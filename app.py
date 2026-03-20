@@ -337,6 +337,7 @@ Verduras: {d['verduras']} | Frutas: {d['frutas']}
 Evitar: {d['alimentosEvitar']}
 Notas: {d['notasAlimentacion']}"""
 
+    print(f"[Claude] Iniciando llamada para: {d.get('nombre','?')}")
     resp = req.post(
         'https://api.anthropic.com/v1/messages',
         headers={
@@ -346,24 +347,36 @@ Notas: {d['notasAlimentacion']}"""
         },
         json={
             'model': 'claude-opus-4-6',
-            'max_tokens': 8000,
+            'max_tokens': 16000,
             'system': sys_prompt,
             'messages': [{'role': 'user', 'content': usr}],
         },
-        timeout=180
+        timeout=300
     )
 
+    print(f"[Claude] Status: {resp.status_code}")
     if resp.status_code != 200:
+        print(f"[Claude] Error: {resp.text[:500]}")
         return {'error': f'Error API Claude ({resp.status_code}): {resp.text[:300]}'}
 
-    txt = resp.json()['content'][0]['text']
+    resp_json = resp.json()
+    txt = resp_json['content'][0]['text']
+    stop_reason = resp_json.get('stop_reason', '')
+    print(f"[Claude] stop_reason={stop_reason} | chars={len(txt)}")
+
+    if stop_reason == 'max_tokens':
+        return {'error': 'JSON truncado por limite de tokens.'}
+
     txt = re.sub(r'^```json\s*', '', txt.strip())
     txt = re.sub(r'^```\s*', '', txt)
     txt = re.sub(r'```\s*$', '', txt).strip()
 
     try:
-        return json.loads(txt)
+        result = json.loads(txt)
+        print(f"[Claude] JSON parseado OK - keys: {list(result.keys())}")
+        return result
     except Exception as e:
+        print(f"[Claude] JSON invalido: {e} | inicio: {txt[:300]}")
         return {'error': f'JSON invalido de Claude: {str(e)[:200]}'}
 
 
