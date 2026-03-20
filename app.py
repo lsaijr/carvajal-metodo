@@ -290,22 +290,18 @@ def parsear_cuestionario(texto):
 
 
 # ════════════════════════════════════════════════════════════
-# GENERAR PLAN CON CLAUDE API
+# GENERAR PLAN CON CLAUDE API — 3 LLAMADAS SEGMENTADAS
 # ════════════════════════════════════════════════════════════
 
-def generar_plan_ia(d):
-    prompt_path = os.path.join(os.path.dirname(__file__), 'prompt_carvajal.txt')
-    with open(prompt_path, encoding='utf-8') as f:
-        sys_prompt = f.read()
+import time
 
+def _datos_paciente(d):
     est = d.get('estatura', '')
     pes = d.get('peso', '')
     imc = d.get('imc', 'No registrado')
-
     contra_activas = [k for k, v in d.get('contraindications', {}).items() if v == 'Si']
     contra_txt = 'CONTRAINDICACIONES ACTIVAS: ' + ', '.join(contra_activas) if contra_activas else 'Sin contraindicaciones activas.'
-
-    usr = f"""DATOS DEL PACIENTE:
+    return f"""DATOS DEL PACIENTE:
 Nombre: {d['nombre']} | Edad: {d['edad']} | Sexo: {d['sexo']}
 Ocupacion: {d['ocupacion']} | Horario: {d['horarioLaboral']} | Act.laboral: {d['actLaboral']}
 Fecha evaluacion: {d['fecha']}
@@ -337,7 +333,10 @@ Verduras: {d['verduras']} | Frutas: {d['frutas']}
 Evitar: {d['alimentosEvitar']}
 Notas: {d['notasAlimentacion']}"""
 
-    print(f"[Claude] Iniciando llamada para: {d.get('nombre','?')}")
+
+def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
+    print(f"[{num}/{total}] Iniciando...")
+    t0 = time.time()
     resp = req.post(
         'https://api.anthropic.com/v1/messages',
         headers={
@@ -347,25 +346,28 @@ Notas: {d['notasAlimentacion']}"""
         },
         json={
             'model': 'claude-opus-4-6',
-            'max_tokens': 16000,
-            'system': sys_prompt,
-            'messages': [{'role': 'user', 'content': usr}],
+            'max_tokens': max_tok,
+            'system': system_prompt,
+            'messages': [{'role': 'user', 'content': user_msg}],
         },
         timeout=300
     )
+    elapsed = round(time.time() - t0, 1)
 
-    print(f"[Claude] Status: {resp.status_code}")
     if resp.status_code != 200:
-        print(f"[Claude] Error: {resp.text[:500]}")
-        return {'error': f'Error API Claude ({resp.status_code}): {resp.text[:300]}'}
+        print(f"[{num}/{total}] ERROR {resp.status_code}: {resp.text[:400]}")
+        return None, f'Error API Claude ({resp.status_code}): {resp.text[:300]}'
 
-    resp_json = resp.json()
-    txt = resp_json['content'][0]['text']
-    stop_reason = resp_json.get('stop_reason', '')
-    print(f"[Claude] stop_reason={stop_reason} | chars={len(txt)}")
+    rj = resp.json()
+    txt = rj['content'][0]['text']
+    stop_reason = rj.get('stop_reason', '')
+    usage = rj.get('usage', {})
+    tok_in  = usage.get('input_tokens', '?')
+    tok_out = usage.get('output_tokens', '?')
+    print(f"[{num}/{total}] OK — {elapsed}s | input: {tok_in} tokens | output: {tok_out} tokens | stop: {stop_reason}")
 
     if stop_reason == 'max_tokens':
-        return {'error': 'JSON truncado por limite de tokens.'}
+        return None, f'Llamada {num} truncada por limite de tokens.'
 
     txt = re.sub(r'^```json\s*', '', txt.strip())
     txt = re.sub(r'^```\s*', '', txt)
@@ -373,12 +375,56 @@ Notas: {d['notasAlimentacion']}"""
 
     try:
         result = json.loads(txt)
-        print(f"[Claude] JSON parseado OK - keys: {list(result.keys())}")
-        return result
+        print(f"[{num}/{total}] JSON OK — claves: {list(result.keys())}")
+        return result, None
     except Exception as e:
-        print(f"[Claude] JSON invalido: {e} | inicio: {txt[:300]}")
-        return {'error': f'JSON invalido de Claude: {str(e)[:200]}'}
+        print(f"[{num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
+        return None, f'JSON invalido en llamada {num}: {str(e)[:150]}'
 
+
+def generar_plan_ia(d):
+    datos = _datos_paciente(d)
+    t_total = time.time()
+
+    SYS1 = '''Eres el generador de contenido para planes del METODO CARVAJAL.
+Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
+Genera SOLO estas 3 claves: portada, diagnostico, rutina.
+{"portada":{"titulo_pilares":"Los 5 Pilares - [condicion]","intro":"3-4 lineas calido motivador","pilares_resumen":[{"num":1,"emoji":"\ud83e\udd57","titulo":"Titulo adaptado","descripcion":"2-3 lineas"},{"num":2,"emoji":"\ud83c\udfc3","titulo":"Titulo","descripcion":"2-3 lineas"},{"num":3,"emoji":"\ud83e\udde0","titulo":"Titulo","descripcion":"2-3 lineas"},{"num":4,"emoji":"\ud83d\ude34","titulo":"Titulo","descripcion":"2-3 lineas"},{"num":5,"emoji":"\u2728","titulo":"Titulo","descripcion":"2-3 lineas"}]},"diagnostico":{"nota_medica":"Nota alertas criticas","filas":[{"area":"Antropometria","estado":"datos","hallazgos":"analisis","alerta":"normal"},{"area":"Salud Digestiva","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Sueno y Energia","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Evaluacion Cutanea","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Salud Capilar","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Prioridad Principal","estado":"palabras textuales","hallazgos":"...","alerta":"normal"},{"area":"Condiciones Medicas","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Rutina Facial Actual","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Estilo de Vida","estado":"...","hallazgos":"...","alerta":"normal"}]},"rutina":{"nota":"nota rutina","items":[{"hora":"07:00","actividad":"descripcion","pilar":"Nutricion"}]}}
+REGLA: Maximo 8 items en rutina. Tips hiperspecificos con nombre y profesion.'''
+
+    SYS2 = '''Eres el generador de contenido para planes del METODO CARVAJAL.
+Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
+Genera SOLO estas 3 claves: pilar1, pilar2, pilar3.
+{"pilar1":{"titulo":"Nutricion adaptada","objetivo":"2-3 lineas","frase_motivacional":"frase corta","frase_posicion":"inicio","permitidos":["item"],"evitar":["item"],"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Miercoles","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Sabado","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."}],"compras":[{"categoria":"Proteinas","emoji":"\ud83e\udd69","items":["i1","i2","i3","i4","i5"]},{"categoria":"Carbohidratos","emoji":"\ud83c\udf3e","items":["i1","i2","i3","i4"]},{"categoria":"Vegetales","emoji":"\ud83e\udd66","items":["i1","i2","i3","i4","i5"]},{"categoria":"Frutas","emoji":"\ud83c\udf4e","items":["i1","i2","i3","i4"]},{"categoria":"Grasas","emoji":"\ud83e\udd51","items":["i1","i2","i3"]},{"categoria":"Otros","emoji":"\ud83e\uddf4","items":["i1","i2","i3","i4"]}],"suplementacion":["Sup1: dosis"],"tips":[{"texto":"tip especifico con nombre"}]},"pilar2":{"titulo":"Actividad Fisica","objetivo":"objetivo","frase_motivacional":"frase","frase_posicion":"medio","plan_semanal":"plan dia a dia","adaptaciones":"adaptaciones","tips":[{"texto":"tip"}]},"pilar3":{"titulo":"Bienestar Mental","objetivo":"objetivo","frase_motivacional":"frase","frase_posicion":"final","tecnicas":["t1","t2","t3","t4","t5"],"tips":[{"texto":"tip"}]}}
+REGLAS: Respetar intolerancias. Tips con nombre, profesion, horario real.'''
+
+    CATALOGO = '''CATALOGO OFICIAL (usar SOLO estos):
+Cosmelan Kit $600|Cosmelan Mantenimiento $300|Melas Peel 3ses $200|Regenerador Facial 3ses $613|Regenerador Facial 1ses $313|Fine Lift paquete $999|Skin Lift Pro 1ses $600|Total Lift paquete $1300|De Age Treatment paquete $975|Blanqueamiento Facial 6ses $266|Plasma Facial 1ses $200|Plasma Gel 1ses $250|Peeling Periocular 3ses $151|Acthyderm Rostro 3ses $334|Peptidos Rejuvenecedores 3ses $544|Peptidos Parpados 3ses $187|Foto Facial 3ses $367|Gleaming Skin 6ses $616|Beauty Light 2ses $300|Bright Eyes 6ses $241|Hidratacion Piel 3ses $236|Vita C Peel 3ses $286|Hidrofacial $90/ses|Microdermoabrasion $45/ses|Luz Anti-Acne 3ses $290|Toxina Botulinica 30u $450|Toxina Botulinica 50u $750|Hilos PDO 1ses $800|EXILIS Abdomen 8ses $2000|Lipolaser 10ses $558|Sculped Body 12ses $458|Cellulite Shock 10ses $790|Electro Fit 12ses $408|Tensor Cuerpo RF 8ses $808|Acthyderm Cuerpo 12ses $783|Post Parto 10ses $218|Blanqueamiento Corporal 6ses $266|Plasma Capilar 2ses $400|Capilar Plus 2ses $499|IPL Facial 6ses $350|IPL Axilas 6ses $350|IPL Piernas 8ses $650|IPL Brasileno 8ses $600'''
+
+    SYS3 = f'''Eres el generador de contenido para planes del METODO CARVAJAL.
+Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
+Genera SOLO estas 3 claves: pilar4, pilar5, compromiso.
+{{"pilar4":{{"titulo":"Sueno adaptado","objetivo":"horas actuales y meta","frase_motivacional":"frase","frase_posicion":"inicio","protocolo":["p1","p2","p3","p4","p5","p6"],"reglas":["r1","r2","r3"],"tips":[{{"texto":"tip"}}]}},"pilar5":{{"titulo":"Tratamientos","objetivo":"objetivo prioridades","frase_motivacional":"frase","frase_posicion":"medio","bimestres":[{{"periodo":"ENE-FEB","titulo":"enfoque","tratamientos":[{{"nombre":"trat","sesiones":"X ses","inversion":"$XXX","beneficio":"desc"}}],"total":0}}],"total_anual":0,"rutina_am":[{{"paso":1,"producto":"prod","descripcion":"desc"}}],"rutina_pm":[{{"paso":1,"producto":"prod","descripcion":"desc"}}],"notas_criticas":["nota"],"tips":[{{"texto":"tip"}}]}},"compromiso":{{"parrafo":"4-5 lineas nombre situacion satisfaccion meta","resultados":[{{"icono":"✓","texto":"resultado metrica"}}],"proximos_pasos":["p1","p2","p3","p4","p5","p6"]}}}}
+{CATALOGO}
+REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_anual = suma todos bimestres. Satisfaccion baja = motor compromiso.'''
+
+    r1, err = _llamar_claude(1, 3, SYS1, datos, max_tok=3000)
+    if err: return {'error': err}
+
+    r2, err = _llamar_claude(2, 3, SYS2, datos, max_tok=7000)
+    if err: return {'error': err}
+
+    r3, err = _llamar_claude(3, 3, SYS3, datos, max_tok=6000)
+    if err: return {'error': err}
+
+    resultado = {}
+    resultado.update(r1)
+    resultado.update(r2)
+    resultado.update(r3)
+
+    t_elapsed = round(time.time() - t_total, 1)
+    print(f"[Total] {t_elapsed}s | claves: {list(resultado.keys())}")
+    return resultado
 
 # ════════════════════════════════════════════════════════════
 # RENDER PLAN — llenar plantilla HTML
