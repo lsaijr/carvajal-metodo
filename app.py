@@ -1,6 +1,12 @@
 import os, json, uuid, threading, calendar
 import cloudinary
 import cloudinary.uploader
+try:
+    from weasyprint import HTML as WeasyprintHTML
+    WEASYPRINT_OK = True
+except ImportError:
+    WEASYPRINT_OK = False
+    print('WeasyPrint no disponible')
 from datetime import date, datetime
 from flask import Flask, request, jsonify, render_template_string, send_from_directory
 import requests as req
@@ -124,6 +130,112 @@ def upload():
 
 
 # ════════════════════════════════════════════════════════════
+# RUTA BORRADOR EDITABLE
+# ════════════════════════════════════════════════════════════
+
+@app.route('/borrador/<job_id>', methods=['GET'])
+def ver_borrador(job_id):
+    """Sirve el borrador editable. Descarga desde Cloudinary si no está en memoria."""
+    # Intentar desde Cloudinary primero (sobrevive reinicios)
+    html = descargar_borrador_cloudinary(job_id)
+    if html:
+        return html
+    # Fallback: regenerar desde job en memoria si existe
+    job = jobs.get(job_id)
+    if not job or job.get('status') != 'done':
+        return '<h2 style="font-family:sans-serif;padding:40px;color:#666">Borrador no encontrado o aún procesando.</h2>', 404
+    return '<h2 style="font-family:sans-serif;padding:40px;color:#666">Borrador no disponible. Verifica Cloudinary.</h2>', 404
+
+
+@app.route('/generar-pdf', methods=['POST'])
+def generar_pdf_final():
+    """Recibe el HTML editado, genera PDF con WeasyPrint, sube a Cloudinary y envía correo."""
+    datos = request.get_json()
+    if not datos:
+        return jsonify({'error': 'No se recibieron datos'}), 400
+
+    job_id   = datos.get('job_id', uuid.uuid4().hex[:16])
+    html_str = datos.get('html', '')
+
+    if not html_str:
+        return jsonify({'error': 'HTML vacío'}), 400
+
+    if not WEASYPRINT_OK:
+        return jsonify({'error': 'WeasyPrint no está instalado en el servidor'}), 500
+
+    try:
+        import tempfile, base64
+
+        # Generar PDF con WeasyPrint
+        pdf_bytes = WeasyprintHTML(string=html_str, base_url=request.host_url).write_pdf()
+
+        # Guardar PDF temporal
+        pdf_name = f'PlanFinal_{job_id}_{datetime.now().strftime("%Y%m%d")}.pdf'
+        pdf_path = os.path.join(PLANES_DIR, pdf_name)
+        with open(pdf_path, 'wb') as f:
+            f.write(pdf_bytes)
+
+        # Subir PDF a Cloudinary
+        pdf_url = None
+        if CLOUDINARY_CLOUD_NAME:
+            try:
+                resultado = cloudinary.uploader.upload(
+                    pdf_path,
+                    folder='carvajal/pdfs',
+                    public_id=f'plan_{job_id}',
+                    resource_type='raw',
+                    overwrite=True,
+                )
+                pdf_url = resultado.get('secure_url', '')
+                print(f'PDF Cloudinary: {pdf_url[:80]}')
+            except Exception as e:
+                print(f'Error subiendo PDF a Cloudinary: {e}')
+
+        # Guardar borrador actualizado en Cloudinary
+        subir_borrador_cloudinary(html_str, job_id)
+
+        # Enviar correo al staff con PDF adjunto
+        fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
+        nombre = jobs.get(job_id, {}).get('nombre', 'Paciente')
+        cuerpo_email = f'''<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="background:#f0e8de;padding:20px;font-family:sans-serif">
+<div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #ddd">
+  <div style="background:#1a1410;padding:20px 24px">
+    <div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · PDF Final Generado</div>
+    <div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div>
+    <div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:2px">{fecha_hoy}</div>
+  </div>
+  <div style="padding:24px">
+    <p style="font-size:13px;color:#3d2e20;margin-bottom:16px">El PDF final del plan de <strong>{nombre}</strong> ha sido generado y revisado por el equipo médico.</p>
+    {"<div style='text-align:center;margin:20px 0'><a href='" + pdf_url + "' style='background:#8fa832;color:#fff;padding:13px 28px;border-radius:4px;text-decoration:none;font-size:14px;font-weight:500'>Ver PDF en Cloudinary</a></div>" if pdf_url else ""}
+  </div>
+  <div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div>
+</div></body></html>'''
+
+        enviar_resend(
+            f'PDF Final Listo - {nombre} ({fecha_hoy})',
+            cuerpo_email,
+            MAIL_TO,
+            adjunto_path=pdf_path,
+            adjunto_name=pdf_name
+        )
+
+        # Limpiar PDF temporal
+        try: os.unlink(pdf_path)
+        except: pass
+
+        return jsonify({
+            'ok'     : True,
+            'pdf_url': pdf_url or '',
+            'nombre' : nombre,
+        })
+
+    except Exception as e:
+        print(f'Error generando PDF: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
+# ════════════════════════════════════════════════════════════
 # WORKER
 # ════════════════════════════════════════════════════════════
 
@@ -149,6 +261,153 @@ def subir_plan_cloudinary(html_path, html_name):
         return None
 
 
+def subir_borrador_cloudinary(html_content, job_id):
+    """Sube el HTML del borrador a Cloudinary como raw file."""
+    if not CLOUDINARY_CLOUD_NAME:
+        return None
+    try:
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as tmp:
+            tmp.write(html_content)
+            tmp_path = tmp.name
+        resultado = cloudinary.uploader.upload(
+            tmp_path,
+            folder='carvajal/borradores',
+            public_id=f'borrador_{job_id}',
+            resource_type='raw',
+            overwrite=True,
+        )
+        os.unlink(tmp_path)
+        return resultado.get('secure_url', '')
+    except Exception as e:
+        print(f'Error subiendo borrador: {e}')
+        return None
+
+
+def descargar_borrador_cloudinary(job_id):
+    """Descarga el HTML del borrador desde Cloudinary."""
+    if not CLOUDINARY_CLOUD_NAME:
+        return None
+    try:
+        url = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/raw/upload/carvajal/borradores/borrador_{job_id}.html'
+        r = req.get(url, timeout=30)
+        if r.status_code == 200:
+            return r.text
+        return None
+    except Exception as e:
+        print(f'Error descargando borrador: {e}')
+        return None
+
+
+def render_borrador(plan_json, data, job_id):
+    """Genera el HTML del borrador editable para el médico."""
+    tpl_path = os.path.join(os.path.dirname(__file__), 'plantilla_borrador.html')
+    with open(tpl_path, encoding='utf-8') as f:
+        tpl = f.read()
+
+    def esc(s): return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
+
+    nombre = data.get('nombre', '')
+
+    # Diagnóstico rows
+    badge_map = {'warning': 'badge-warning', 'critical': 'badge-critical', 'normal': 'badge-normal'}
+    badge_label = {'warning': '⚠ Atención', 'critical': '✕ Crítico', 'normal': 'Normal'}
+    diag_html = ''.join(
+        f'<tr><td style="font-weight:500">{esc(f["area"])}</td><td contenteditable="true">{esc(f["estado"])}</td><td contenteditable="true">{esc(f["hallazgos"])}</td><td><span class="{badge_map.get(f.get("alerta","normal"),"badge-normal")}">{badge_label.get(f.get("alerta","normal"),"Normal")}</span></td></tr>'
+        for f in plan_json.get('diagnostico', {}).get('filas', [])
+    )
+
+    # Rutina
+    tag_map = {'Nutricion':'tag-n','Sueno':'tag-s','Actividad':'tag-a','Mental':'tag-m','Estetico':'tag-e','Salud':'tag-h'}
+    rutina_html = ''.join(
+        f'<div class="rutina-row"><span class="rutina-hora">{esc(r["hora"])}</span><span contenteditable="true" style="flex:1">{esc(r["actividad"])}</span><span class="rutina-tag {tag_map.get(r["pilar"],"tag-n")}">{esc(r["pilar"])}</span></div>'
+        for r in plan_json.get('rutina', {}).get('items', [])
+    )
+
+    # Pilares helpers
+    p1 = plan_json.get('pilar1', {})
+    p2 = plan_json.get('pilar2', {})
+    p3 = plan_json.get('pilar3', {})
+    p4 = plan_json.get('pilar4', {})
+    p5 = plan_json.get('pilar5', {})
+    comp = plan_json.get('compromiso', {})
+
+    p1_perm = ''.join(f'<li contenteditable="true">{esc(i)}</li>' for i in p1.get('permitidos',[]))
+    p1_evit = ''.join(f'<li contenteditable="true">{esc(i)}</li>' for i in p1.get('evitar',[]))
+    p1_menu = ''.join(
+        f'<tr><td class="dia">{esc(m["dia"])}</td><td contenteditable="true">{esc(m["desayuno"])}</td><td contenteditable="true">{esc(m["almuerzo"])}</td><td contenteditable="true">{esc(m["cena"])}</td><td contenteditable="true">{esc(m["snack"])}</td></tr>'
+        for m in p1.get('menu',[])
+    )
+    p1_supl = ''
+    if p1.get('suplementacion'):
+        items = ''.join(f'<li contenteditable="true" style="font-size:13px;padding:4px 0;border-bottom:1px solid #e5e7eb">{esc(s)}</li>' for s in p1['suplementacion'])
+        p1_supl = f'<h4 style="font-size:12px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Suplementación</h4><ul style="list-style:none">{items}</ul>'
+
+    p3_tec = ''.join(f'<li contenteditable="true">{esc(t)}</li>' for t in p3.get('tecnicas',[]))
+
+    p4_proto = ''.join(f'<li contenteditable="true" style="padding:4px 0;font-size:13px">{esc(s)}</li>' for s in p4.get('protocolo',[]))
+    p4_reg = ''.join(f'<li contenteditable="true">{esc(r)}</li>' for r in p4.get('reglas',[]))
+
+    # Pilar 5 bimestres
+    p5_bim = ''
+    for bim in p5.get('bimestres',[]):
+        rows = ''.join(f'<tr><td contenteditable="true" style="font-weight:500">{esc(t["nombre"])}</td><td contenteditable="true">{esc(t["sesiones"])}</td><td contenteditable="true" style="font-weight:500">{esc(t["inversion"])}</td><td contenteditable="true">{esc(t["beneficio"])}</td></tr>' for t in bim.get('tratamientos',[]))
+        p5_bim += f'<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:#8fa832;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px" contenteditable="true">{esc(bim["periodo"])} · {esc(bim["titulo"])}</div><table><thead><tr><th>Tratamiento</th><th>Sesiones</th><th>Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table><div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right" contenteditable="true">Total bimestre: ${bim.get("total",0):,}</div></div>'
+
+    notas = p5.get('notas_criticas',[])
+    p5_notas = ''
+    if notas:
+        items = ''.join(f'<p style="font-size:13px;padding:3px 0;border-bottom:1px solid #e5e7eb" contenteditable="true">{esc(n)}</p>' for n in notas)
+        p5_notas = f'<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:12px 16px;margin-bottom:12px"><strong style="font-size:11px;color:#9a3412;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Notas críticas</strong>{items}</div>'
+
+    p5_am = ''.join(f'<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e5e7eb"><span style="font-size:11px;font-weight:600;background:#8fa832;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{s["paso"]}</span><div><div style="font-size:12px;font-weight:500" contenteditable="true">{esc(s["producto"])}</div><div style="font-size:11px;color:#6b7280" contenteditable="true">{esc(s["descripcion"])}</div></div></div>' for s in p5.get('rutina_am',[]))
+    p5_pm = ''.join(f'<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e5e7eb"><span style="font-size:11px;font-weight:600;background:#2d3a2e;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{s["paso"]}</span><div><div style="font-size:12px;font-weight:500" contenteditable="true">{esc(s["producto"])}</div><div style="font-size:11px;color:#6b7280" contenteditable="true">{esc(s["descripcion"])}</div></div></div>' for s in p5.get('rutina_pm',[]))
+
+    comp_res = ''.join(f'<li contenteditable="true">{esc(r["texto"])}</li>' for r in comp.get('resultados',[]))
+    comp_pasos = ''.join(f'<li style="padding:4px 0;font-size:13px" contenteditable="true">{esc(p)}</li>' for p in comp.get('proximos_pasos',[]))
+
+    replacements = {
+        '{{JOB_ID}}': job_id,
+        '{{NOMBRE}}': esc(nombre),
+        '{{EDAD}}': esc(data.get('edad','')),
+        '{{OCUPACION}}': esc(data.get('ocupacion','')),
+        '{{FECHA}}': esc(data.get('fecha','')),
+        '{{NOTA_MEDICA}}': esc(plan_json.get('diagnostico',{}).get('nota_medica','')),
+        '{{DIAGNOSTICO_FILAS}}': diag_html,
+        '{{RUTINA_NOTA}}': esc(plan_json.get('rutina',{}).get('nota','')),
+        '{{RUTINA_FILAS}}': rutina_html,
+        '{{P1_TITULO}}': esc(p1.get('titulo','')),
+        '{{P1_OBJETIVO}}': esc(p1.get('objetivo','')),
+        '{{P1_PERMITIDOS}}': p1_perm,
+        '{{P1_EVITAR}}': p1_evit,
+        '{{P1_MENU}}': p1_menu,
+        '{{P1_SUPLEMENTACION}}': p1_supl,
+        '{{P2_TITULO}}': esc(p2.get('titulo','')),
+        '{{P2_OBJETIVO}}': esc(p2.get('objetivo','')),
+        '{{P2_PLAN}}': esc(p2.get('plan_semanal','')),
+        '{{P2_ADAPTACIONES}}': esc(p2.get('adaptaciones','')),
+        '{{P3_TITULO}}': esc(p3.get('titulo','')),
+        '{{P3_OBJETIVO}}': esc(p3.get('objetivo','')),
+        '{{P3_TECNICAS}}': p3_tec,
+        '{{P4_TITULO}}': esc(p4.get('titulo','')),
+        '{{P4_OBJETIVO}}': esc(p4.get('objetivo','')),
+        '{{P4_PROTOCOLO}}': p4_proto,
+        '{{P4_REGLAS}}': p4_reg,
+        '{{P5_TITULO}}': esc(p5.get('titulo','')),
+        '{{P5_OBJETIVO}}': esc(p5.get('objetivo','')),
+        '{{P5_BIMESTRES}}': p5_bim,
+        '{{P5_NOTAS_CRITICAS}}': p5_notas,
+        '{{P5_RUTINA_AM}}': p5_am,
+        '{{P5_RUTINA_PM}}': p5_pm,
+        '{{COMP_PARRAFO}}': esc(comp.get('parrafo','')),
+        '{{COMP_RESULTADOS}}': comp_res,
+        '{{COMP_PASOS}}': comp_pasos,
+    }
+    for k, v in replacements.items():
+        tpl = tpl.replace(k, v)
+    return tpl
+
+
 def worker(job_id, data, faltantes, fotos=None):
     try:
         jobs[job_id] = {'status': 'working', 'msg': 'Generando plan con IA (puede tomar 1-2 min)...'}
@@ -158,39 +417,37 @@ def worker(job_id, data, faltantes, fotos=None):
             jobs[job_id] = {'status': 'error', 'msg': plan_json['error']}
             return
 
-        jobs[job_id] = {'status': 'working', 'msg': 'Construyendo HTML del plan...'}
+        jobs[job_id] = {'status': 'working', 'msg': 'Construyendo borrador y plan...'}
         html = render_plan(plan_json, data)
+        borrador_html = render_borrador(plan_json, data, job_id)
 
-        nombre     = data.get('nombre', 'Paciente')
-        html_name  = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + '.html'
-        html_path  = os.path.join(PLANES_DIR, html_name)
+        nombre    = data.get('nombre', 'Paciente')
+        html_name = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + '.html'
+        html_path = os.path.join(PLANES_DIR, html_name)
         with open(html_path, 'w', encoding='utf-8') as f:
             f.write(html)
 
         base_url = os.environ.get('BASE_URL', 'https://metodo.centrocarvajal.com')
         html_url_local = f'{base_url}/planes_generados/{html_name}'
 
-        # Intentar subir a Cloudinary para URL permanente
+        # Subir plan final a Cloudinary
         html_url_cdn = subir_plan_cloudinary(html_path, html_name)
         html_url = html_url_cdn if html_url_cdn else html_url_local
+
+        # Subir borrador editable a Cloudinary
+        jobs[job_id] = {'status': 'working', 'msg': 'Guardando borrador editable...'}
+        subir_borrador_cloudinary(borrador_html, job_id)
+        borrador_url = f'{base_url}/borrador/{job_id}'
 
         jobs[job_id] = {'status': 'working', 'msg': 'Enviando correos...'}
         fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
 
-        # Correo 1: resumen del cuestionario al staff (con fotos adjuntas si las hay)
+        # Correo 1: cuestionario + link al borrador editable
         enviar_resend(
-            f'Nuevo Cuestionario - {nombre} ({fecha_hoy})',
-            email_formulario(data, faltantes),
+            f'Nuevo Plan IA - {nombre} ({fecha_hoy})',
+            email_formulario(data, faltantes, borrador_url),
             MAIL_TO,
             adjuntos_extra=fotos or []
-        )
-        # Correo 2: plan generado
-        enviar_resend(
-            f'Plan IA - {nombre} ({fecha_hoy})',
-            email_plan(nombre, html_url, datetime.now().strftime('%d/%m/%Y')),
-            'isai.josue@gmail.com',
-            adjunto_path=html_path,
-            adjunto_name=html_name
         )
 
         # Limpiar fotos temporales
@@ -199,11 +456,12 @@ def worker(job_id, data, faltantes, fotos=None):
             except: pass
 
         jobs[job_id] = {
-            'status'   : 'done',
-            'nombre'   : nombre,
-            'html_url' : html_url,
-            'html_name': html_name,
-            'faltantes': faltantes,
+            'status'      : 'done',
+            'nombre'      : nombre,
+            'html_url'    : html_url,
+            'html_name'   : html_name,
+            'borrador_url': borrador_url,
+            'faltantes'   : faltantes,
         }
 
     except Exception as e:
@@ -853,7 +1111,7 @@ def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adju
         print(f'Resend error: {e}')
 
 
-def email_formulario(d, faltantes):
+def email_formulario(d, faltantes, borrador_url=''):
     nombre = d.get('nombre', '')
     rows = ''.join(f'<tr><td style="color:#b8935a;font-weight:600;padding:8px 16px;font-size:12px;text-transform:uppercase;letter-spacing:1px;width:140px">{k}</td><td style="padding:8px 16px;font-size:13px">{v}</td></tr>'
         for k, v in [('Nombre', nombre), ('Edad', d.get('edad','')), ('Ocupacion', d.get('ocupacion','')),
@@ -864,7 +1122,8 @@ def email_formulario(d, faltantes):
     if faltantes:
         items = ''.join(f'<li style="font-size:12px;color:#6a5a20;padding:2px 0">{f}</li>' for f in faltantes)
         faltantes_html = f'<div style="background:#fffbf0;border:1px solid #e8d89a;border-radius:4px;padding:14px 18px;margin:16px 24px"><div style="font-size:11px;font-weight:700;color:#8a7030;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Campos sin datos</div><ul style="padding-left:16px;margin:0">{items}</ul></div>'
-    return f'<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="background:#f0e8de;padding:20px;font-family:sans-serif"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #ddd"><div style="background:#1a1410;padding:20px 24px"><div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Nuevo Cuestionario</div><div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div></div><table style="width:100%;border-collapse:collapse">{rows}</table>{faltantes_html}<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div></div></body></html>'
+    borrador_btn = f'<div style="text-align:center;margin:20px 24px"><a href="{borrador_url}" style="background:#8fa832;color:#fff;padding:13px 28px;border-radius:4px;text-decoration:none;font-size:14px;font-weight:500;display:inline-block">✏️ Revisar y editar borrador del plan</a><p style="font-size:11px;color:#999;margin-top:8px">Una vez editado, genera el PDF final desde el borrador.</p></div>' if borrador_url else ''
+    return f'<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="background:#f0e8de;padding:20px;font-family:sans-serif"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #ddd"><div style="background:#1a1410;padding:20px 24px"><div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Nuevo Plan IA</div><div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div></div>{borrador_btn}<table style="width:100%;border-collapse:collapse">{rows}</table>{faltantes_html}<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div></div></body></html>'
 
 
 def email_plan(nombre, html_url, fecha):

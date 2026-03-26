@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Borrador — {{NOMBRE}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#8fa832;--dark:#2d3a2e;--muted:#6b7280;--border:#e5e7eb;--bg:#f9fafb;--white:#ffffff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--dark);font-size:14px;line-height:1.6}
+
+/* ── Barra superior fija ── */
+#topbar{position:sticky;top:0;z-index:100;background:var(--dark);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+#topbar .info{color:rgba(255,255,255,.7);font-size:12px}
+#topbar .info strong{color:#fff;font-size:14px;display:block}
+.topbar-btns{display:flex;gap:10px}
+.btn{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;padding:8px 18px;border-radius:4px;border:none;transition:all .2s;letter-spacing:.03em}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+.btn-outline:hover{border-color:#fff;color:#fff}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:#7a9428}
+.btn-gold:disabled{background:#9ca3af;cursor:not-allowed}
+
+/* ── Aviso edición ── */
+#edit-notice{background:#fffbeb;border-bottom:1px solid #fde68a;padding:8px 24px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px}
+#edit-notice svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+
+/* ── Contenedor principal ── */
+.container{max-width:860px;margin:0 auto;padding:32px 24px 80px}
+
+/* ── Cabecera del paciente ── */
+.patient-header{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.patient-header h1{font-size:22px;font-weight:600;color:var(--dark);margin-bottom:4px}
+.patient-header .meta{font-size:13px;color:var(--muted)}
+.patient-header .meta span{margin-right:16px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500;background:#dcfce7;color:#166534}
+
+/* ── Secciones ── */
+.section{background:var(--white);border:1px solid var(--border);border-radius:6px;margin-bottom:16px;overflow:hidden}
+.section-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:#fafafa}
+.section-header .num{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.section-header h2{font-size:14px;font-weight:600;color:var(--dark)}
+.section-body{padding:20px}
+
+/* ── Campos editables ── */
+[contenteditable]{outline:none;border-radius:3px;transition:background .15s}
+[contenteditable]:focus{background:#fffbeb;box-shadow:0 0 0 2px #fde68a}
+[contenteditable]:hover:not(:focus){background:#f9fafb}
+
+/* ── Tabla diagnóstico ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;background:#f3f4f6;font-weight:500;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.badge-normal{background:#dcfce7;color:#166534;padding:2px 8px;border-radius:99px;font-size:11px}
+.badge-warning{background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:99px;font-size:11px}
+.badge-critical{background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-size:11px}
+
+/* ── Lista de items ── */
+.items-list{list-style:none}
+.items-list li{padding:7px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px;font-size:13px}
+.items-list li:last-child{border-bottom:none}
+.items-list li::before{content:'•';color:var(--gold);font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* ── Menú semanal ── */
+.menu-table th,.menu-table td{padding:8px 10px;font-size:12px}
+.menu-table .dia{font-weight:600;color:var(--dark);white-space:nowrap}
+.menu-table .meal-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px}
+
+/* ── Rutina diaria ── */
+.rutina-row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.rutina-row:last-child{border-bottom:none}
+.rutina-hora{font-weight:600;color:var(--gold);font-size:13px;min-width:52px}
+.rutina-tag{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:500;white-space:nowrap}
+.tag-n{background:#dcfce7;color:#166534}
+.tag-s{background:#dbeafe;color:#1e40af}
+.tag-a{background:#ffedd5;color:#9a3412}
+.tag-m{background:#f3e8ff;color:#6b21a8}
+.tag-e{background:#fce7f3;color:#9d174d}
+.tag-h{background:#f0fdf4;color:#166534}
+
+/* ── Grid pilar ── */
+.pilar-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.pilar-grid{grid-template-columns:1fr}}
+.pilar-card{border:1px solid var(--border);border-radius:4px;padding:14px}
+.pilar-card h4{font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+
+/* ── Nota médica ── */
+.nota-medica{background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:12px 16px;font-size:13px;color:#9a3412;margin-bottom:16px}
+.nota-medica strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── Spinner ── */
+#spinner{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#spinner.show{display:flex}
+.spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#spinner p{color:#fff;font-size:14px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--dark);color:#fff;padding:12px 20px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .3s;z-index:300;pointer-events:none}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="info">
+    <strong>{{NOMBRE}}</strong>
+    Borrador editable — {{FECHA}}
+  </div>
+  <div class="topbar-btns">
+    <button class="btn btn-outline" onclick="guardarCambios()">💾 Guardar cambios</button>
+    <button class="btn btn-gold" id="btn-pdf" onclick="generarPDF()">📄 Generar PDF final</button>
+  </div>
+</div>
+
+<div id="edit-notice">
+  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  Haz clic en cualquier texto para editarlo. Los cambios se guardan automáticamente al generar el PDF.
+</div>
+
+<div class="container">
+
+  <!-- Cabecera paciente -->
+  <div class="patient-header">
+    <div>
+      <h1 contenteditable="true" data-field="nombre">{{NOMBRE}}</h1>
+      <div class="meta">
+        <span contenteditable="true" data-field="edad">{{EDAD}} años</span>
+        <span contenteditable="true" data-field="ocupacion">{{OCUPACION}}</span>
+        <span contenteditable="true" data-field="fecha">{{FECHA}}</span>
+      </div>
+    </div>
+    <span class="badge">Borrador médico</span>
+  </div>
+
+  <!-- SECCIÓN 1: Nota médica + Diagnóstico -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">1</div>
+      <h2>Diagnóstico y Evaluación</h2>
+    </div>
+    <div class="section-body">
+      <div class="nota-medica">
+        <strong>Nota para el equipo</strong>
+        <span contenteditable="true" data-field="nota_medica">{{NOTA_MEDICA}}</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Área</th><th>Estado actual</th><th>Hallazgos clínicos</th><th>Alerta</th></tr>
+        </thead>
+        <tbody id="diag-tbody">
+          {{DIAGNOSTICO_FILAS}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: Rutina diaria -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">2</div>
+      <h2>Rutina Diaria Recomendada</h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px" contenteditable="true" data-field="rutina_nota">{{RUTINA_NOTA}}</p>
+      <div id="rutina-list">{{RUTINA_FILAS}}</div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 3: Nutrición (Pilar 1) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">3</div>
+      <h2>🥗 <span contenteditable="true" data-field="p1_titulo">{{P1_TITULO}}</span></h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p1_objetivo">{{P1_OBJETIVO}}</p>
+
+      <div class="pilar-grid" style="margin-bottom:20px">
+        <div class="pilar-card">
+          <h4>✓ Alimentos permitidos</h4>
+          <ul class="items-list" id="p1-permitidos">{{P1_PERMITIDOS}}</ul>
+        </div>
+        <div class="pilar-card">
+          <h4>✕ Alimentos a evitar</h4>
+          <ul class="items-list" id="p1-evitar">{{P1_EVITAR}}</ul>
+        </div>
+      </div>
+
+      <h4 style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Menú semanal</h4>
+      <table class="menu-table">
+        <thead><tr><th>Día</th><th>Desayuno</th><th>Almuerzo</th><th>Cena</th><th>Snack</th></tr></thead>
+        <tbody id="p1-menu">{{P1_MENU}}</tbody>
+      </table>
+
+      <div style="margin-top:16px" id="p1-suplementacion">{{P1_SUPLEMENTACION}}</div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 4: Actividad Física (Pilar 2) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">4</div>
+      <h2>🏃 <span contenteditable="true" data-field="p2_titulo">{{P2_TITULO}}</span></h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p2_objetivo">{{P2_OBJETIVO}}</p>
+      <div class="pilar-grid">
+        <div class="pilar-card">
+          <h4>Plan semanal</h4>
+          <p style="font-size:13px;white-space:pre-line" contenteditable="true" data-field="p2_plan">{{P2_PLAN}}</p>
+        </div>
+        <div class="pilar-card">
+          <h4>Adaptaciones específicas</h4>
+          <p style="font-size:13px" contenteditable="true" data-field="p2_adaptaciones">{{P2_ADAPTACIONES}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 5: Bienestar Mental (Pilar 3) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">5</div>
+      <h2>🧠 <span contenteditable="true" data-field="p3_titulo">{{P3_TITULO}}</span></h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p3_objetivo">{{P3_OBJETIVO}}</p>
+      <ul class="items-list" id="p3-tecnicas">{{P3_TECNICAS}}</ul>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 6: Sueño (Pilar 4) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">6</div>
+      <h2>😴 <span contenteditable="true" data-field="p4_titulo">{{P4_TITULO}}</span></h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p4_objetivo">{{P4_OBJETIVO}}</p>
+      <div class="pilar-grid">
+        <div class="pilar-card">
+          <h4>Protocolo de sueño</h4>
+          <ol style="padding-left:16px;font-size:13px" id="p4-protocolo">{{P4_PROTOCOLO}}</ol>
+        </div>
+        <div class="pilar-card">
+          <h4>Reglas críticas</h4>
+          <ul class="items-list" id="p4-reglas">{{P4_REGLAS}}</ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 7: Tratamientos (Pilar 5) -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">7</div>
+      <h2>✨ <span contenteditable="true" data-field="p5_titulo">{{P5_TITULO}}</span></h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p5_objetivo">{{P5_OBJETIVO}}</p>
+      <div id="p5-bimestres">{{P5_BIMESTRES}}</div>
+      <div style="margin-top:16px" id="p5-notas">{{P5_NOTAS_CRITICAS}}</div>
+
+      <div class="pilar-grid" style="margin-top:16px">
+        <div class="pilar-card">
+          <h4>Rutina AM</h4>
+          <div id="p5-rutina-am">{{P5_RUTINA_AM}}</div>
+        </div>
+        <div class="pilar-card">
+          <h4>Rutina PM</h4>
+          <div id="p5-rutina-pm">{{P5_RUTINA_PM}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 8: Compromiso -->
+  <div class="section">
+    <div class="section-header">
+      <div class="num">8</div>
+      <h2>🎯 Plan de Compromiso</h2>
+    </div>
+    <div class="section-body">
+      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="comp_parrafo">{{COMP_PARRAFO}}</p>
+      <div class="pilar-grid">
+        <div class="pilar-card">
+          <h4>Resultados esperados</h4>
+          <ul class="items-list" id="comp-resultados">{{COMP_RESULTADOS}}</ul>
+        </div>
+        <div class="pilar-card">
+          <h4>Próximos pasos</h4>
+          <ol style="padding-left:16px;font-size:13px" id="comp-pasos">{{COMP_PASOS}}</ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Spinner -->
+<div id="spinner">
+  <div class="spin"></div>
+  <p>Generando PDF final...</p>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const JOB_ID = '{{JOB_ID}}';
+let guardadoTimeout = null;
+
+// Auto-guardar al editar
+document.querySelectorAll('[contenteditable]').forEach(el => {
+  el.addEventListener('input', () => {
+    clearTimeout(guardadoTimeout);
+    guardadoTimeout = setTimeout(guardarLocal, 2000);
+  });
+});
+
+function guardarLocal() {
+  showToast('Cambios guardados localmente');
+}
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function guardarCambios() {
+  showToast('✓ Cambios guardados');
+}
+
+async function generarPDF() {
+  const btn = document.getElementById('btn-pdf');
+  btn.disabled = true;
+  btn.textContent = 'Procesando...';
+  document.getElementById('spinner').classList.add('show');
+
+  // Capturar el HTML completo del body editable
+  const htmlCompleto = document.documentElement.outerHTML;
+
+  try {
+    const resp = await fetch('/generar-pdf', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        job_id: JOB_ID,
+        html: htmlCompleto
+      })
+    });
+    const data = await resp.json();
+
+    document.getElementById('spinner').classList.remove('show');
+
+    if (data.error) {
+      showToast('Error: ' + data.error, 5000);
+      btn.disabled = false;
+      btn.textContent = '📄 Generar PDF final';
+      return;
+    }
+
+    // Éxito
+    btn.textContent = '✓ PDF generado';
+    showToast('✓ PDF generado y enviado al staff', 4000);
+
+    // Mostrar link al PDF
+    if (data.pdf_url) {
+      const link = document.createElement('a');
+      link.href = data.pdf_url;
+      link.target = '_blank';
+      link.style.cssText = 'display:block;text-align:center;margin:16px auto;font-size:13px;color:#8fa832';
+      link.textContent = '→ Ver PDF final';
+      document.querySelector('.container').prepend(link);
+    }
+
+  } catch(e) {
+    document.getElementById('spinner').classList.remove('show');
+    showToast('Error de conexión', 4000);
+    btn.disabled = false;
+    btn.textContent = '📄 Generar PDF final';
+  }
+}
+</script>
+</body>
+</html>
