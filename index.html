@@ -253,7 +253,10 @@ async function iniciar() {
   secs = 0;
   ticker = setInterval(() => {
     secs++;
-    document.getElementById('timer').textContent = '⏱ ' + secs + 's transcurridos...';
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    const timeStr = m > 0 ? m + 'min ' + String(s).padStart(2,'0') + 's' : s + 's';
+    document.getElementById('timer').textContent = '⏱ ' + timeStr + ' transcurridos...';
   }, 1000);
 
   const fd = new FormData();
@@ -284,8 +287,15 @@ async function checkStatus() {
     const data = await r.json();
 
     if (data.status === 'working') {
-      const cur = parseInt(document.getElementById('pbar').style.width) || 25;
-      setPbar(Math.min(88, cur + 5));
+      if (data.pct) setPbar(data.pct);
+      const s2 = document.getElementById('s2');
+      if (data.msg && s2 && s2.classList.contains('active')) {
+        s2.querySelector('span').textContent = data.msg;
+      }
+      if (data.msg) {
+        const tm = document.getElementById('timer-msg');
+        if (tm) tm.textContent = data.msg;
+      }
       return;
     }
 
