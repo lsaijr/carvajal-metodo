@@ -23,6 +23,13 @@ jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
 
 @app.route('/', methods=['GET'])
 def index():
+    # Formulario web para pacientes
+    with open(os.path.join(os.path.dirname(__file__), 'index.html'), encoding='utf-8') as f:
+        return f.read()
+
+@app.route('/subir', methods=['GET'])
+def subir():
+    # Carga de .docx para pruebas internas
     with open(os.path.join(os.path.dirname(__file__), 'subir_word.html'), encoding='utf-8') as f:
         return f.read()
 
@@ -36,6 +43,43 @@ def status():
     job = jobs.get(job_id, {'status': 'working', 'msg': 'Procesando...'})
     return jsonify(job)
 
+
+# ── Endpoint formulario web (/enviar) ─────────────────────────
+@app.route('/enviar', methods=['POST'])
+def enviar():
+    raw = request.form.get('data', '')
+    if not raw:
+        return jsonify({'error': 'No se recibieron datos del formulario'}), 400
+
+    try:
+        form = json.loads(raw)
+    except Exception:
+        return jsonify({'error': 'JSON invalido en los datos del formulario'}), 400
+
+    data = _mapear_formulario(form)
+
+    if not data.get('nombre'):
+        return jsonify({'error': 'El campo Nombre completo es obligatorio'}), 400
+
+    # Guardar fotos opcionales (se envían al correo del staff)
+    fotos = []
+    for i in range(1, 5):
+        foto = request.files.get(f'foto_{i}')
+        if foto:
+            tmp = f'/tmp/foto_{uuid.uuid4().hex}_{foto.filename}'
+            foto.save(tmp)
+            fotos.append(tmp)
+
+    job_id = uuid.uuid4().hex[:16]
+    jobs[job_id] = {'status': 'working', 'msg': 'Iniciando generacion del plan...'}
+
+    t = threading.Thread(target=worker, args=(job_id, data, [], fotos), daemon=True)
+    t.start()
+
+    return jsonify({'jobId': job_id, 'nombre': data['nombre']})
+
+
+# ── Endpoint carga .docx (/upload) ────────────────────────────
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'docx' not in request.files:
@@ -58,7 +102,6 @@ def upload():
     job_id = uuid.uuid4().hex[:16]
     jobs[job_id] = {'status': 'working', 'msg': 'Iniciando generacion del plan...'}
 
-    # Lanzar en background
     t = threading.Thread(target=worker, args=(job_id, data, faltantes), daemon=True)
     t.start()
 
@@ -69,7 +112,7 @@ def upload():
 # WORKER
 # ════════════════════════════════════════════════════════════
 
-def worker(job_id, data, faltantes):
+def worker(job_id, data, faltantes, fotos=None):
     try:
         jobs[job_id] = {'status': 'working', 'msg': 'Generando plan con IA (puede tomar 1-2 min)...'}
 
@@ -93,13 +136,14 @@ def worker(job_id, data, faltantes):
         jobs[job_id] = {'status': 'working', 'msg': 'Enviando correos...'}
         fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
 
-        # Correo 1: formulario
+        # Correo 1: resumen del cuestionario al staff (con fotos adjuntas si las hay)
         enviar_resend(
             f'Nuevo Cuestionario - {nombre} ({fecha_hoy})',
             email_formulario(data, faltantes),
-            MAIL_TO
+            MAIL_TO,
+            adjuntos_extra=fotos or []
         )
-        # Correo 2: plan
+        # Correo 2: plan generado
         enviar_resend(
             f'Plan IA - {nombre} ({fecha_hoy})',
             email_plan(nombre, html_url, datetime.now().strftime('%d/%m/%Y')),
@@ -107,6 +151,11 @@ def worker(job_id, data, faltantes):
             adjunto_path=html_path,
             adjunto_name=html_name
         )
+
+        # Limpiar fotos temporales
+        for f_path in (fotos or []):
+            try: os.unlink(f_path)
+            except: pass
 
         jobs[job_id] = {
             'status'   : 'done',
@@ -145,6 +194,107 @@ def leer_docx(path):
         print(f'leer_docx error: {e}')
         return None
 
+
+
+
+# ════════════════════════════════════════════════════════════
+# MAPEAR FORMULARIO WEB → data dict
+# ════════════════════════════════════════════════════════════
+
+def _mapear_formulario(f):
+    """Convierte el JSON de index.html al mismo dict que usan generar_plan_ia() y render_plan()."""
+
+    def s(key, default=''):
+        val = f.get(key, default)
+        if isinstance(val, list):
+            return ', '.join(str(v) for v in val if v)
+        return str(val).strip() if val else default
+
+    def lst(key):
+        val = f.get(key, [])
+        return val if isinstance(val, list) else []
+
+    est = s('estatura')
+    pes = s('peso')
+    imc = 'No registrado'
+    if est and pes:
+        try: imc = f'{float(pes) / (float(est)/100)**2:.1f}'
+        except: pass
+
+    contra_raw = f.get('contraindications', {})
+    contra = {k: ('Si' if str(v).lower() in ['si','sí','yes'] else 'No') for k, v in contra_raw.items()}
+
+    intolerancias = lst('intolerancias')
+    sintomas_map = {
+        'hinchazon_abdominal': 'Hinchazon',
+        'gases':               'Gases',
+        'estrenimiento':       'Estrenimiento',
+        'cansancio_comidas':   'Cansancio tras comer',
+        'digestion_lenta':     'Digestion lenta',
+        'nauseas':             'Nauseas',
+    }
+    sintomas = [sintomas_map[k] for k in lst('sintomasDigestivos') if k in sintomas_map]
+    faciales   = lst('areasFaciales')
+    corporales = lst('areasCorporales')
+    rutina_m = s('rutinaManana')
+    rutina_n = s('rutinaNoche')
+    rutina_facial = (rutina_m + ' | ' + rutina_n).strip(' |') if (rutina_m or rutina_n) else 'No tiene rutina facial'
+
+    return {
+        'nombre':              s('nombre'),
+        'edad':                s('edad'),
+        'sexo':                s('sexo'),
+        'ocupacion':           s('ocupacion'),
+        'actLaboral':          s('actLaboral'),
+        'horarioLaboral':      s('horarioLaboral'),
+        'email':               s('email'),
+        'fecha':               datetime.now().strftime('%d de %B, %Y'),
+        'estatura':            est or None,
+        'peso':                pes or None,
+        'imc':                 imc,
+        'pielTipo':            s('pielTipo'),
+        'pielProblemas':       faciales,
+        'rutinaFacial':        rutina_facial,
+        'rutinaManana':        rutina_m,
+        'rutinaNoche':         rutina_n,
+        'productosFrecuentes': s('productosFrecuentes'),
+        'solar':               s('solar'),
+        'spf':                 s('spf'),
+        'actFisica':           s('actFisica'),
+        'sueno':               s('sueno'),
+        'horaDespierta':       s('horaDespierta'),
+        'horaDuerme':          s('horaDuerme'),
+        'cansancioDia':        'Si' if s('cansancioDia').lower() in ['si','sí','yes'] else 'No',
+        'fuma':                s('fuma'),
+        'alcohol':             s('alcohol'),
+        'condicionSistemica':  s('condicionSistemica') or 'Sin enfermedades',
+        'condiciones':         s('condiciones'),
+        'medicamentos':        s('medicamentos'),
+        'cirugias':            s('cirugias') or 'Ninguna',
+        'antecedentesFam':     'Ninguno',
+        'alergias':            s('alergias') or 'Ninguna',
+        'contraindications':   contra,
+        'areasFaciales':       faciales,
+        'areasCorporales':     corporales,
+        'prioridad':           s('prioridad'),
+        'expectativas':        s('expectativas'),
+        'satisfaccion':        s('satisfaccion'),
+        'historialEstetico':   lst('historialEstetico'),
+        'laserActivo':         'Si' if s('laserActivo').lower() in ['si','sí','yes'] else 'No',
+        'intolerancias':       intolerancias,
+        'sintomasDigestivos':  sintomas,
+        'proteinas':           s('proteinas'),
+        'carbohidratos':       s('carbohidratos'),
+        'verduras':            s('verduras'),
+        'frutas':              s('frutas'),
+        'alimentosEvitar':     s('alimentosEvitar'),
+        'postres':             s('postres'),
+        'bebidas':             s('bebidas'),
+        'notasAlimentacion':   s('notasAlimentacion'),
+        'nivelEstres':         s('nivelEstres'),
+        'numHijos':            s('numHijosVal') or s('numHijos'),
+        'notasStaff':          '',
+    }
 
 # ════════════════════════════════════════════════════════════
 # PARSEAR CUESTIONARIO
@@ -331,7 +481,11 @@ Intolerancias: {', '.join(d['intolerancias']) or 'Ninguna'}
 Proteinas: {d['proteinas']} | Carbos: {d['carbohidratos']}
 Verduras: {d['verduras']} | Frutas: {d['frutas']}
 Evitar: {d['alimentosEvitar']}
-Notas: {d['notasAlimentacion']}"""
+Notas: {d['notasAlimentacion']}
+
+CONTEXTO PERSONAL ADICIONAL:
+Numero de hijos: {d.get('numHijos','No especificado')}
+Nivel de estres (1-10): {d.get('nivelEstres','No especificado')}"""
 
 
 def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
@@ -612,7 +766,7 @@ def generar_calendario():
 # EMAILS con Resend
 # ════════════════════════════════════════════════════════════
 
-def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None):
+def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adjuntos_extra=None):
     if not RESEND_KEY:
         print('RESEND_KEY no configurado')
         return
@@ -622,13 +776,24 @@ def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None):
         'subject': asunto,
         'html': cuerpo,
     }
+    attachments = []
     if adjunto_path and adjunto_name and os.path.exists(adjunto_path):
         import base64
         with open(adjunto_path, 'rb') as f:
-            payload['attachments'] = [{
+            attachments.append({
                 'filename': adjunto_name,
                 'content': base64.b64encode(f.read()).decode(),
-            }]
+            })
+    for fp in (adjuntos_extra or []):
+        if os.path.exists(fp):
+            import base64
+            with open(fp, 'rb') as f:
+                attachments.append({
+                    'filename': os.path.basename(fp),
+                    'content': base64.b64encode(f.read()).decode(),
+                })
+    if attachments:
+        payload['attachments'] = attachments
     try:
         r = req.post('https://api.resend.com/emails',
             headers={'Authorization': f'Bearer {RESEND_KEY}', 'Content-Type': 'application/json'},
