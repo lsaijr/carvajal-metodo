@@ -23,14 +23,14 @@ jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
 
 @app.route('/', methods=['GET'])
 def index():
-    # Formulario web para pacientes
+    # Pantalla de entrada: elige formulario o subir .docx
     with open(os.path.join(os.path.dirname(__file__), 'index.html'), encoding='utf-8') as f:
         return f.read()
 
-@app.route('/subir', methods=['GET'])
-def subir():
-    # Carga de .docx para pruebas internas
-    with open(os.path.join(os.path.dirname(__file__), 'subir_word.html'), encoding='utf-8') as f:
+@app.route('/formulario', methods=['GET'])
+def formulario():
+    # Formulario web completo para el paciente
+    with open(os.path.join(os.path.dirname(__file__), 'formulario.html'), encoding='utf-8') as f:
         return f.read()
 
 @app.route('/planes_generados/<path:filename>')
