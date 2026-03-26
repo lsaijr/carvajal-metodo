@@ -562,13 +562,13 @@ Genera SOLO estas 3 claves: pilar4, pilar5, compromiso.
 {CATALOGO}
 REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_anual = suma todos bimestres. Satisfaccion baja = motor compromiso.'''
 
-    r1, err = _llamar_claude(1, 3, SYS1, datos, max_tok=3000)
+    r1, err = _llamar_claude(1, 3, SYS1, datos, max_tok=4000)
     if err: return {'error': err}
 
-    r2, err = _llamar_claude(2, 3, SYS2, datos, max_tok=7000)
+    r2, err = _llamar_claude(2, 3, SYS2, datos, max_tok=10000)
     if err: return {'error': err}
 
-    r3, err = _llamar_claude(3, 3, SYS3, datos, max_tok=6000)
+    r3, err = _llamar_claude(3, 3, SYS3, datos, max_tok=8000)
     if err: return {'error': err}
 
     resultado = {}
