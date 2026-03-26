@@ -1,4 +1,6 @@
 import os, json, uuid, threading, calendar
+import cloudinary
+import cloudinary.uploader
 from datetime import date, datetime
 from flask import Flask, request, jsonify, render_template_string, send_from_directory
 import requests as req
@@ -13,6 +15,19 @@ MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
 os.makedirs(PLANES_DIR, exist_ok=True)
+
+# ── Cloudinary ────────────────────────────────────────────────
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+CLOUDINARY_API_KEY    = os.environ.get('CLOUDINARY_API_KEY', '')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '')
+
+if CLOUDINARY_CLOUD_NAME:
+    cloudinary.config(
+        cloud_name = CLOUDINARY_CLOUD_NAME,
+        api_key    = CLOUDINARY_API_KEY,
+        api_secret = CLOUDINARY_API_SECRET,
+        secure     = True
+    )
 
 # ── Jobs en memoria ───────────────────────────────────────────
 jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
@@ -40,7 +55,7 @@ def serve_plan(filename):
 @app.route('/status')
 def status():
     job_id = request.args.get('job', '')
-    job = jobs.get(job_id, {'status': 'working', 'msg': 'Procesando...'})
+    job = jobs.get(job_id, {'status': 'working', 'msg': 'Procesando...', 'pct': 5})
     return jsonify(job)
 
 
@@ -112,11 +127,33 @@ def upload():
 # WORKER
 # ════════════════════════════════════════════════════════════
 
+def subir_plan_cloudinary(html_path, html_name):
+    """Sube el HTML del plan a Cloudinary como raw file.
+    Devuelve la URL pública o None si falla."""
+    if not CLOUDINARY_CLOUD_NAME:
+        print('Cloudinary no configurado, usando URL local')
+        return None
+    try:
+        resultado = cloudinary.uploader.upload(
+            html_path,
+            folder       = 'carvajal/planes',
+            public_id    = html_name.replace('.html', ''),
+            resource_type= 'raw',
+            overwrite    = True,
+        )
+        url = resultado.get('secure_url', '')
+        print(f'Cloudinary OK: {url[:80]}')
+        return url
+    except Exception as e:
+        print(f'Cloudinary error: {e}')
+        return None
+
+
 def worker(job_id, data, faltantes, fotos=None):
     try:
         jobs[job_id] = {'status': 'working', 'msg': 'Generando plan con IA (puede tomar 1-2 min)...'}
 
-        plan_json = generar_plan_ia(data)
+        plan_json = generar_plan_ia(data, job_id)
         if 'error' in plan_json:
             jobs[job_id] = {'status': 'error', 'msg': plan_json['error']}
             return
@@ -131,7 +168,11 @@ def worker(job_id, data, faltantes, fotos=None):
             f.write(html)
 
         base_url = os.environ.get('BASE_URL', 'https://metodo.centrocarvajal.com')
-        html_url = f'{base_url}/planes_generados/{html_name}'
+        html_url_local = f'{base_url}/planes_generados/{html_name}'
+
+        # Intentar subir a Cloudinary para URL permanente
+        html_url_cdn = subir_plan_cloudinary(html_path, html_name)
+        html_url = html_url_cdn if html_url_cdn else html_url_local
 
         jobs[job_id] = {'status': 'working', 'msg': 'Enviando correos...'}
         fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
@@ -536,9 +577,15 @@ def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
         return None, f'JSON invalido en llamada {num}: {str(e)[:150]}'
 
 
-def generar_plan_ia(d):
+def generar_plan_ia(d, job_id=None):
     datos = _datos_paciente(d)
     t_total = time.time()
+
+    def actualizar(msg, pct=None):
+        if job_id and job_id in jobs:
+            jobs[job_id]['msg'] = msg
+            if pct is not None:
+                jobs[job_id]['pct'] = pct
 
     SYS1 = '''Eres el generador de contenido para planes del METODO CARVAJAL.
 Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
@@ -562,12 +609,15 @@ Genera SOLO estas 3 claves: pilar4, pilar5, compromiso.
 {CATALOGO}
 REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_anual = suma todos bimestres. Satisfaccion baja = motor compromiso.'''
 
+    actualizar('Sección 1/3 — Portada, diagnóstico y rutina diaria...', 15)
     r1, err = _llamar_claude(1, 3, SYS1, datos, max_tok=4000)
     if err: return {'error': err}
 
+    actualizar('Sección 2/3 — Nutrición, ejercicio y bienestar mental...', 45)
     r2, err = _llamar_claude(2, 3, SYS2, datos, max_tok=10000)
     if err: return {'error': err}
 
+    actualizar('Sección 3/3 — Sueño, tratamientos y plan de compromiso...', 75)
     r3, err = _llamar_claude(3, 3, SYS3, datos, max_tok=8000)
     if err: return {'error': err}
 
