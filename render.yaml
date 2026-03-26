@@ -3,11 +3,17 @@ services:
     name: carvajal-metodo
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --workers 2 --timeout 300 --bind 0.0.0.0:$PORT
+    startCommand: gunicorn app:app --workers 2 --worker-class gthread --threads 4 --timeout 600 --bind 0.0.0.0:$PORT
     envVars:
       - key: CLAUDE_KEY
         sync: false
       - key: RESEND_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false
       - key: MAIL_TO
         value: isai.josue@gmail.com
