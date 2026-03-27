@@ -354,7 +354,7 @@ def _render_borrador_legacy(plan_json, data, job_id):
 def admin_planes():
     return PLANES_HTML
 
-PLANES_HTML = """<!DOCTYPE html>
+PLANES_HTML = """>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -832,130 +832,154 @@ function mostrarToast(msg, tipo='success') {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Calendario ───────────────────────────────────────────────
+
+  <!-- ── SECCIÓN CALENDARIO ── -->
+  <div style="background:#f4f5ef;border-top:1px solid rgba(143,168,50,.2);padding:28px;margin-top:8px">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--olive);margin-bottom:4px">Herramienta</div>
+        <div style="font-size:18px;font-weight:700;color:var(--dark)">Generador de Calendario</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:3px">Genera un calendario de seguimiento listo para imprimir como PDF desde Chrome</div>
+      </div>
+      <div style="background:white;border:1px solid rgba(143,168,50,.2);border-radius:10px;padding:20px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray)">Mes de inicio</label>
+          <input type="month" id="cal-desde" style="padding:9px 12px;border:1px solid #d4dcc0;border-radius:6px;font-size:13px;font-family:inherit;outline:none;color:var(--dark);min-width:160px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray)">Mes final</label>
+          <input type="month" id="cal-hasta" style="padding:9px 12px;border:1px solid #d4dcc0;border-radius:6px;font-size:13px;font-family:inherit;outline:none;color:var(--dark);min-width:160px">
+        </div>
+        <button onclick="generarCalendario()" style="padding:10px 24px;background:var(--olive);color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;white-space:nowrap">
+          Generar e Imprimir
+        </button>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--gray)">
+        Al generar se abrira una nueva ventana lista para imprimir. Usa <strong>Ctrl+P</strong> &rarr; <strong>Guardar como PDF</strong> &rarr; Orientacion <strong>Horizontal</strong> &rarr; Sin margenes.
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+// ── Calendario ──────────────────────────────────────────────
 function generarCalendario() {
-  const desde = document.getElementById('cal-desde').value;
-  const hasta = document.getElementById('cal-hasta').value;
+  var desde = document.getElementById('cal-desde').value;
+  var hasta = document.getElementById('cal-hasta').value;
   if (!desde || !hasta) {
-    mostrarToast('Selecciona fecha de inicio y fecha final', 'error');
+    mostrarToast('Selecciona mes de inicio y mes final', 'error');
     return;
   }
-  const d0 = new Date(desde + '-01');
-  const d1 = new Date(hasta + '-01');
+  var d0 = new Date(desde + '-01');
+  var d1 = new Date(hasta + '-01');
   if (d0 > d1) {
-    mostrarToast('La fecha de inicio debe ser anterior a la final', 'error');
+    mostrarToast('El mes de inicio debe ser anterior al mes final', 'error');
     return;
   }
 
-  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const diasSem = ['LU','MA','MI','JU','VI','SA','DO'];
-
-  // Colores cuadritos — igual que en el plan
-  const colores = [
-    {bg:'#c8e6c9',border:'#a5d6a7',label:'Nutrición'},
+  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var diasSem = ['LU','MA','MI','JU','VI','SA','DO'];
+  var colores = [
+    {bg:'#c8e6c9',border:'#a5d6a7',label:'Nutrici\u00f3n'},
     {bg:'#bbdefb',border:'#90caf9',label:'Ejercicio'},
     {bg:'#f8bbd0',border:'#f48fb1',label:'Rutina facial'},
-    {bg:'#fff9c4',border:'#ffe082',label:'Sueño'},
+    {bg:'#fff9c4',border:'#ffe082',label:'Sue\u00f1o'}
   ];
 
-  let mesesHtml = '';
-  let cur = new Date(d0);
+  var mesesHtml = '';
+  var cur = new Date(d0);
   while (cur <= d1) {
-    const yr  = cur.getFullYear();
-    const mo  = cur.getMonth(); // 0-based
-    const diasEnMes = new Date(yr, mo + 1, 0).getDate();
-    // primer día de la semana: getDay() → 0=Dom, necesitamos 0=Lun
-    let primerDia = new Date(yr, mo, 1).getDay();
-    primerDia = (primerDia === 0) ? 6 : primerDia - 1; // convertir a lunes=0
+    var yr  = cur.getFullYear();
+    var mo  = cur.getMonth();
+    var diasEnMes = new Date(yr, mo + 1, 0).getDate();
+    var primerDia = new Date(yr, mo, 1).getDay();
+    primerDia = (primerDia === 0) ? 6 : primerDia - 1;
 
-    // cabeceras días
-    let cabHtml = diasSem.map(d => `<div class="cal-dh">${d}</div>`).join('');
-    // celdas vacías inicio
-    let celdasHtml = '';
-    for (let i = 0; i < primerDia; i++) celdasHtml += '<div class="cal-day empty"></div>';
-    // días
-    for (let dia = 1; dia <= diasEnMes; dia++) {
-      const dots = colores.map(c =>
-        `<div style="width:11px;height:11px;border-radius:2px;background:${c.bg};border:1px solid ${c.border};flex-shrink:0"></div>`
-      ).join('');
-      celdasHtml += `<div class="cal-day">
-        <div class="cal-day-num">${dia}</div>
-        <div class="cal-dots">${dots}</div>
-      </div>`;
+    var cabHtml = '';
+    for (var di = 0; di < diasSem.length; di++) {
+      cabHtml += '<div class="cal-dh">' + diasSem[di] + '</div>';
     }
-    // rellenar última semana
-    const total = primerDia + diasEnMes;
-    const rest  = (7 - total % 7) % 7;
-    for (let i = 0; i < rest; i++) celdasHtml += '<div class="cal-day empty"></div>';
 
-    mesesHtml += `<div class="cal-month">
-      <div class="cal-mhdr">${meses[mo]} ${yr}</div>
-      <div class="cal-days-hdr">${cabHtml}</div>
-      <div class="cal-days-grid">${celdasHtml}</div>
-    </div>`;
+    var celdasHtml = '';
+    for (var e = 0; e < primerDia; e++) celdasHtml += '<div class="cal-day empty"></div>';
+
+    for (var dia = 1; dia <= diasEnMes; dia++) {
+      var dots = '';
+      for (var ci = 0; ci < colores.length; ci++) {
+        dots += '<div style="width:11px;height:11px;border-radius:2px;background:' +
+                colores[ci].bg + ';border:1px solid ' + colores[ci].border +
+                ';flex-shrink:0"></div>';
+      }
+      celdasHtml += '<div class="cal-day"><div class="cal-day-num">' + dia +
+                    '</div><div class="cal-dots">' + dots + '</div></div>';
+    }
+
+    var total = primerDia + diasEnMes;
+    var rest  = (7 - total % 7) % 7;
+    for (var r = 0; r < rest; r++) celdasHtml += '<div class="cal-day empty"></div>';
+
+    mesesHtml += '<div class="cal-month">' +
+      '<div class="cal-mhdr">' + meses[mo] + ' ' + yr + '</div>' +
+      '<div class="cal-days-hdr">' + cabHtml + '</div>' +
+      '<div class="cal-days-grid">' + celdasHtml + '</div>' +
+    '</div>';
 
     cur.setMonth(cur.getMonth() + 1);
   }
 
-  // Leyenda
-  const leyenda = colores.map(c =>
-    `<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280">
-      <div style="width:12px;height:12px;border-radius:2px;background:${c.bg};border:1px solid ${c.border}"></div>
-      ${c.label}
-    </div>`
-  ).join('');
+  var leyenda = '';
+  for (var li = 0; li < colores.length; li++) {
+    leyenda += '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280">' +
+               '<div style="width:12px;height:12px;border-radius:2px;background:' + colores[li].bg +
+               ';border:1px solid ' + colores[li].border + '"></div>' + colores[li].label + '</div>';
+  }
 
-  // Abrir ventana de impresión
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Calendario de Seguimiento — Centro Carvajal</title>
-<style>
-@page{size:A4 landscape;margin:12mm}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#faf9f6;color:#1c1c1c;font-size:10pt}
-.page-header{text-align:center;margin-bottom:16px}
-.page-header h1{font-family:Georgia,serif;font-size:18pt;color:#1c1c1c;margin-bottom:2px}
-.page-header p{font-size:9pt;color:#6b7280}
-.cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.cal-month{border:1px solid rgba(143,168,50,.22);border-radius:8px;overflow:hidden;background:#fff}
-.cal-mhdr{background:#1c1c1c;color:#8fa832;text-align:center;padding:8px 10px;font-family:Georgia,serif;font-size:12pt;font-weight:700}
-.cal-days-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:rgba(143,168,50,.1)}
-.cal-dh{text-align:center;font-size:7pt;font-weight:700;color:#8fa832;padding:4px 1px;text-transform:uppercase}
-.cal-days-grid{display:grid;grid-template-columns:repeat(7,1fr)}
-.cal-day{border-right:1px solid rgba(143,168,50,.1);border-bottom:1px solid rgba(143,168,50,.1);padding:3px 4px;background:#fff;min-height:36px}
-.cal-day:nth-child(7n){border-right:none}
-.cal-day.empty{background:#fafafa}
-.cal-day-num{font-size:8pt;font-weight:700;color:#1c1c1c;margin-bottom:2px}
-.cal-dots{display:flex;gap:2px;flex-wrap:wrap}
-.leyenda{display:flex;gap:16px;justify-content:center;margin-top:14px;padding-top:10px;border-top:1px solid rgba(143,168,50,.2)}
-.footer{text-align:center;margin-top:14px;font-size:8pt;color:#9aaa8a}
-@media print{
-  body{background:white}
-  @page{size:A4 landscape;margin:10mm}
-}
-</style>
-</head>
-<body>
-<div class="page-header">
-  <h1>Calendario de Seguimiento</h1>
-  <p>Centro Carvajal · Método de Rejuvenecimiento Carvajal · Marca cada día al completar tu rutina</p>
-</div>
-<div class="cal-grid">${mesesHtml}</div>
-<div class="leyenda">${leyenda}</div>
-<div class="footer">Centro Carvajal · Líderes en Medicina Estética en Panamá · centrocarvajal.com</div>
-<script>window.onload=()=>window.print()</script>
-</body>
-</html>`);
+  var printHtml =
+    '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">' +
+    '<title>Calendario de Seguimiento \u2014 Centro Carvajal</title>' +
+    '<style>' +
+    '@page{size:A4 landscape;margin:10mm}' +
+    '*{margin:0;padding:0;box-sizing:border-box}' +
+    'body{font-family:"Segoe UI",system-ui,sans-serif;background:#faf9f6;color:#1c1c1c}' +
+    '.page-header{text-align:center;margin-bottom:14px}' +
+    '.page-header h1{font-family:Georgia,serif;font-size:18pt;color:#1c1c1c;margin-bottom:2px}' +
+    '.page-header p{font-size:9pt;color:#6b7280}' +
+    '.cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}' +
+    '.cal-month{border:1px solid rgba(143,168,50,.22);border-radius:8px;overflow:hidden;background:#fff}' +
+    '.cal-mhdr{background:#1c1c1c;color:#8fa832;text-align:center;padding:7px 10px;font-family:Georgia,serif;font-size:11pt;font-weight:700}' +
+    '.cal-days-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:rgba(143,168,50,.1)}' +
+    '.cal-dh{text-align:center;font-size:7pt;font-weight:700;color:#8fa832;padding:3px 1px;text-transform:uppercase}' +
+    '.cal-days-grid{display:grid;grid-template-columns:repeat(7,1fr)}' +
+    '.cal-day{border-right:1px solid rgba(143,168,50,.1);border-bottom:1px solid rgba(143,168,50,.1);padding:3px 4px;background:#fff;min-height:34px}' +
+    '.cal-day:nth-child(7n){border-right:none}' +
+    '.cal-day.empty{background:#fafafa}' +
+    '.cal-day-num{font-size:7.5pt;font-weight:700;color:#1c1c1c;margin-bottom:2px}' +
+    '.cal-dots{display:flex;gap:2px;flex-wrap:wrap}' +
+    '.leyenda{display:flex;gap:16px;justify-content:center;margin-top:12px;padding-top:8px;border-top:1px solid rgba(143,168,50,.2)}' +
+    '.footer{text-align:center;margin-top:10px;font-size:8pt;color:#9aaa8a}' +
+    '@media print{body{background:white}}' +
+    '</style></head><body>' +
+    '<div class="page-header">' +
+    '<h1>Calendario de Seguimiento</h1>' +
+    '<p>Centro Carvajal \u00b7 M\u00e9todo de Rejuvenecimiento Carvajal \u00b7 Marca cada d\u00eda al completar tu rutina</p>' +
+    '</div>' +
+    '<div class="cal-grid">' + mesesHtml + '</div>' +
+    '<div class="leyenda">' + leyenda + '</div>' +
+    '<div class="footer">Centro Carvajal \u00b7 L\u00edderes en Medicina Est\u00e9tica en Panam\u00e1 \u00b7 centrocarvajal.com</div>' +
+    '<script>window.onload=function(){window.print();}<\/script>' +
+    '</body></html>';
+
+  var win = window.open('', '_blank');
+  win.document.write(printHtml);
   win.document.close();
 }
 </script>
 </body>
-</html>
-""" 
+</html>""" 
 
 
 @app.route('/api/login', methods=['POST'])
