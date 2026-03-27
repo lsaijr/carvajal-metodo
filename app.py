@@ -147,122 +147,21 @@ def ver_borrador(job_id):
     return Response('<h2 style="font-family:sans-serif;padding:40px;color:#666">Borrador no disponible. Verifica Cloudinary.</h2>', status=404, content_type='text/html; charset=utf-8')
 
 
-@app.route('/generar-pdf', methods=['POST'])
-def generar_pdf_final():
-    """Recibe el HTML editado, genera PDF con WeasyPrint, sube a Cloudinary y envía correo."""
-    datos = request.get_json()
-    if not datos:
-        return jsonify({'error': 'No se recibieron datos'}), 400
+@app.route('/guardar/<job_id>', methods=['POST'])
+def guardar_borrador(job_id):
+    """Recibe el HTML completo editado y lo guarda en Cloudinary."""
+    from flask import Response as R
+    html = request.get_data(as_text=True)
+    if not html:
+        return jsonify({'ok': False, 'error': 'HTML vacío'}), 400
+    url = subir_borrador_cloudinary(html, job_id)
+    # Actualizar nombre en jobs si existe
+    if job_id in jobs:
+        jobs[job_id]['borrador_actualizado'] = True
+    return jsonify({'ok': True, 'url': url or ''})
 
-    job_id   = datos.get('job_id', uuid.uuid4().hex[:16])
-    html_str = datos.get('html', '')
 
-    if not html_str:
-        return jsonify({'error': 'HTML vacío'}), 400
 
-    try:
-        import tempfile, base64
-
-        # Generar PDF via API externa (PDFShift) — sin dependencias del sistema
-        PDFSHIFT_KEY = os.environ.get('PDFSHIFT_KEY', '')
-        if not PDFSHIFT_KEY:
-            # Fallback: intentar weasyprint si está disponible
-            try:
-                from weasyprint import HTML as _WHP
-                pdf_bytes = _WHP(string=html_str, base_url=request.host_url).write_pdf()
-            except Exception as e:
-                return jsonify({'error': 'PDFSHIFT_KEY no configurada y WeasyPrint no disponible. Configura PDFSHIFT_KEY en Railway.'}), 500
-        else:
-            # Limpiar HTML antes de enviar a PDFShift:
-            # Inyectar CSS que oculta elementos de UI del borrador
-            css_limpieza = '''<style>
-            #spinner, #toast, #topbar, #edit-notice, #btn-pdf,
-            .topbar-btns, #topbar .info { display: none !important; }
-            [contenteditable] { outline: none !important; background: transparent !important; box-shadow: none !important; }
-            body { padding-top: 0 !important; }
-            .container { padding-top: 20px !important; }
-            </style>'''
-            html_limpio = html_str.replace('</head>', css_limpieza + '</head>', 1)
-
-            r_pdf = req.post(
-                'https://api.pdfshift.io/v3/convert/pdf',
-                auth=('api', PDFSHIFT_KEY),
-                json={
-                    'source': html_limpio,
-                    'format': 'A4',
-                    'margin': '15mm',
-                    'disable_javascript': False,
-                },
-                timeout=120
-            )
-            if r_pdf.status_code != 200:
-                return jsonify({'error': f'PDFShift error {r_pdf.status_code}: {r_pdf.text[:200]}'}), 500
-            pdf_bytes = r_pdf.content
-
-        # Guardar PDF temporal
-        pdf_name = f'PlanFinal_{job_id}_{datetime.now().strftime("%Y%m%d")}.pdf'
-        pdf_path = os.path.join(PLANES_DIR, pdf_name)
-        with open(pdf_path, 'wb') as f:
-            f.write(pdf_bytes)
-
-        # Subir PDF a Cloudinary
-        pdf_url = None
-        if CLOUDINARY_CLOUD_NAME:
-            try:
-                resultado = cloudinary.uploader.upload(
-                    pdf_path,
-                    folder='carvajal/pdfs',
-                    public_id=f'plan_{job_id}',
-                    resource_type='raw',
-                    overwrite=True,
-                )
-                pdf_url = resultado.get('secure_url', '')
-                print(f'PDF Cloudinary: {pdf_url[:80]}')
-            except Exception as e:
-                print(f'Error subiendo PDF a Cloudinary: {e}')
-
-        # Guardar borrador actualizado en Cloudinary
-        subir_borrador_cloudinary(html_str, job_id)
-
-        # Enviar correo al staff con PDF adjunto
-        fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
-        nombre = jobs.get(job_id, {}).get('nombre', 'Paciente')
-        cuerpo_email = f'''<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="background:#f0e8de;padding:20px;font-family:sans-serif">
-<div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #ddd">
-  <div style="background:#1a1410;padding:20px 24px">
-    <div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · PDF Final Generado</div>
-    <div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div>
-    <div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:2px">{fecha_hoy}</div>
-  </div>
-  <div style="padding:24px">
-    <p style="font-size:13px;color:#3d2e20;margin-bottom:16px">El PDF final del plan de <strong>{nombre}</strong> ha sido generado y revisado por el equipo médico.</p>
-    {"<div style='text-align:center;margin:20px 0'><a href='" + pdf_url + "' style='background:#8fa832;color:#fff;padding:13px 28px;border-radius:4px;text-decoration:none;font-size:14px;font-weight:500'>Ver PDF en Cloudinary</a></div>" if pdf_url else ""}
-  </div>
-  <div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div>
-</div></body></html>'''
-
-        enviar_resend(
-            f'PDF Final Listo - {nombre} ({fecha_hoy})',
-            cuerpo_email,
-            MAIL_TO,
-            adjunto_path=pdf_path,
-            adjunto_name=pdf_name
-        )
-
-        # Limpiar PDF temporal
-        try: os.unlink(pdf_path)
-        except: pass
-
-        return jsonify({
-            'ok'     : True,
-            'pdf_url': pdf_url or '',
-            'nombre' : nombre,
-        })
-
-    except Exception as e:
-        print(f'Error generando PDF: {e}')
-        return jsonify({'error': str(e)}), 500
 
 
 # ════════════════════════════════════════════════════════════
@@ -330,7 +229,12 @@ def descargar_borrador_cloudinary(job_id):
 
 
 def render_borrador(plan_json, data, job_id):
-    """Genera el HTML del borrador editable para el médico."""
+    """Genera el HTML del borrador — ahora usa la misma plantilla que render_plan."""
+    return render_plan(plan_json, data, job_id=job_id)
+
+
+def _render_borrador_legacy(plan_json, data, job_id):
+    """LEGACY — ya no se usa. render_borrador ahora llama render_plan."""
     tpl_path = os.path.join(os.path.dirname(__file__), 'plantilla_borrador.html')
     with open(tpl_path, encoding='utf-8') as f:
         tpl = f.read()
@@ -1108,7 +1012,7 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
 # RENDER PLAN — llenar plantilla HTML
 # ════════════════════════════════════════════════════════════
 
-def render_plan(j, d):
+def render_plan(j, d, job_id=''):
     tpl_path = os.path.join(os.path.dirname(__file__), 'plantilla_plan.html')
     with open(tpl_path, encoding='utf-8') as f:
         tpl = f.read()
@@ -1136,14 +1040,14 @@ def render_plan(j, d):
     # Diagnostico
     badge_map = {'warning':'<span class="a-badge warning">⚠ Atención</span> ','critical':'<span class="a-badge critical">✕ Crítico</span> ','normal':''}
     diag_html = ''.join(
-        f'<tr><td class="diag-left">{badge_map.get(f.get("alerta","normal"),"")}{esc(f["area"])}</td><td><strong>{esc(f["estado"])}</strong><br><span style="color:#666;font-size:0.85rem">{esc(f["hallazgos"])}</span></td></tr>'
+        f'<tr><td class="diag-left">{badge_map.get(f.get("alerta","normal"),"")}{esc(f["area"])}</td><td><strong contenteditable="true">{esc(f["estado"])}</strong><br><span style="color:#666;font-size:0.85rem" contenteditable="true">{esc(f["hallazgos"])}</span></td></tr>'
         for f in j.get('diagnostico', {}).get('filas', [])
     )
 
     # Rutina
     tag_map = {'Nutricion':'tag-n','Sueno':'tag-s','Actividad':'tag-a','Mental':'tag-m','Estetico':'tag-e','Salud':'tag-h','Trabajo':'tag-n'}
     rutina_html = ''.join(
-        f'<tr><td style="font-weight:600;color:var(--gold)">{esc(r["hora"])}</td><td style="text-align:center"><input type="checkbox"></td><td>{esc(r["actividad"])}</td><td><span class="pilar-tag {tag_map.get(r["pilar"],"tag-n")}">{esc(r["pilar"])}</span></td></tr>'
+        f'<tr><td style="font-weight:600;color:var(--gold)">{esc(r["hora"])}</td><td style="text-align:center"><input type="checkbox"></td><td contenteditable="true">{esc(r["actividad"])}</td><td><span class="pilar-tag {tag_map.get(r["pilar"],"tag-n")}">{esc(r["pilar"])}</span></td></tr>'
         for r in j.get('rutina', {}).get('items', [])
     )
 
@@ -1162,7 +1066,7 @@ def render_plan(j, d):
     p1q, p1pos, p1tips = build_pilar(p1)
     p1_perm = ''.join(f'<li><svg viewBox="0 0 24 24" style="stroke:var(--green);fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg><span>{esc(i)}</span></li>' for i in p1.get('permitidos', []))
     p1_evit = ''.join(f'<li><svg viewBox="0 0 24 24" style="stroke:#b71c1c;fill:none;stroke-width:2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>{esc(i)}</span></li>' for i in p1.get('evitar', []))
-    p1_menu = ''.join(f'<tr><td style="font-weight:600">{esc(m["dia"])}</td><td>{esc(m["desayuno"])}</td><td>{esc(m["almuerzo"])}</td><td>{esc(m["cena"])}</td><td>{esc(m["snack"])}</td></tr>' for m in p1.get('menu', []))
+    p1_menu = ''.join(f'<tr><td style="font-weight:600">{esc(m["dia"])}</td><td contenteditable="true">{esc(m["desayuno"])}</td><td contenteditable="true">{esc(m["almuerzo"])}</td><td contenteditable="true">{esc(m["cena"])}</td><td contenteditable="true">{esc(m["snack"])}</td></tr>' for m in p1.get('menu', []))
     p1_compras = ''.join(f'<div class="compra-cat"><h5>{c["emoji"]} {esc(c["categoria"])}</h5><ul>{"".join(f"<li>{esc(i)}</li>" for i in c["items"])}</ul></div>' for c in p1.get('compras', []))
     p1_supl = ''
     if p1.get('suplementacion'):
@@ -1189,7 +1093,7 @@ def render_plan(j, d):
     p5q, p5pos, p5tips = build_pilar(p5)
     p5_bim = ''
     for bim in p5.get('bimestres', []):
-        rows = ''.join(f'<tr><td><strong>{esc(t["nombre"])}</strong></td><td>{esc(t["sesiones"])}</td><td><strong>{esc(t["inversion"])}</strong></td><td>{esc(t["beneficio"])}</td></tr>' for t in bim.get('tratamientos', []))
+        rows = ''.join(f'<tr><td><strong contenteditable="true">{esc(t["nombre"])}</strong></td><td contenteditable="true">{esc(t["sesiones"])}</td><td><strong contenteditable="true">{esc(t["inversion"])}</strong></td><td contenteditable="true">{esc(t["beneficio"])}</td></tr>' for t in bim.get('tratamientos', []))
         total = bim.get('total', 0)
         p5_bim += f'<div class="bim"><div class="bim-hdr">{esc(bim["periodo"])} · {esc(bim["titulo"])}</div><div class="bim-body"><table><thead><tr><th>Tratamiento</th><th>Sesiones</th><th>Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table><div class="bim-total">💰 Inversión Bimestre: ${total:,}</div></div></div>'
 
@@ -1214,6 +1118,7 @@ def render_plan(j, d):
     get_emoji = lambda i: pr[i]['emoji'] if i < len(pr) else ['🥗','🏃','🧠','😴','✨'][i]
 
     replacements = {
+        '{{JOB_ID}}': job_id,
         '{{NOMBRE}}': esc(nombre), '{{NOMBRE_COMPLETO}}': esc(nombre),
         '{{EDAD}}': esc(d.get('edad','')), '{{OCUPACION}}': esc(d.get('ocupacion','')),
         '{{FECHA}}': esc(d.get('fecha','')), '{{IMC}}': esc(imc), '{{YEAR}}': str(yr),

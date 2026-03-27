@@ -2,390 +2,566 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Borrador — {{NOMBRE}}</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan Carvajal - {{NOMBRE}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--gold:#8fa832;--dark:#2d3a2e;--muted:#6b7280;--border:#e5e7eb;--bg:#f9fafb;--white:#ffffff}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--dark);font-size:14px;line-height:1.6}
+:root{--dark:#1a1410;--gold:#b8935a;--cream:#f4f5ef;--green:#2d3a2e;--white:#fff;--gold-light:rgba(184,147,90,0.1);--gold-border:rgba(184,147,90,0.25);--shadow:0 2px 16px rgba(26,20,16,0.07);--shadow-md:0 4px 24px rgba(26,20,16,0.10);--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);font-size:15px;line-height:1.7}
+h1,h2,h3,h4,h5,h6{font-family:'Cormorant Garamond',serif;font-weight:600;line-height:1.25}
 
-/* ── Barra superior fija ── */
-#topbar{position:sticky;top:0;z-index:100;background:var(--dark);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-#topbar .info{color:rgba(255,255,255,.7);font-size:12px}
-#topbar .info strong{color:#fff;font-size:14px;display:block}
-.topbar-btns{display:flex;gap:10px}
-.btn{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;padding:8px 18px;border-radius:4px;border:none;transition:all .2s;letter-spacing:.03em}
-.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
-.btn-outline:hover{border-color:#fff;color:#fff}
-.btn-gold{background:var(--gold);color:#fff}
-.btn-gold:hover{background:#7a9428}
-.btn-gold:disabled{background:#9ca3af;cursor:not-allowed}
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:var(--dark);z-index:1000;display:flex;flex-direction:column;overflow-y:auto;transition:transform .3s}
+.sb-logo{padding:28px 24px 16px;text-align:center;border-bottom:1px solid rgba(184,147,90,0.18)}
+.sb-logo svg{width:44px;height:44px}
+.sb-logo h2{font-family:'Cormorant Garamond',serif;color:var(--gold);font-size:1rem;margin-top:8px;letter-spacing:2px;text-transform:uppercase}
+.sb-patient{padding:16px 24px;border-bottom:1px solid rgba(184,147,90,0.12)}
+.sb-patient .name{color:var(--white);font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600}
+.sb-patient .meta{color:rgba(255,255,255,0.45);font-size:0.75rem;margin-top:2px}
+.sidebar nav{flex:1;padding:12px 0}
+.sidebar nav a{display:flex;align-items:center;gap:10px;padding:9px 24px;color:rgba(255,255,255,0.6);text-decoration:none;font-size:0.8rem;font-weight:500;transition:all .2s;border-left:3px solid transparent}
+.sidebar nav a:hover,.sidebar nav a.active{color:var(--gold);background:rgba(184,147,90,0.08);border-left-color:var(--gold)}
+.sidebar nav a svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2}
+.sb-footer{padding:14px 24px;border-top:1px solid rgba(184,147,90,0.12);text-align:center}
+.sb-footer p{color:rgba(255,255,255,0.3);font-size:0.65rem;line-height:1.6}
+.hamburger{display:none;position:fixed;top:14px;left:14px;z-index:1100;background:var(--dark);border:1px solid var(--gold-border);border-radius:8px;padding:8px 10px;cursor:pointer}
+.hamburger svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:2}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999}
 
-/* ── Aviso edición ── */
-#edit-notice{background:#fffbeb;border-bottom:1px solid #fde68a;padding:8px 24px;font-size:12px;color:#92400e;display:flex;align-items:center;gap:8px}
-#edit-notice svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+/* MAIN */
+.main{margin-left:260px;min-height:100vh}
+section{padding:56px 48px;max-width:1100px}
 
-/* ── Contenedor principal ── */
-.container{max-width:860px;margin:0 auto;padding:32px 24px 80px}
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius);padding:30px;box-shadow:var(--shadow);border:1px solid rgba(184,147,90,0.08);margin-bottom:24px}
 
-/* ── Cabecera del paciente ── */
-.patient-header{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-.patient-header h1{font-size:22px;font-weight:600;color:var(--dark);margin-bottom:4px}
-.patient-header .meta{font-size:13px;color:var(--muted)}
-.patient-header .meta span{margin-right:16px}
-.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500;background:#dcfce7;color:#166534}
+/* PORTADA */
+.portada-hdr{background:var(--dark);padding:56px 48px;position:relative;overflow:hidden}
+.portada-hdr::before{content:'';position:absolute;top:-40%;right:-15%;width:480px;height:480px;background:radial-gradient(circle,rgba(184,147,90,0.07) 0%,transparent 70%);border-radius:50%}
+.portada-hdr .eyebrow{color:var(--gold);font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:4px;margin-bottom:10px}
+.portada-hdr h1{font-size:2.2rem;color:var(--white);line-height:1.2;margin-bottom:4px}
+.portada-hdr .patient-name{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:700;color:var(--gold);margin:14px 0 24px}
+.datos-tbl{background:rgba(255,255,255,0.05);border:1px solid rgba(184,147,90,0.2);border-radius:10px;overflow:hidden;max-width:480px}
+.datos-tbl td{padding:9px 18px;border-bottom:1px solid rgba(184,147,90,0.1);font-size:0.83rem;color:rgba(255,255,255,0.7)}
+.datos-tbl td:first-child{color:var(--gold);font-weight:600;width:130px;font-size:0.75rem;text-transform:uppercase;letter-spacing:1px}
+.datos-tbl tr:last-child td{border-bottom:none}
 
-/* ── Secciones ── */
-.section{background:var(--white);border:1px solid var(--border);border-radius:6px;margin-bottom:16px;overflow:hidden}
-.section-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:#fafafa}
-.section-header .num{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.section-header h2{font-size:14px;font-weight:600;color:var(--dark)}
-.section-body{padding:20px}
+/* INTRO */
+.intro-text{font-size:1rem;color:rgba(255,255,255,0.75);line-height:1.85;max-width:720px;margin:28px 0}
+.pilares-block{margin-top:32px}
+.pilares-block h3{color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:16px}
+.pilar-mini{display:flex;gap:14px;align-items:flex-start;padding:14px 18px;background:rgba(255,255,255,0.04);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;margin-bottom:10px}
+.pilar-mini .pm-icon{font-size:1.3rem;flex-shrink:0;margin-top:2px}
+.pilar-mini h4{color:var(--white);font-size:0.95rem;margin-bottom:3px}
+.pilar-mini p{color:rgba(255,255,255,0.55);font-size:0.8rem;line-height:1.5}
 
-/* ── Campos editables ── */
-[contenteditable]{outline:none;border-radius:3px;transition:background .15s}
-[contenteditable]:focus{background:#fffbeb;box-shadow:0 0 0 2px #fde68a}
-[contenteditable]:hover:not(:focus){background:#f9fafb}
+/* SECTION HEADER */
+.sec-hdr{margin-bottom:32px}
+.sec-eyebrow{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:var(--gold);margin-bottom:6px}
+.sec-title{font-size:2rem;color:var(--dark)}
 
-/* ── Tabla diagnóstico ── */
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:8px 12px;background:#f3f4f6;font-weight:500;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
-td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
-tr:last-child td{border-bottom:none}
-.badge-normal{background:#dcfce7;color:#166534;padding:2px 8px;border-radius:99px;font-size:11px}
-.badge-warning{background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:99px;font-size:11px}
-.badge-critical{background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:99px;font-size:11px}
+/* BADGE PILAR */
+.badge-pilar{display:inline-flex;align-items:center;gap:6px;background:var(--gold-light);color:var(--gold);font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;padding:4px 14px;border-radius:20px;border:1px solid var(--gold-border);margin-bottom:12px}
 
-/* ── Lista de items ── */
-.items-list{list-style:none}
-.items-list li{padding:7px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px;font-size:13px}
-.items-list li:last-child{border-bottom:none}
-.items-list li::before{content:'•';color:var(--gold);font-weight:700;flex-shrink:0;margin-top:1px}
+/* OBJETIVO FOCAL */
+.objetivo{background:var(--green);color:var(--white);border-radius:var(--radius);padding:20px 26px;margin:18px 0 24px}
+.objetivo h4{color:var(--gold);font-size:0.72rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;font-family:'DM Sans',sans-serif;font-weight:700}
+.objetivo p{font-size:0.98rem;line-height:1.65}
 
-/* ── Menú semanal ── */
-.menu-table th,.menu-table td{padding:8px 10px;font-size:12px}
-.menu-table .dia{font-weight:600;color:var(--dark);white-space:nowrap}
-.menu-table .meal-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px}
+/* QUOTE - frase motivacional */
+.quote{display:flex;gap:14px;align-items:flex-start;padding:20px 24px;background:var(--gold-light);border-left:3px solid var(--gold);border-radius:0 var(--radius) var(--radius) 0;margin:24px 0}
+.quote svg{flex-shrink:0;width:26px;height:26px;fill:var(--gold);opacity:.6;margin-top:3px}
+.quote p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.08rem;color:var(--gold);line-height:1.65}
 
-/* ── Rutina diaria ── */
-.rutina-row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
-.rutina-row:last-child{border-bottom:none}
-.rutina-hora{font-weight:600;color:var(--gold);font-size:13px;min-width:52px}
-.rutina-tag{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:500;white-space:nowrap}
-.tag-n{background:#dcfce7;color:#166534}
-.tag-s{background:#dbeafe;color:#1e40af}
-.tag-a{background:#ffedd5;color:#9a3412}
-.tag-m{background:#f3e8ff;color:#6b21a8}
-.tag-e{background:#fce7f3;color:#9d174d}
-.tag-h{background:#f0fdf4;color:#166534}
+/* TIP */
+.tip{display:flex;gap:12px;align-items:flex-start;padding:16px 20px;background:#fefcf6;border:1px solid var(--gold-border);border-radius:var(--radius);margin:16px 0}
+.tip svg{flex-shrink:0;width:20px;height:20px;fill:var(--gold);margin-top:2px}
+.tip p{font-size:0.87rem;line-height:1.6}
+.tip strong{color:var(--gold)}
 
-/* ── Grid pilar ── */
-.pilar-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.pilar-grid{grid-template-columns:1fr}}
-.pilar-card{border:1px solid var(--border);border-radius:4px;padding:14px}
-.pilar-card h4{font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+/* ALERTA BADGE */
+.a-badge{display:inline-flex;align-items:center;gap:3px;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.a-badge.warning{background:#fef3cd;color:#856404}
+.a-badge.critical{background:#f8d7da;color:#721c24}
+.a-badge svg{width:11px;height:11px}
 
-/* ── Nota médica ── */
-.nota-medica{background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:12px 16px;font-size:13px;color:#9a3412;margin-bottom:16px}
-.nota-medica strong{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+/* TABLAS */
+table{width:100%;border-collapse:collapse;font-size:0.87rem}
+table th{background:var(--dark);color:var(--gold);padding:11px 15px;text-align:left;font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:1px}
+table td{padding:10px 15px;border-bottom:1px solid rgba(184,147,90,0.1);vertical-align:top;line-height:1.5}
+table tr:nth-child(even) td{background:rgba(244,245,239,0.5)}
+.diag-left{width:160px;font-weight:600;color:var(--dark);background:rgba(45,58,46,0.04)!important}
 
-/* ── Spinner ── */
-#spinner{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:16px}
-#spinner.show{display:flex}
-.spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-#spinner p{color:#fff;font-size:14px}
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 
-/* ── Toast ── */
-#toast{position:fixed;bottom:24px;right:24px;background:var(--dark);color:#fff;padding:12px 20px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .3s;z-index:300;pointer-events:none}
-#toast.show{opacity:1}
+/* RUTINA */
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:pointer}
+.pilar-tag{display:inline-block;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.tag-n{background:#e8f5e9;color:#2e7d32}
+.tag-a{background:#e3f2fd;color:#1565c0}
+.tag-m{background:#fce4ec;color:#880e4f}
+.tag-s{background:#f3e5f5;color:#4a148c}
+.tag-e{background:#fff8e1;color:#f57f17}
+.tag-h{background:#fbe9e7;color:#bf360c}
+
+/* CALENDARIO */
+.cal-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.cal-month{background:var(--white);border-radius:10px;box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(184,147,90,0.08)}
+.cal-mhdr{background:var(--dark);color:var(--gold);text-align:center;padding:9px;font-family:'Cormorant Garamond',serif;font-size:0.95rem;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:rgba(184,147,90,0.08)}
+.cal-dh{text-align:center;font-size:0.6rem;font-weight:700;color:var(--gold);padding:5px 2px;background:var(--cream);text-transform:uppercase}
+.cal-d{background:var(--white);padding:3px 2px;min-height:40px;text-align:center}
+.cal-d .n{font-weight:600;font-size:0.65rem;color:var(--dark)}
+.cal-d .dots{display:flex;gap:2px;justify-content:center;margin-top:2px}
+.dot{width:8px;height:8px;border-radius:2px;cursor:pointer;border:1px solid rgba(0,0,0,0.12);transition:all .15s;position:relative;flex-shrink:0}
+.dot.nu{background:#c8e6c9}.dot.ac{background:#bbdefb}.dot.me{background:#f8bbd0}.dot.su{background:#fff9c4}
+.dot.chk::after{content:'✓';position:absolute;top:-2px;left:1px;font-size:7px;font-weight:900;color:#2e7d32}
+.dot.mis::after{content:'✕';position:absolute;top:-2px;left:1px;font-size:7px;font-weight:900;color:#c62828}
+.cal-empty{background:transparent!important}
+.cal-legend{display:flex;gap:14px;justify-content:center;padding:10px;flex-wrap:wrap}
+.cal-legend span{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:#777}
+.cal-legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+/* PRINCIPIOS */
+.pc h4{font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+.pc.p h4{color:var(--green)}.pc.e h4{color:#b71c1c}
+.pc ul{list-style:none}
+.pc li{display:flex;align-items:flex-start;gap:7px;padding:4px 0;font-size:0.83rem;line-height:1.5}
+.pc li svg{width:14px;height:14px;flex-shrink:0;margin-top:3px}
+.pc.p li svg{stroke:var(--green);fill:none}.pc.e li svg{stroke:#b71c1c;fill:none}
+
+/* COMPRAS */
+.compra-cat{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid rgba(184,147,90,0.08)}
+.compra-cat h5{font-size:0.78rem;font-weight:700;color:var(--green);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+.compra-cat ul{list-style:none}
+.compra-cat li{font-size:0.8rem;padding:2px 0;color:#555;display:flex;align-items:center;gap:6px}
+.compra-cat li::before{content:'';width:5px;height:5px;background:var(--gold);border-radius:50%;flex-shrink:0}
+
+/* SUPLEMENTOS */
+.suppl{background:var(--white);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);border-left:4px solid var(--gold)}
+.suppl p{font-size:0.83rem;color:#555;line-height:1.6}
+
+/* BIMESTRES */
+.bim{margin-bottom:22px}
+.bim-hdr{background:var(--dark);color:var(--gold);padding:13px 22px;border-radius:var(--radius) var(--radius) 0 0;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600}
+.bim-body{background:var(--white);border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.bim-total{background:var(--gold-light);padding:11px 22px;text-align:right;font-weight:700;color:var(--gold);font-size:0.93rem;border-top:2px solid var(--gold-border)}
+.total-anual{background:var(--dark);color:var(--white);border-radius:var(--radius);padding:30px;text-align:center;margin:28px 0}
+.total-anual .label{font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;color:rgba(184,147,90,0.7);margin-bottom:6px}
+.total-anual .amount{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:700;color:var(--gold)}
+
+/* RUTINA FACIAL */
+.rbox{background:var(--white);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow);border-top:4px solid}
+.rbox.am{border-top-color:#f9a825}.rbox.pm{border-top-color:#5c6bc0}
+.rbox h4{font-size:1.1rem;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.rstep{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05)}
+.rstep:last-child{border-bottom:none}
+.snum{width:24px;height:24px;background:var(--gold-light);color:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.rstep .prod{font-weight:600;font-size:0.87rem;margin-bottom:2px}
+.rstep .desc{font-size:0.78rem;color:#666}
+
+/* COMPROMISO */
+.comp-box{background:var(--green);color:var(--white);border-radius:var(--radius);padding:32px;margin-bottom:24px;border:1px solid rgba(184,147,90,0.2)}
+.comp-box p{font-size:0.97rem;color:rgba(255,255,255,0.85);line-height:1.85}
+.result-card{background:var(--white);border-radius:var(--radius);padding:18px;text-align:center;box-shadow:var(--shadow);border:1px solid rgba(184,147,90,0.08)}
+.result-card .icon{font-size:1.2rem;margin-bottom:6px}
+.result-card p{font-size:0.8rem;color:#666;line-height:1.5}
+.chk-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:0.88rem}
+.chk-item svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:2;flex-shrink:0;margin-top:2px}
+
+/* NOTA MEDICA */
+.nota-medica{background:#fff8e8;border:1px dashed rgba(184,147,90,0.5);border-radius:var(--radius);padding:14px 18px;margin-bottom:24px;font-size:0.83rem;color:#7a5a10;line-height:1.7}
+.nota-medica strong{color:var(--gold)}
+
+/* FOOTER */
+.plan-footer{background:var(--dark);color:rgba(255,255,255,0.4);padding:24px 48px;text-align:center;font-size:0.72rem;line-height:1.8}
+.plan-footer strong{color:var(--gold);font-size:0.85rem;display:block;margin-bottom:4px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .overlay.open{display:block}.hamburger{display:block}
+  .main{margin-left:0}section{padding:40px 20px}
+  .g2,.g3{grid-template-columns:1fr}.g4{grid-template-columns:1fr 1fr}
+  .portada-hdr{padding:56px 20px 36px}
+  .portada-hdr h1{font-size:1.6rem}.portada-hdr .patient-name{font-size:2rem}
+  table{font-size:0.78rem}table th,table td{padding:8px 10px}
+  .cal-row{grid-template-columns:1fr!important}
+}
+/* ── Topbar ── */
+#topbar-edit{
+  position:fixed;top:0;left:0;right:0;z-index:2000;
+  background:#2d3a2e;padding:9px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+}
+#topbar-edit .tb-left{display:flex;align-items:center;gap:12px}
+#topbar-edit img{height:30px;filter:brightness(0) invert(1) opacity(0.85)}
+#topbar-edit .tb-name{color:#fff;font-size:13px;font-weight:600;line-height:1.2}
+#topbar-edit .tb-meta{color:rgba(255,255,255,0.45);font-size:11px}
+#topbar-edit .tb-sep{width:1px;height:30px;background:rgba(255,255,255,0.15)}
+.tb-btn{font-size:12px;font-weight:500;cursor:pointer;padding:7px 16px;border-radius:4px;border:none;
+  letter-spacing:.03em;transition:all .18s;font-family:inherit}
+.tb-btn-outline{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+.tb-btn-outline:hover{border-color:#fff;color:#fff}
+.tb-btn-green{background:#8fa832;color:#fff}
+.tb-btn-green:hover{background:#7a9428}
+.tb-btn-green:disabled{background:#9ca3af;cursor:not-allowed}
+#toast-edit{position:fixed;bottom:20px;right:20px;background:#2d3a2e;color:#fff;
+  padding:10px 18px;border-radius:5px;font-size:12px;font-family:inherit;
+  opacity:0;transition:opacity .3s;z-index:3000;pointer-events:none}
+#toast-edit.show{opacity:1}
+body{padding-top:50px}
+[contenteditable]{outline:none;border-radius:2px;transition:background .15s}
+[contenteditable]:hover:not(:focus){background:rgba(184,147,90,0.07)}
+[contenteditable]:focus{background:rgba(184,147,90,0.12);box-shadow:0 0 0 1px rgba(184,147,90,0.3)}
+
+@media print{
+  #topbar-edit,#toast-edit,.hamburger,.no-print{display:none!important}
+  .sidebar{display:none!important}
+  .main{margin-left:0!important}
+  body{padding-top:0!important;background:#fff}
+  section{page-break-inside:avoid;padding:28px 20px}
+  @page{size:A4;margin:12mm 14mm}
+}
 </style>
 </head>
-<body>
 
-<div id="topbar">
-  <div class="info">
-    <strong>{{NOMBRE}}</strong>
-    Borrador editable — {{FECHA}}
-  </div>
-  <div class="topbar-btns">
-    <button class="btn btn-outline" onclick="guardarCambios()">💾 Guardar cambios</button>
-    <button class="btn btn-gold" id="btn-pdf" onclick="generarPDF()">📄 Generar PDF final</button>
-  </div>
-</div>
-
-<div id="edit-notice">
-  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-  Haz clic en cualquier texto para editarlo. Los cambios se guardan automáticamente al generar el PDF.
-</div>
-
-<div class="container">
-
-  <!-- Cabecera paciente -->
-  <div class="patient-header">
+<div id="topbar-edit" class="no-print">
+  <div class="tb-left">
+    <img src="https://centrocarvajal.com/wp-content/uploads/2023/05/logo-carvajal-300x147.jpg" alt="Carvajal">
+    <div class="tb-sep"></div>
     <div>
-      <h1 contenteditable="true" data-field="nombre">{{NOMBRE}}</h1>
-      <div class="meta">
-        <span contenteditable="true" data-field="edad">{{EDAD}} años</span>
-        <span contenteditable="true" data-field="ocupacion">{{OCUPACION}}</span>
-        <span contenteditable="true" data-field="fecha">{{FECHA}}</span>
-      </div>
-    </div>
-    <span class="badge">Borrador médico</span>
-  </div>
-
-  <!-- SECCIÓN 1: Nota médica + Diagnóstico -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">1</div>
-      <h2>Diagnóstico y Evaluación</h2>
-    </div>
-    <div class="section-body">
-      <div class="nota-medica">
-        <strong>Nota para el equipo</strong>
-        <span contenteditable="true" data-field="nota_medica">{{NOTA_MEDICA}}</span>
-      </div>
-      <table>
-        <thead>
-          <tr><th>Área</th><th>Estado actual</th><th>Hallazgos clínicos</th><th>Alerta</th></tr>
-        </thead>
-        <tbody id="diag-tbody">
-          {{DIAGNOSTICO_FILAS}}
-        </tbody>
-      </table>
+      <div class="tb-name">{{NOMBRE}}</div>
+      <div class="tb-meta">Plan editable · {{FECHA}}</div>
     </div>
   </div>
-
-  <!-- SECCIÓN 2: Rutina diaria -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">2</div>
-      <h2>Rutina Diaria Recomendada</h2>
-    </div>
-    <div class="section-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:14px" contenteditable="true" data-field="rutina_nota">{{RUTINA_NOTA}}</p>
-      <div id="rutina-list">{{RUTINA_FILAS}}</div>
-    </div>
+  <div style="display:flex;gap:8px">
+    <button class="tb-btn tb-btn-outline" onclick="window.print()">🖨 Imprimir / PDF</button>
+    <button class="tb-btn tb-btn-green" id="btn-guardar" onclick="guardarCambios()">💾 Guardar cambios</button>
   </div>
-
-  <!-- SECCIÓN 3: Nutrición (Pilar 1) -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">3</div>
-      <h2>🥗 <span contenteditable="true" data-field="p1_titulo">{{P1_TITULO}}</span></h2>
-    </div>
-    <div class="section-body">
-      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p1_objetivo">{{P1_OBJETIVO}}</p>
-
-      <div class="pilar-grid" style="margin-bottom:20px">
-        <div class="pilar-card">
-          <h4>✓ Alimentos permitidos</h4>
-          <ul class="items-list" id="p1-permitidos">{{P1_PERMITIDOS}}</ul>
-        </div>
-        <div class="pilar-card">
-          <h4>✕ Alimentos a evitar</h4>
-          <ul class="items-list" id="p1-evitar">{{P1_EVITAR}}</ul>
-        </div>
-      </div>
-
-      <h4 style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Menú semanal</h4>
-      <table class="menu-table">
-        <thead><tr><th>Día</th><th>Desayuno</th><th>Almuerzo</th><th>Cena</th><th>Snack</th></tr></thead>
-        <tbody id="p1-menu">{{P1_MENU}}</tbody>
-      </table>
-
-      <div style="margin-top:16px" id="p1-suplementacion">{{P1_SUPLEMENTACION}}</div>
-    </div>
-  </div>
-
-  <!-- SECCIÓN 4: Actividad Física (Pilar 2) -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">4</div>
-      <h2>🏃 <span contenteditable="true" data-field="p2_titulo">{{P2_TITULO}}</span></h2>
-    </div>
-    <div class="section-body">
-      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p2_objetivo">{{P2_OBJETIVO}}</p>
-      <div class="pilar-grid">
-        <div class="pilar-card">
-          <h4>Plan semanal</h4>
-          <p style="font-size:13px;white-space:pre-line" contenteditable="true" data-field="p2_plan">{{P2_PLAN}}</p>
-        </div>
-        <div class="pilar-card">
-          <h4>Adaptaciones específicas</h4>
-          <p style="font-size:13px" contenteditable="true" data-field="p2_adaptaciones">{{P2_ADAPTACIONES}}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECCIÓN 5: Bienestar Mental (Pilar 3) -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">5</div>
-      <h2>🧠 <span contenteditable="true" data-field="p3_titulo">{{P3_TITULO}}</span></h2>
-    </div>
-    <div class="section-body">
-      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p3_objetivo">{{P3_OBJETIVO}}</p>
-      <ul class="items-list" id="p3-tecnicas">{{P3_TECNICAS}}</ul>
-    </div>
-  </div>
-
-  <!-- SECCIÓN 6: Sueño (Pilar 4) -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">6</div>
-      <h2>😴 <span contenteditable="true" data-field="p4_titulo">{{P4_TITULO}}</span></h2>
-    </div>
-    <div class="section-body">
-      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p4_objetivo">{{P4_OBJETIVO}}</p>
-      <div class="pilar-grid">
-        <div class="pilar-card">
-          <h4>Protocolo de sueño</h4>
-          <ol style="padding-left:16px;font-size:13px" id="p4-protocolo">{{P4_PROTOCOLO}}</ol>
-        </div>
-        <div class="pilar-card">
-          <h4>Reglas críticas</h4>
-          <ul class="items-list" id="p4-reglas">{{P4_REGLAS}}</ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECCIÓN 7: Tratamientos (Pilar 5) -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">7</div>
-      <h2>✨ <span contenteditable="true" data-field="p5_titulo">{{P5_TITULO}}</span></h2>
-    </div>
-    <div class="section-body">
-      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="p5_objetivo">{{P5_OBJETIVO}}</p>
-      <div id="p5-bimestres">{{P5_BIMESTRES}}</div>
-      <div style="margin-top:16px" id="p5-notas">{{P5_NOTAS_CRITICAS}}</div>
-
-      <div class="pilar-grid" style="margin-top:16px">
-        <div class="pilar-card">
-          <h4>Rutina AM</h4>
-          <div id="p5-rutina-am">{{P5_RUTINA_AM}}</div>
-        </div>
-        <div class="pilar-card">
-          <h4>Rutina PM</h4>
-          <div id="p5-rutina-pm">{{P5_RUTINA_PM}}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECCIÓN 8: Compromiso -->
-  <div class="section">
-    <div class="section-header">
-      <div class="num">8</div>
-      <h2>🎯 Plan de Compromiso</h2>
-    </div>
-    <div class="section-body">
-      <p style="font-size:13px;margin-bottom:16px" contenteditable="true" data-field="comp_parrafo">{{COMP_PARRAFO}}</p>
-      <div class="pilar-grid">
-        <div class="pilar-card">
-          <h4>Resultados esperados</h4>
-          <ul class="items-list" id="comp-resultados">{{COMP_RESULTADOS}}</ul>
-        </div>
-        <div class="pilar-card">
-          <h4>Próximos pasos</h4>
-          <ol style="padding-left:16px;font-size:13px" id="comp-pasos">{{COMP_PASOS}}</ol>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /container -->
-
-<!-- Spinner -->
-<div id="spinner">
-  <div class="spin"></div>
-  <p>Generando PDF final...</p>
 </div>
+<div id="toast-edit"></div>
 
-<!-- Toast -->
-<div id="toast"></div>
+<button class="hamburger no-print" onclick="toggleSidebar()" aria-label="Menu">
+  <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" stroke="#b8935a" stroke-width="1.5"/><text x="22" y="27" text-anchor="middle" fill="#b8935a" font-family="Cormorant Garamond,serif" font-size="13" font-weight="600">CC</text></svg>
+    <h2>Centro Carvajal</h2>
+  </div>
+  <div class="sb-patient">
+    <div class="name">{{NOMBRE}}</div>
+    <div class="meta">{{EDAD}} años · {{OCUPACION}}</div>
+  </div>
+  <nav>
+    <a href="#portada"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Portada</a>
+    <a href="#diagnostico"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>Diagnóstico</a>
+    <a href="#rutina"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Rutina Diaria</a>
+    <a href="#calendario"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Calendario</a>
+    <a href="#pilar1"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/></svg>Pilar 1 · Nutrición</a>
+    <a href="#pilar2"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Pilar 2 · Actividad</a>
+    <a href="#pilar3"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg>Pilar 3 · Bienestar</a>
+    <a href="#pilar4"><svg viewBox="0 0 24 24"><path d="M17 18a5 5 0 00-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/></svg>Pilar 4 · Sueño</a>
+    <a href="#pilar5"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Pilar 5 · Imagen</a>
+    <a href="#compromiso"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Compromiso</a>
+  </nav>
+  <div class="sb-footer">
+    <p>Centro Carvajal · Método Carvajal<br>centrocarvajal.com · Tel: 263-8134</p>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ═══ PORTADA ═══ -->
+<section id="portada" style="padding:0">
+  <div class="portada-hdr">
+    <div class="eyebrow">Programa de Salud, Bienestar y Desarrollo de Imagen {{YEAR}}</div>
+    <h1>Método Carvajal · Plan Integral Personalizado</h1>
+    <div class="patient-name" contenteditable="true">{{NOMBRE}}</div>
+    <table class="datos-tbl">
+      <tr><td>Nombre</td><td contenteditable="true">{{NOMBRE_COMPLETO}}</td></tr>
+      <tr><td>Edad</td><td contenteditable="true">{{EDAD}} años</td></tr>
+      <tr><td>Ocupación</td><td contenteditable="true">{{OCUPACION}}</td></tr>
+      <tr><td>Evaluación</td><td contenteditable="true">{{FECHA}}</td></tr>
+      <tr><td>IMC</td><td contenteditable="true">{{IMC}}</td></tr>
+    </table>
+    <p class="intro-text" contenteditable="true">{{INTRO}}</p>
+    <div class="pilares-block">
+      <h3 contenteditable="true">{{TITULO_PILARES}}</h3>
+      {{PILARES_RESUMEN}}
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DIAGNÓSTICO ═══ -->
+<section id="diagnostico">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Sección 2</div>
+    <h2 class="sec-title">Diagnóstico y Análisis Inicial</h2>
+  </div>
+  <div class="nota-medica" contenteditable="true">{{NOTA_MEDICA}}</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead><tr><th style="width:160px">Estado Actual</th><th>Hallazgos Clave</th></tr></thead>
+      <tbody>{{DIAGNOSTICO_FILAS}}</tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ RUTINA DIARIA ═══ -->
+<section id="rutina">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Sección 3</div>
+    <h2 class="sec-title">Rutina Diaria Ideal</h2>
+  </div>
+  <p style="color:#777;font-size:0.87rem;margin-bottom:20px" contenteditable="true">{{RUTINA_NOTA}}</p>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead><tr><th style="width:80px">Hora</th><th style="width:40px;text-align:center">✓</th><th>Actividad</th><th style="width:110px">Pilar</th></tr></thead>
+      <tbody>{{RUTINA_FILAS}}</tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ CALENDARIO ═══ -->
+<section id="calendario">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Sección 4</div>
+    <h2 class="sec-title">Calendario de Seguimiento {{YEAR}}</h2>
+  </div>
+  <div class="cal-legend" style="margin-bottom:16px">
+    <span><i style="background:#c8e6c9"></i>Nutrición</span>
+    <span><i style="background:#bbdefb"></i>Actividad Física</span>
+    <span><i style="background:#f8bbd0"></i>Bienestar Mental</span>
+    <span><i style="background:#fff9c4"></i>Sueño</span>
+  </div>
+  {{CALENDARIO_HTML}}
+  <p style="font-size:0.8rem;color:#999;text-align:center;margin-top:14px">Haz clic en cada cuadrito para marcar ✓ cumplido o ✕ no cumplido. Úsalo en tus consultas trimestrales.</p>
+</section>
+
+<!-- ═══ PILAR 1 ═══ -->
+<section id="pilar1">
+  <div class="sec-hdr">
+    <div class="badge-pilar">Pilar 1</div>
+    <h2 class="sec-title">{{P1_EMOJI}} {{P1_TITULO}}</h2>
+  </div>
+  {{P1_QUOTE_TOP}}
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P1_OBJETIVO}}</p></div>
+  {{P1_QUOTE_MID}}
+  <div class="g2" style="margin-bottom:24px">
+    <div class="pc p">
+      <h4><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg>Priorizar</h4>
+      <ul>{{P1_PERMITIDOS}}</ul>
+    </div>
+    <div class="pc e">
+      <h4><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reducir / Evitar</h4>
+      <ul>{{P1_EVITAR}}</ul>
+    </div>
+  </div>
+  {{P1_TIPS_TOP}}
+  <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--gold-border)">Menú Semanal</h3>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="menu-table">
+      <thead><tr><th style="width:80px">Día</th><th>Desayuno</th><th>Almuerzo</th><th>Cena</th><th>Snack</th></tr></thead>
+      <tbody>{{P1_MENU}}</tbody>
+    </table>
+  </div>
+  <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--gold-border)">Lista de Compras</h3>
+  <div class="g3">{{P1_COMPRAS}}</div>
+  {{P1_SUPLEMENTACION}}
+  {{P1_QUOTE_END}}
+  {{P1_TIPS_END}}
+</section>
+
+<!-- ═══ PILAR 2 ═══ -->
+<section id="pilar2">
+  <div class="sec-hdr">
+    <div class="badge-pilar">Pilar 2</div>
+    <h2 class="sec-title">{{P2_EMOJI}} {{P2_TITULO}}</h2>
+  </div>
+  {{P2_QUOTE_TOP}}
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P2_OBJETIVO}}</p></div>
+  {{P2_QUOTE_MID}}
+  <div class="card">
+    <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px">Plan Semanal</h4>
+    <p style="font-size:0.88rem;line-height:1.9;white-space:pre-line" contenteditable="true">{{P2_PLAN}}</p>
+  </div>
+  <div class="card">
+    <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:10px">Adaptaciones Específicas</h4>
+    <p style="font-size:0.88rem;line-height:1.8" contenteditable="true">{{P2_ADAPTACIONES}}</p>
+  </div>
+  {{P2_TIPS}}
+  {{P2_QUOTE_END}}
+</section>
+
+<!-- ═══ PILAR 3 ═══ -->
+<section id="pilar3">
+  <div class="sec-hdr">
+    <div class="badge-pilar">Pilar 3</div>
+    <h2 class="sec-title">{{P3_EMOJI}} {{P3_TITULO}}</h2>
+  </div>
+  {{P3_QUOTE_TOP}}
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P3_OBJETIVO}}</p></div>
+  {{P3_QUOTE_MID}}
+  <div class="card"><ul style="list-style:none">{{P3_TECNICAS}}</ul></div>
+  {{P3_TIPS}}
+  {{P3_QUOTE_END}}
+</section>
+
+<!-- ═══ PILAR 4 ═══ -->
+<section id="pilar4">
+  <div class="sec-hdr">
+    <div class="badge-pilar">Pilar 4</div>
+    <h2 class="sec-title">{{P4_EMOJI}} {{P4_TITULO}}</h2>
+  </div>
+  {{P4_QUOTE_TOP}}
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P4_OBJETIVO}}</p></div>
+  {{P4_QUOTE_MID}}
+  <div class="g2">
+    <div class="card">
+      <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px">Protocolo Nocturno</h4>
+      <ul style="list-style:none">{{P4_PROTOCOLO}}</ul>
+    </div>
+    <div class="card">
+      <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px">Reglas Críticas</h4>
+      <ul style="list-style:none">{{P4_REGLAS}}</ul>
+    </div>
+  </div>
+  {{P4_TIPS}}
+  {{P4_QUOTE_END}}
+</section>
+
+<!-- ═══ PILAR 5 ═══ -->
+<section id="pilar5">
+  <div class="sec-hdr">
+    <div class="badge-pilar">Pilar 5</div>
+    <h2 class="sec-title">{{P5_EMOJI}} {{P5_TITULO}}</h2>
+  </div>
+  {{P5_QUOTE_TOP}}
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P5_OBJETIVO}}</p></div>
+  {{P5_QUOTE_MID}}
+  {{P5_BIMESTRES}}
+  <div class="total-anual">
+    <div class="label">Inversión Total 2026</div>
+    <div class="amount">{{P5_TOTAL_ANUAL}}</div>
+    <p style="font-size:0.75rem;color:rgba(184,147,90,0.6);margin-top:8px">12 meses · 6 bimestres · Plan integral personalizado</p>
+  </div>
+  <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin:28px 0 16px;padding-bottom:6px;border-bottom:2px solid var(--gold-border)">Rutina de Cuidado en Casa</h3>
+  <div class="g2">
+    <div class="rbox am">
+      <h4>☀️ Mañana</h4>
+      {{P5_RUTINA_AM}}
+    </div>
+    <div class="rbox pm">
+      <h4>🌙 Noche</h4>
+      {{P5_RUTINA_PM}}
+    </div>
+  </div>
+  {{P5_NOTAS_CRITICAS}}
+  {{P5_TIPS}}
+  {{P5_QUOTE_END}}
+</section>
+
+<!-- ═══ COMPROMISO ═══ -->
+<section id="compromiso">
+  <div class="sec-hdr">
+    <div class="sec-eyebrow">Sección 10</div>
+    <h2 class="sec-title">Compromiso y Seguimiento</h2>
+  </div>
+  <div class="comp-box"><p contenteditable="true">{{COMP_PARRAFO}}</p></div>
+  <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin:0 0 16px;padding-bottom:6px;border-bottom:2px solid var(--gold-border)">Resultados Esperados a 12 Meses</h3>
+  <div class="g4" style="margin-bottom:28px">{{COMP_RESULTADOS}}</div>
+  <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin:0 0 14px;padding-bottom:6px;border-bottom:2px solid var(--gold-border)">Próximos Pasos Inmediatos</h3>
+  <div class="card">{{COMP_PASOS}}</div>
+</section>
+
+<footer class="plan-footer">
+  <strong>Centro Carvajal · Clínica de Medicina Estética</strong>
+  centrocarvajal.com · Tel: 263-8134 &amp; 209-4284 · @centrocarvajal · Panamá<br>
+  Dra. Yasmina Carvajal — Medicina Estética y Regenerativa<br>
+  <em>Revisado y validado por el equipo médico de Centro Carvajal.</em>
+</footer>
+
+</main>
 
 <script>
 const JOB_ID = '{{JOB_ID}}';
-let guardadoTimeout = null;
 
-// Auto-guardar al editar
-document.querySelectorAll('[contenteditable]').forEach(el => {
-  el.addEventListener('input', () => {
-    clearTimeout(guardadoTimeout);
-    guardadoTimeout = setTimeout(guardarLocal, 2000);
-  });
-});
-
-function guardarLocal() {
-  showToast('Cambios guardados localmente');
+// ── Guardar en Cloudinary ──
+async function guardarCambios() {
+  const btn = document.getElementById('btn-guardar');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando...';
+  try {
+    const resp = await fetch('/guardar/' + JOB_ID, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/html; charset=utf-8'},
+      body: document.documentElement.outerHTML
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      btn.textContent = '✓ Guardado';
+      showToast('✓ Cambios guardados en Cloudinary');
+    } else {
+      showToast('Error al guardar: ' + (data.error || 'Desconocido'), 4000);
+      btn.textContent = original;
+    }
+  } catch(e) {
+    showToast('Error de conexión', 4000);
+    btn.textContent = original;
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = '💾 Guardar cambios'; }, 2500);
+  }
 }
 
 function showToast(msg, dur=2500) {
-  const t = document.getElementById('toast');
+  const t = document.getElementById('toast-edit');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function guardarCambios() {
-  showToast('✓ Cambios guardados');
+// ── Sidebar toggle ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
 }
 
-async function generarPDF() {
-  const btn = document.getElementById('btn-pdf');
-  btn.disabled = true;
-  btn.textContent = 'Procesando...';
-  document.getElementById('spinner').classList.add('show');
-
-  // Capturar el HTML completo del body editable
-  const htmlCompleto = document.documentElement.outerHTML;
-
-  try {
-    const resp = await fetch('/generar-pdf', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        job_id: JOB_ID,
-        html: htmlCompleto
-      })
-    });
-    const data = await resp.json();
-
-    document.getElementById('spinner').classList.remove('show');
-
-    if (data.error) {
-      showToast('Error: ' + data.error, 5000);
-      btn.disabled = false;
-      btn.textContent = '📄 Generar PDF final';
-      return;
+// Active nav link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.sidebar nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const active = document.querySelector('.sidebar nav a[href="#' + e.target.id + '"]');
+      if (active) active.classList.add('active');
     }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => observer.observe(s));
 
-    // Éxito
-    btn.textContent = '✓ PDF generado';
-    showToast('✓ PDF generado y enviado al staff', 4000);
-
-    // Mostrar link al PDF
-    if (data.pdf_url) {
-      const link = document.createElement('a');
-      link.href = data.pdf_url;
-      link.target = '_blank';
-      link.style.cssText = 'display:block;text-align:center;margin:16px auto;font-size:13px;color:#8fa832';
-      link.textContent = '→ Ver PDF final';
-      document.querySelector('.container').prepend(link);
+// Calendar dots
+document.querySelectorAll('.dot').forEach(dot => {
+  dot.addEventListener('click', function() {
+    if (this.classList.contains('chk')) {
+      this.classList.remove('chk'); this.classList.add('mis');
+    } else if (this.classList.contains('mis')) {
+      this.classList.remove('mis');
+    } else {
+      this.classList.add('chk');
     }
-
-  } catch(e) {
-    document.getElementById('spinner').classList.remove('show');
-    showToast('Error de conexión', 4000);
-    btn.disabled = false;
-    btn.textContent = '📄 Generar PDF final';
-  }
-}
+  });
+});
 </script>
 </body>
 </html>

@@ -192,15 +192,62 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
   table{font-size:0.78rem}table th,table td{padding:8px 10px}
   .cal-row{grid-template-columns:1fr!important}
 }
+/* ── Topbar ── */
+#topbar-edit{
+  position:fixed;top:0;left:0;right:0;z-index:2000;
+  background:#2d3a2e;padding:9px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+}
+#topbar-edit .tb-left{display:flex;align-items:center;gap:12px}
+#topbar-edit img{height:30px;filter:brightness(0) invert(1) opacity(0.85)}
+#topbar-edit .tb-name{color:#fff;font-size:13px;font-weight:600;line-height:1.2}
+#topbar-edit .tb-meta{color:rgba(255,255,255,0.45);font-size:11px}
+#topbar-edit .tb-sep{width:1px;height:30px;background:rgba(255,255,255,0.15)}
+.tb-btn{font-size:12px;font-weight:500;cursor:pointer;padding:7px 16px;border-radius:4px;border:none;
+  letter-spacing:.03em;transition:all .18s;font-family:inherit}
+.tb-btn-outline{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+.tb-btn-outline:hover{border-color:#fff;color:#fff}
+.tb-btn-green{background:#8fa832;color:#fff}
+.tb-btn-green:hover{background:#7a9428}
+.tb-btn-green:disabled{background:#9ca3af;cursor:not-allowed}
+#toast-edit{position:fixed;bottom:20px;right:20px;background:#2d3a2e;color:#fff;
+  padding:10px 18px;border-radius:5px;font-size:12px;font-family:inherit;
+  opacity:0;transition:opacity .3s;z-index:3000;pointer-events:none}
+#toast-edit.show{opacity:1}
+body{padding-top:50px}
+[contenteditable]{outline:none;border-radius:2px;transition:background .15s}
+[contenteditable]:hover:not(:focus){background:rgba(184,147,90,0.07)}
+[contenteditable]:focus{background:rgba(184,147,90,0.12);box-shadow:0 0 0 1px rgba(184,147,90,0.3)}
+
 @media print{
-  .sidebar,.hamburger{display:none!important}.main{margin-left:0}
+  #topbar-edit,#toast-edit,.hamburger,.no-print{display:none!important}
+  .sidebar{display:none!important}
+  .main{margin-left:0!important}
+  body{padding-top:0!important;background:#fff}
   section{page-break-inside:avoid;padding:28px 20px}
+  @page{size:A4;margin:12mm 14mm}
 }
 </style>
 </head>
-<body>
 
-<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+<div id="topbar-edit" class="no-print">
+  <div class="tb-left">
+    <img src="https://centrocarvajal.com/wp-content/uploads/2023/05/logo-carvajal-300x147.jpg" alt="Carvajal">
+    <div class="tb-sep"></div>
+    <div>
+      <div class="tb-name">{{NOMBRE}}</div>
+      <div class="tb-meta">Plan editable · {{FECHA}}</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="tb-btn tb-btn-outline" onclick="window.print()">🖨 Imprimir / PDF</button>
+    <button class="tb-btn tb-btn-green" id="btn-guardar" onclick="guardarCambios()">💾 Guardar cambios</button>
+  </div>
+</div>
+<div id="toast-edit"></div>
+
+<button class="hamburger no-print" onclick="toggleSidebar()" aria-label="Menu">
   <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -238,17 +285,17 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
   <div class="portada-hdr">
     <div class="eyebrow">Programa de Salud, Bienestar y Desarrollo de Imagen {{YEAR}}</div>
     <h1>Método Carvajal · Plan Integral Personalizado</h1>
-    <div class="patient-name">{{NOMBRE}}</div>
+    <div class="patient-name" contenteditable="true">{{NOMBRE}}</div>
     <table class="datos-tbl">
-      <tr><td>Nombre</td><td>{{NOMBRE_COMPLETO}}</td></tr>
-      <tr><td>Edad</td><td>{{EDAD}} años</td></tr>
-      <tr><td>Ocupación</td><td>{{OCUPACION}}</td></tr>
-      <tr><td>Evaluación</td><td>{{FECHA}}</td></tr>
-      <tr><td>IMC</td><td>{{IMC}}</td></tr>
+      <tr><td>Nombre</td><td contenteditable="true">{{NOMBRE_COMPLETO}}</td></tr>
+      <tr><td>Edad</td><td contenteditable="true">{{EDAD}} años</td></tr>
+      <tr><td>Ocupación</td><td contenteditable="true">{{OCUPACION}}</td></tr>
+      <tr><td>Evaluación</td><td contenteditable="true">{{FECHA}}</td></tr>
+      <tr><td>IMC</td><td contenteditable="true">{{IMC}}</td></tr>
     </table>
-    <p class="intro-text">{{INTRO}}</p>
+    <p class="intro-text" contenteditable="true">{{INTRO}}</p>
     <div class="pilares-block">
-      <h3>{{TITULO_PILARES}}</h3>
+      <h3 contenteditable="true">{{TITULO_PILARES}}</h3>
       {{PILARES_RESUMEN}}
     </div>
   </div>
@@ -260,7 +307,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <div class="sec-eyebrow">Sección 2</div>
     <h2 class="sec-title">Diagnóstico y Análisis Inicial</h2>
   </div>
-  <div class="nota-medica">{{NOTA_MEDICA}}</div>
+  <div class="nota-medica" contenteditable="true">{{NOTA_MEDICA}}</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table>
       <thead><tr><th style="width:160px">Estado Actual</th><th>Hallazgos Clave</th></tr></thead>
@@ -275,7 +322,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <div class="sec-eyebrow">Sección 3</div>
     <h2 class="sec-title">Rutina Diaria Ideal</h2>
   </div>
-  <p style="color:#777;font-size:0.87rem;margin-bottom:20px">{{RUTINA_NOTA}}</p>
+  <p style="color:#777;font-size:0.87rem;margin-bottom:20px" contenteditable="true">{{RUTINA_NOTA}}</p>
   <div class="card" style="padding:0;overflow:hidden">
     <table>
       <thead><tr><th style="width:80px">Hora</th><th style="width:40px;text-align:center">✓</th><th>Actividad</th><th style="width:110px">Pilar</th></tr></thead>
@@ -307,7 +354,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <h2 class="sec-title">{{P1_EMOJI}} {{P1_TITULO}}</h2>
   </div>
   {{P1_QUOTE_TOP}}
-  <div class="objetivo"><h4>Objetivo focal</h4><p>{{P1_OBJETIVO}}</p></div>
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P1_OBJETIVO}}</p></div>
   {{P1_QUOTE_MID}}
   <div class="g2" style="margin-bottom:24px">
     <div class="pc p">
@@ -341,15 +388,15 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <h2 class="sec-title">{{P2_EMOJI}} {{P2_TITULO}}</h2>
   </div>
   {{P2_QUOTE_TOP}}
-  <div class="objetivo"><h4>Objetivo focal</h4><p>{{P2_OBJETIVO}}</p></div>
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P2_OBJETIVO}}</p></div>
   {{P2_QUOTE_MID}}
   <div class="card">
     <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:12px">Plan Semanal</h4>
-    <p style="font-size:0.88rem;line-height:1.9;white-space:pre-line">{{P2_PLAN}}</p>
+    <p style="font-size:0.88rem;line-height:1.9;white-space:pre-line" contenteditable="true">{{P2_PLAN}}</p>
   </div>
   <div class="card">
     <h4 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:10px">Adaptaciones Específicas</h4>
-    <p style="font-size:0.88rem;line-height:1.8">{{P2_ADAPTACIONES}}</p>
+    <p style="font-size:0.88rem;line-height:1.8" contenteditable="true">{{P2_ADAPTACIONES}}</p>
   </div>
   {{P2_TIPS}}
   {{P2_QUOTE_END}}
@@ -362,7 +409,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <h2 class="sec-title">{{P3_EMOJI}} {{P3_TITULO}}</h2>
   </div>
   {{P3_QUOTE_TOP}}
-  <div class="objetivo"><h4>Objetivo focal</h4><p>{{P3_OBJETIVO}}</p></div>
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P3_OBJETIVO}}</p></div>
   {{P3_QUOTE_MID}}
   <div class="card"><ul style="list-style:none">{{P3_TECNICAS}}</ul></div>
   {{P3_TIPS}}
@@ -376,7 +423,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <h2 class="sec-title">{{P4_EMOJI}} {{P4_TITULO}}</h2>
   </div>
   {{P4_QUOTE_TOP}}
-  <div class="objetivo"><h4>Objetivo focal</h4><p>{{P4_OBJETIVO}}</p></div>
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P4_OBJETIVO}}</p></div>
   {{P4_QUOTE_MID}}
   <div class="g2">
     <div class="card">
@@ -399,7 +446,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <h2 class="sec-title">{{P5_EMOJI}} {{P5_TITULO}}</h2>
   </div>
   {{P5_QUOTE_TOP}}
-  <div class="objetivo"><h4>Objetivo focal</h4><p>{{P5_OBJETIVO}}</p></div>
+  <div class="objetivo"><h4>Objetivo focal</h4><p contenteditable="true">{{P5_OBJETIVO}}</p></div>
   {{P5_QUOTE_MID}}
   {{P5_BIMESTRES}}
   <div class="total-anual">
@@ -429,7 +476,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
     <div class="sec-eyebrow">Sección 10</div>
     <h2 class="sec-title">Compromiso y Seguimiento</h2>
   </div>
-  <div class="comp-box"><p>{{COMP_PARRAFO}}</p></div>
+  <div class="comp-box"><p contenteditable="true">{{COMP_PARRAFO}}</p></div>
   <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin:0 0 16px;padding-bottom:6px;border-bottom:2px solid var(--gold-border)">Resultados Esperados a 12 Meses</h3>
   <div class="g4" style="margin-bottom:28px">{{COMP_RESULTADOS}}</div>
   <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin:0 0 14px;padding-bottom:6px;border-bottom:2px solid var(--gold-border)">Próximos Pasos Inmediatos</h3>
@@ -440,13 +487,50 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:poin
   <strong>Centro Carvajal · Clínica de Medicina Estética</strong>
   centrocarvajal.com · Tel: 263-8134 &amp; 209-4284 · @centrocarvajal · Panamá<br>
   Dra. Yasmina Carvajal — Medicina Estética y Regenerativa<br>
-  <em>Plan generado con IA — revisado y validado por el equipo médico de Centro Carvajal antes de su entrega al paciente.</em>
+  <em>Revisado y validado por el equipo médico de Centro Carvajal.</em>
 </footer>
 
 </main>
 
 <script>
-// Sidebar toggle
+const JOB_ID = '{{JOB_ID}}';
+
+// ── Guardar en Cloudinary ──
+async function guardarCambios() {
+  const btn = document.getElementById('btn-guardar');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando...';
+  try {
+    const resp = await fetch('/guardar/' + JOB_ID, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/html; charset=utf-8'},
+      body: document.documentElement.outerHTML
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      btn.textContent = '✓ Guardado';
+      showToast('✓ Cambios guardados en Cloudinary');
+    } else {
+      showToast('Error al guardar: ' + (data.error || 'Desconocido'), 4000);
+      btn.textContent = original;
+    }
+  } catch(e) {
+    showToast('Error de conexión', 4000);
+    btn.textContent = original;
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = '💾 Guardar cambios'; }, 2500);
+  }
+}
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast-edit');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ── Sidebar toggle ──
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('open');
