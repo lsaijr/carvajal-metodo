@@ -62,15 +62,27 @@ header p{margin-top:10px;font-size:13px;color:var(--muted);font-weight:300}
 .btn-gold:hover:not(:disabled){background:var(--dark)}
 
 #progress{display:none;margin-top:24px}
-.steps{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-.step{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:2px;font-size:13px;color:#888;background:#f9f9f9;border:1px solid #eee;transition:all .3s}
-.step.active{background:#f0f7e8;border-color:#b8d89a;color:#2d6a2d;font-weight:500}
-.step.done{background:#e8f5e9;border-color:#81c784;color:#2e7d32}
-.step.error{background:#fdecea;border-color:#e57373;color:#c62828}
-.step-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0}
-.pbar-wrap{height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;margin-bottom:8px}
-.pbar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;width:0%;transition:width .6s ease}
-.timer{font-size:11px;color:#bbb;text-align:center}
+.progress-card{background:#f9faf6;border:1px solid var(--border);border-radius:4px;padding:20px;text-align:center}
+.pbar-wrap{height:3px;background:#e4e9d8;border-radius:2px;overflow:hidden;margin-bottom:20px}
+.pbar{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width .8s ease}
+.steps{display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:20px;position:relative}
+.steps::before{content:'';position:absolute;top:14px;left:14px;right:14px;height:1px;background:var(--border);z-index:0}
+.step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;position:relative;z-index:1}
+.step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--warm-white);display:flex;align-items:center;justify-content:center;transition:all .35s;flex-shrink:0}
+.step-dot svg{width:12px;height:12px;stroke:var(--border);fill:none;stroke-width:2;transition:all .35s}
+.step-label{font-size:10px;color:var(--muted);letter-spacing:.04em;text-align:center;line-height:1.3;font-weight:400;transition:all .35s}
+.step.active .step-dot{border-color:var(--gold);background:var(--gold)}
+.step.active .step-dot svg{stroke:#fff}
+.step.active .step-label{color:var(--gold);font-weight:500}
+.step.done .step-dot{border-color:var(--gold);background:var(--gold)}
+.step.done .step-dot svg{stroke:#fff}
+.step.done .step-label{color:var(--muted)}
+.step.error .step-dot{border-color:#e57373;background:#fee2e2}
+.step.error .step-dot svg{stroke:#c62828}
+.step.error .step-label{color:#c62828}
+.progress-status{font-size:12px;color:var(--muted);margin-bottom:6px;min-height:18px;transition:all .3s;font-weight:300}
+.progress-status strong{color:var(--dark);font-weight:500}
+.timer{font-size:11px;color:#b0b8a0;letter-spacing:.04em}
 
 #result{display:none;margin-top:20px}
 .result-title{color:#2e7d32;font-weight:500;font-size:14px;margin-bottom:14px}
@@ -159,14 +171,29 @@ header p{margin-top:10px;font-size:13px;color:var(--muted);font-weight:300}
     <button class="btn btn-primary" id="btn-upload" disabled onclick="iniciar()">Generar plan con IA</button>
 
     <div id="progress">
-      <div class="steps">
-        <div class="step" id="s1"><span class="step-icon">📄</span><span>Leyendo cuestionario</span></div>
-        <div class="step" id="s2"><span class="step-icon">🧠</span><span>Generando plan con IA...</span></div>
-        <div class="step" id="s3"><span class="step-icon">💾</span><span>Guardando plan</span></div>
-        <div class="step" id="s4"><span class="step-icon">📧</span><span>Enviando correo</span></div>
+      <div class="progress-card">
+        <div class="pbar-wrap"><div class="pbar" id="pbar"></div></div>
+        <div class="steps">
+          <div class="step" id="s1">
+            <div class="step-dot"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span class="step-label">Leyendo<br>cuestionario</span>
+          </div>
+          <div class="step" id="s2">
+            <div class="step-dot"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg></div>
+            <span class="step-label">Generando<br>con IA</span>
+          </div>
+          <div class="step" id="s3">
+            <div class="step-dot"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg></div>
+            <span class="step-label">Guardando<br>plan</span>
+          </div>
+          <div class="step" id="s4">
+            <div class="step-dot"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+            <span class="step-label">Enviando<br>correo</span>
+          </div>
+        </div>
+        <div class="progress-status" id="progress-status">Iniciando...</div>
+        <div class="timer" id="timer">⏱ 0s</div>
       </div>
-      <div class="pbar-wrap"><div class="pbar" id="pbar"></div></div>
-      <div class="timer" id="timer">Esto toma entre 1 y 2 minutos...</div>
     </div>
 
     <div id="result">
@@ -288,13 +315,20 @@ async function checkStatus() {
 
     if (data.status === 'working') {
       if (data.pct) setPbar(data.pct);
-      const s2 = document.getElementById('s2');
-      if (data.msg && s2 && s2.classList.contains('active')) {
-        s2.querySelector('span').textContent = data.msg;
-      }
       if (data.msg) {
-        const tm = document.getElementById('timer-msg');
-        if (tm) tm.textContent = data.msg;
+        const st = document.getElementById('progress-status');
+        if (st) {
+          if (data.msg.includes('1/3')) {
+            st.innerHTML = '<strong>Sección 1 / 3</strong> — Portada, diagnóstico y rutina';
+            setStep(2, 'active');
+          } else if (data.msg.includes('2/3')) {
+            st.innerHTML = '<strong>Sección 2 / 3</strong> — Nutrición, ejercicio y bienestar mental';
+          } else if (data.msg.includes('3/3')) {
+            st.innerHTML = '<strong>Sección 3 / 3</strong> — Sueño, tratamientos y compromiso';
+          } else {
+            st.textContent = data.msg;
+          }
+        }
       }
       return;
     }
@@ -306,6 +340,8 @@ async function checkStatus() {
       setStep(3, 'done');
       setStep(4, 'done');
       setPbar(100);
+      const st = document.getElementById('progress-status');
+      if (st) st.innerHTML = '<strong>Plan generado</strong> — listo para revisar';
       setTimeout(() => {
         document.getElementById('progress').style.display = 'none';
         document.getElementById('result').style.display = 'block';
@@ -342,6 +378,7 @@ function copiar() {
 
 function setStep(n, state) {
   const el = document.getElementById('s' + n);
+  if (!el) return;
   el.classList.remove('active','done','error');
   if (state) el.classList.add(state);
 }
