@@ -970,7 +970,7 @@ function generarCalendario() {
     '<div class="cal-grid">' + mesesHtml + '</div>' +
     '<div class="leyenda">' + leyenda + '</div>' +
     '<div class="footer">Centro Carvajal \u00b7 L\u00edderes en Medicina Est\u00e9tica en Panam\u00e1 \u00b7 centrocarvajal.com</div>' +
-    '<script>window.onload=function(){window.print();}<\/script>' +
+    '<script>window.onload=function(){window.print();}</scr' + 'ipt>' +
     '</body></html>';
 
   var win = window.open('', '_blank');
