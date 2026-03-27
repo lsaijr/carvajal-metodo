@@ -15,6 +15,7 @@ CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
 GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 GROQ_KEY    = os.environ.get('GROQ_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
+MAIL_CC         = [m.strip() for m in os.environ.get('MAIL_CC','').split(',') if m.strip()]
 ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
@@ -169,7 +170,7 @@ def guardar_borrador(job_id):
 # WORKER
 # ════════════════════════════════════════════════════════════
 
-def subir_plan_cloudinary(html_path, html_name):
+def subir_plan_cloudinary(html_path, html_name, job_id=''):
     """Sube el HTML del plan a Cloudinary como raw file.
     Devuelve la URL pública o None si falla."""
     if not CLOUDINARY_CLOUD_NAME:
@@ -178,10 +179,11 @@ def subir_plan_cloudinary(html_path, html_name):
     try:
         resultado = cloudinary.uploader.upload(
             html_path,
-            folder       = 'carvajal/planes',
-            public_id    = html_name.replace('.html', ''),
-            resource_type= 'raw',
-            overwrite    = True,
+            folder        = 'carvajal/planes',
+            public_id     = re.sub(r'\.html$', '', html_name),
+            resource_type = 'raw',
+            overwrite     = True,
+            context       = f'job_id={job_id}' if job_id else None,
         )
         url = resultado.get('secure_url', '')
         print(f'Cloudinary OK: {url[:80]}')
@@ -377,44 +379,60 @@ def api_listar_planes():
     planes = []
     try:
         import cloudinary.api
+        from datetime import datetime as dt
         resultado = cloudinary.api.resources(
             type='upload',
             resource_type='raw',
             prefix='carvajal/planes/',
             max_results=200,
+            context=True,
         )
         for r in resultado.get('resources', []):
-            public_id     = r.get('public_id', '')
+            public_id      = r.get('public_id', '')
+            # secure_url ya incluye la extensión correcta
+            plan_url       = r.get('secure_url', '')
             nombre_archivo = public_id.split('/')[-1] + '.html'
-            parts = nombre_archivo.replace('.html', '').split('_')
+
+            # Extraer campos del nombre de archivo
+            # Formato: Plan_Nombre_Apellido_YYYYMMDD_modelo
+            base   = public_id.split('/')[-1]  # sin extensión
+            parts  = base.split('_')
             modelo = 'claude'
             fecha_raw = ''
             nombre_parts = []
             for p in parts:
-                if p in ('claude', 'gemini', 'groq'):
-                    modelo = p
+                if p.lower() in ('claude', 'gemini', 'groq'):
+                    modelo = p.lower()
                 elif len(p) == 8 and p.isdigit():
                     fecha_raw = p
                 elif p not in ('Plan',):
                     nombre_parts.append(p)
-            nombre_paciente = ' '.join(nombre_parts) if nombre_parts else nombre_archivo
+            nombre_paciente = ' '.join(nombre_parts) if nombre_parts else base
+
+            # Fecha legible desde nombre de archivo
             fecha_legible = ''
             if fecha_raw and len(fecha_raw) == 8:
                 try:
-                    from datetime import datetime as dt
                     fecha_legible = dt.strptime(fecha_raw, '%Y%m%d').strftime('%d/%m/%Y')
                 except:
                     fecha_legible = fecha_raw
-            job_id_guess = public_id.split('/')[-1]
+
+            # Fecha ISO de Cloudinary para stats "este mes"
+            created_at = r.get('created_at', '')
+
+            # job_id: primero desde context (si fue guardado), luego fallback al nombre
+            ctx      = r.get('context', {}).get('custom', {})
+            job_id_r = ctx.get('job_id', '') or base
+
             planes.append({
-                'url'           : r.get('secure_url', ''),
+                'url'           : plan_url,
                 'nombre_archivo': nombre_archivo,
                 'nombre'        : nombre_paciente,
                 'modelo'        : modelo,
                 'fecha'         : fecha_legible or 'Sin fecha',
                 'fecha_raw'     : fecha_raw,
-                'job_id'        : job_id_guess,
-                'created_at'    : r.get('created_at', ''),
+                'job_id'        : job_id_r,
+                'created_at'    : created_at,
             })
         planes.sort(key=lambda x: x.get('created_at', ''), reverse=True)
     except Exception as e:
@@ -422,6 +440,145 @@ def api_listar_planes():
         return jsonify({'planes': [], 'error': str(e)})
     return jsonify({'planes': planes, 'total': len(planes)})
 
+
+
+def generar_docx_cuestionario(data):
+    """Genera .docx estructurado con los datos del formulario."""
+    from docx import Document
+    from docx.shared import Pt, RGBColor, Cm
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+
+    doc = Document()
+    for section in doc.sections:
+        section.top_margin = Cm(2); section.bottom_margin = Cm(2)
+        section.left_margin = Cm(2.5); section.right_margin = Cm(2.5)
+
+    VERDE  = RGBColor(0x2d,0x3a,0x2e)
+    OLIVE  = RGBColor(0x8f,0xa8,0x32)
+    GOLD   = RGBColor(0xb8,0x93,0x5a)
+    BLANCO = RGBColor(0xff,0xff,0xff)
+    GRIS   = RGBColor(0x6b,0x72,0x80)
+
+    def set_cell_bg(cell, color_hex):
+        tc = cell._tc; tcPr = tc.get_or_add_tcPr()
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'),'clear'); shd.set(qn('w:color'),'auto')
+        shd.set(qn('w:fill'), color_hex); tcPr.append(shd)
+
+    def heading(text, level=1):
+        p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        run = p.add_run(text); run.bold = True
+        run.font.size = Pt(13 if level==1 else 11)
+        run.font.color.rgb = OLIVE if level==1 else VERDE
+        p.paragraph_format.space_before = Pt(12)
+        p.paragraph_format.space_after = Pt(4)
+
+    def row_tabla(tabla, label, value):
+        cells = tabla.add_row().cells
+        cells[0].text = label
+        cells[0].paragraphs[0].runs[0].bold = True
+        cells[0].paragraphs[0].runs[0].font.size = Pt(9)
+        set_cell_bg(cells[0], '2d3a2e')
+        cells[0].paragraphs[0].runs[0].font.color.rgb = BLANCO
+        val_str = value if isinstance(value,str) else (', '.join(value) if isinstance(value,list) else str(value or '—'))
+        cells[1].text = val_str or '—'
+        cells[1].paragraphs[0].runs[0].font.size = Pt(10)
+
+    def tabla2():
+        t = doc.add_table(rows=0, cols=2); t.style = 'Table Grid'
+        t.alignment = WD_TABLE_ALIGNMENT.LEFT
+        return t
+
+    # Encabezado
+    p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = p.add_run('CENTRO CARVAJAL'); r.bold=True; r.font.size=Pt(16); r.font.color.rgb=VERDE
+    p2 = doc.add_paragraph(); p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r2 = p2.add_run('Cuestionario del Paciente — Método de Rejuvenecimiento Carvajal')
+    r2.font.size=Pt(10); r2.font.color.rgb=GOLD
+    doc.add_paragraph()
+
+    heading('1. DATOS PERSONALES')
+    t=tabla2()
+    row_tabla(t,'nombre_completo',data.get('nombre',''))
+    row_tabla(t,'edad',data.get('edad',''))
+    row_tabla(t,'sexo',data.get('sexo',''))
+    row_tabla(t,'ocupacion',data.get('ocupacion',''))
+    row_tabla(t,'actividad_laboral',data.get('actLaboral',''))
+    row_tabla(t,'horario_laboral',data.get('horarioLaboral',''))
+    row_tabla(t,'email',data.get('email',''))
+    row_tabla(t,'fecha_evaluacion',data.get('fecha',''))
+
+    heading('2. MEDIDAS CORPORALES')
+    t=tabla2()
+    row_tabla(t,'estatura_cm',data.get('estatura',''))
+    row_tabla(t,'peso_kg',data.get('peso',''))
+    row_tabla(t,'imc',data.get('imc',''))
+
+    heading('3. SALUD GENERAL')
+    t=tabla2()
+    row_tabla(t,'condicion_sistemica',data.get('condicionSistemica',''))
+    row_tabla(t,'condiciones_medicas',data.get('condiciones',''))
+    row_tabla(t,'medicamentos',data.get('medicamentos',''))
+    row_tabla(t,'cirugias_previas',data.get('cirugias',''))
+    row_tabla(t,'alergias',data.get('alergias',''))
+    row_tabla(t,'fuma',data.get('fuma',''))
+    row_tabla(t,'consume_alcohol',data.get('alcohol',''))
+
+    heading('4. EVALUACIÓN CUTÁNEA Y RUTINA FACIAL')
+    t=tabla2()
+    row_tabla(t,'tipo_piel',data.get('pielTipo',''))
+    row_tabla(t,'problemas_faciales',data.get('pielProblemas',''))
+    row_tabla(t,'areas_corporales',data.get('areasCorporales',''))
+    row_tabla(t,'rutina_manana',data.get('rutinaManana',''))
+    row_tabla(t,'rutina_noche',data.get('rutinaNoche',''))
+    row_tabla(t,'productos_frecuentes',data.get('productosFrecuentes',''))
+    row_tabla(t,'usa_solar',data.get('solar',''))
+    row_tabla(t,'spf_factor',data.get('spf',''))
+    row_tabla(t,'laser_activo',data.get('laserActivo',''))
+    hist=data.get('historialEstetico',[])
+    if hist: row_tabla(t,'historial_estetico',hist if isinstance(hist,str) else ', '.join(hist))
+
+    heading('5. ALIMENTACIÓN Y NUTRICIÓN')
+    t=tabla2()
+    row_tabla(t,'intolerancias_alim',data.get('intolerancias',''))
+    row_tabla(t,'sintomas_digestivos',data.get('sintomasDigestivos',''))
+    row_tabla(t,'proteinas_frecuentes',data.get('proteinas',''))
+    row_tabla(t,'carbohidratos',data.get('carbohidratos',''))
+    row_tabla(t,'verduras',data.get('verduras',''))
+    row_tabla(t,'frutas',data.get('frutas',''))
+    row_tabla(t,'alimentos_evitar',data.get('alimentosEvitar',''))
+    row_tabla(t,'postres_dulces',data.get('postres',''))
+    row_tabla(t,'bebidas_habituales',data.get('bebidas',''))
+    row_tabla(t,'notas_alimentacion',data.get('notasAlimentacion',''))
+
+    heading('6. ACTIVIDAD FÍSICA Y SUEÑO')
+    t=tabla2()
+    row_tabla(t,'actividad_fisica',data.get('actFisica',''))
+    row_tabla(t,'horas_sueno',data.get('sueno',''))
+    row_tabla(t,'hora_despierta',data.get('horaDespierta',''))
+    row_tabla(t,'hora_duerme',data.get('horaDuerme',''))
+    row_tabla(t,'cansancio_diurno',data.get('cansancioDia',''))
+    row_tabla(t,'nivel_estres',data.get('nivelEstres',''))
+    row_tabla(t,'num_hijos',data.get('numHijos',''))
+
+    heading('7. OBJETIVOS Y PRIORIDADES')
+    t=tabla2()
+    row_tabla(t,'prioridad_principal',data.get('prioridad',''))
+    row_tabla(t,'expectativas',data.get('expectativas',''))
+    row_tabla(t,'satisfaccion_actual',str(data.get('satisfaccion',''))+'/10')
+
+    doc.add_paragraph()
+    p_pie = doc.add_paragraph(); p_pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    rp = p_pie.add_run('Centro Carvajal · Líderes en Medicina Estética en Panamá · centrocarvajal.com')
+    rp.font.size=Pt(8); rp.font.color.rgb=GRIS
+
+    nombre_safe = re.sub(r'[^a-zA-Z0-9]','_', data.get('nombre','Paciente'))
+    docx_path = f'/tmp/Cuestionario_{nombre_safe}_{uuid.uuid4().hex[:6]}.docx'
+    doc.save(docx_path)
+    return docx_path
 
 
 def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
@@ -453,7 +610,7 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
         html_url_local = f'{base_url}/planes_generados/{html_name}'
 
         # Subir plan final a Cloudinary
-        html_url_cdn = subir_plan_cloudinary(html_path, html_name)
+        html_url_cdn = subir_plan_cloudinary(html_path, html_name, job_id=job_id)
         html_url = html_url_cdn if html_url_cdn else html_url_local
 
         # Subir borrador editable a Cloudinary
@@ -464,16 +621,30 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
         jobs[job_id] = {'status': 'working', 'msg': 'Enviando correos...'}
         fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
 
-        # Correo 1: cuestionario + link al borrador editable
+        # Generar .docx del cuestionario para adjuntar
+        docx_cuestionario = None
+        try:
+            docx_cuestionario = generar_docx_cuestionario(data)
+            print(f'[worker] Cuestionario .docx: {docx_cuestionario}')
+        except Exception as e:
+            print(f'[worker] Error docx cuestionario: {e}')
+
+        # Armar lista de adjuntos: fotos + docx
+        adjuntos = list(fotos or [])
+        if docx_cuestionario and os.path.exists(docx_cuestionario):
+            adjuntos.append(docx_cuestionario)
+
+        # Correo al staff con borrador + adjuntos + CC
         enviar_resend(
             f'Nuevo Plan IA - {nombre} ({fecha_hoy})',
             email_formulario(data, faltantes, borrador_url),
             MAIL_TO,
-            adjuntos_extra=fotos or []
+            adjuntos_extra=adjuntos,
+            cc=MAIL_CC or None
         )
 
-        # Limpiar fotos temporales
-        for f_path in (fotos or []):
+        # Limpiar temporales
+        for f_path in adjuntos:
             try: os.unlink(f_path)
             except: pass
 
@@ -1249,7 +1420,7 @@ def generar_calendario():
 # EMAILS con Resend
 # ════════════════════════════════════════════════════════════
 
-def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adjuntos_extra=None):
+def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adjuntos_extra=None, cc=None):
     if not RESEND_KEY:
         print('RESEND_KEY no configurado')
         return
@@ -1259,6 +1430,8 @@ def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adju
         'subject': asunto,
         'html': cuerpo,
     }
+    if cc:
+        payload['cc'] = cc if isinstance(cc, list) else [cc]
     attachments = []
     if adjunto_path and adjunto_name and os.path.exists(adjunto_path):
         import base64
