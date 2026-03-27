@@ -762,7 +762,6 @@ textarea:focus{border-color:var(--gold)}
       <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
       <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
       <button onclick="setModelo('groq')" id="mbtn-groq" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">▲ Groq</button>
-      <button onclick="setModelo('grok')" id="mbtn-grok" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">✕ Grok</button>
     </div>
   </div>
 </div>
@@ -1246,7 +1245,6 @@ function setModelo(m) {
     claude: { id: 'mbtn-claude', bg: '#2d3a2e', border: '#2d3a2e' },
     gemini: { id: 'mbtn-gemini', bg: '#1a73e8', border: '#1a73e8' },
     groq:   { id: 'mbtn-groq',   bg: '#f55036', border: '#f55036' },
-    grok:   { id: 'mbtn-grok',   bg: '#000000', border: '#000000' },
   };
   // Reset all
   Object.values(configs).forEach(c => {
