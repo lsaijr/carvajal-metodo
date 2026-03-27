@@ -189,6 +189,8 @@ textarea:focus{border-color:var(--gold)}
     <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-nombre" type="text" placeholder="Tu nombre y apellidos"></div>
     <div class="field"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" type="text" placeholder="Ej. 8-123-456"></div>
     <div class="field full"><label class="field-label">Dirección de residencia</label><input id="f-direccion" type="text" placeholder="Ej. Calle 50, Miraflores, Panamá"></div>
+    <div class="field"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" type="text" placeholder="Ej. 8-123-456"></div>
+    <div class="field full"><label class="field-label">Dirección de residencia</label><input id="f-direccion" type="text" placeholder="Ej. Calle 50, Miraflores, Panamá"></div>
     <div class="field"><label class="field-label">Edad <span class="req">*</span></label><input id="f-edad" type="number" placeholder="Ej. 32" min="1" max="120"></div>
     <div class="field"><label class="field-label">Sexo <span class="req">*</span></label>
       <div class="radio-group">
@@ -258,6 +260,18 @@ textarea:focus{border-color:var(--gold)}
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Cuido de niños o adultos</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Acompañamiento diario</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Otro</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-grid" style="margin-top:8px">
+    <div class="field full"><label class="field-label">¿Cómo nos conociste?</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Internet / Google</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Redes sociales</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Recomendación de amigo/a</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Paciente anterior</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Otro</label>
       </div>
     </div>
   </div>
@@ -735,6 +749,21 @@ textarea:focus{border-color:var(--gold)}
       </div>
     </div>
   </div>
+  <div class="subsection" style="margin-top:8px">
+    <div class="subsection-title">Antecedentes Familiares</div>
+    <div class="form-grid">
+      <div class="field full"><label class="field-label">¿Algún familiar directo con enfermedades relevantes?</label>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="antecedentes_fam"><div class="radio-dot"></div>Sí</label>
+          <label class="radio-item"><input type="radio" name="antecedentes_fam"><div class="radio-dot"></div>No</label>
+        </div>
+      </div>
+      <div class="field full" id="antecedentes-det-wrap" style="display:none">
+        <label class="field-label">¿Cuáles? (diabetes, cáncer, enfermedades cardíacas, etc.)</label>
+        <textarea id="f-antecedentes-det" placeholder="Ej. Padre con diabetes tipo 2, madre con hipotiroidismo..."></textarea>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- STEP 11: Declaración y Consentimiento -->
@@ -756,7 +785,7 @@ textarea:focus{border-color:var(--gold)}
 <div id="screen-loading">
   <div class="loading-spinner"></div>
   <div class="loading-title">Procesando tu información</div>
-  <div class="loading-desc">Estamos generando tu plan personalizado con inteligencia artificial. Esto puede tardar entre 1 y 2 minutos — por favor no cierres esta ventana.</div>
+  <div class="loading-desc">Estamos generando tu plan personalizado con inteligencia artificial. Esto puede tardar entre 5 y 10 minutos según la cantidad y tipo de información — por favor no cierres esta ventana.</div>
   <div class="loading-steps">
     <div class="ls-item active" id="ls-1"><div class="ls-dot"></div>Enviando tu formulario al equipo</div>
     <div class="ls-item" id="ls-2"><div class="ls-dot"></div>Analizando tus objetivos con IA</div>
@@ -788,9 +817,14 @@ textarea:focus{border-color:var(--gold)}
       <div style="font-size:12px;color:#2d3a2e">Selecciona con qué IA quieres generar el plan</div>
     </div>
     <div style="display:flex;gap:10px">
-      <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
-      <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
-      <button onclick="setModelo('groq')" id="mbtn-groq" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">▲ Groq</button>
+<select id="modelo-select" onchange="setModeloSelect(this.value)"
+        style="padding:9px 36px 9px 0;border:none;border-bottom:1px solid var(--border);font-size:14px;font-family:inherit;color:var(--text);background:transparent;cursor:pointer;outline:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%238fa832%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 4px center;width:100%">
+          <option value="">— Selecciona una IA —</option>
+          <option value="claude">✦ Claude</option>
+          <option value="gemini">◆ Gemini</option>
+          <option value="groq">▲ Groq</option>
+        </select>
+        <div id="modelo-warning" style="display:none;margin-top:6px;font-size:11px;color:#c62828;font-weight:500">⚠ Debes seleccionar una IA</div>
     </div>
   </div>
 </div>
@@ -1210,6 +1244,13 @@ function collectData(){
 }
 
 function submitForm(){
+  if (!window._modeloSel) {
+    const warn = document.getElementById('modelo-warning');
+    const sel  = document.getElementById('modelo-select');
+    if (warn) { warn.style.display='block'; }
+    if (sel)  { sel.style.borderColor='#c62828'; sel.focus(); sel.scrollIntoView({behavior:'smooth',block:'center'}); }
+    return;
+  }
   const consents=document.querySelectorAll('#step-11 .consent-item input[type="checkbox"]');
   if(![...consents].every(c=>c.checked)){
     alert('Por favor acepta todas las declaraciones de consentimiento para continuar.');
@@ -1226,7 +1267,7 @@ function submitForm(){
   fd.append('data',JSON.stringify(collectData()));
   photoFiles.forEach((file,i)=>{ if(file)fd.append('foto_'+(i+1),file,file.name); });
 
-  fd.append('modelo', window._modeloSel || 'claude');
+  fd.append('modelo', window._modeloSel);
   fetch('/enviar',{method:'POST',body:fd})
     .then(r=>r.json())
     .then(data=>{
@@ -1295,6 +1336,14 @@ function animateLoadingSteps(){
 
 document.getElementById('fecha-envio').valueAsDate=new Date();
 
+// Toggle antecedentes familiares
+document.querySelectorAll('input[name="antecedentes_fam"]').forEach(r => {
+  r.addEventListener('change', function() {
+    const wrap = document.getElementById('antecedentes-det-wrap');
+    if (wrap) wrap.style.display = this.closest('.radio-item').textContent.trim() === 'Sí' ? 'block' : 'none';
+  });
+});
+
 // Mostrar/ocultar detalle antecedentes familiares
 document.querySelectorAll('input[name="antecedentes_fam"]').forEach(r => {
   r.addEventListener('change', function() {
@@ -1306,27 +1355,17 @@ buildLabels();
 initCheckboxes();
 updateUI();
 
-window._modeloSel = 'claude';
+window._modeloSel = '';  // vacío — obliga a seleccionar
 
+function setModeloSelect(m) {
+  window._modeloSel = m;
+  const warn = document.getElementById('modelo-warning');
+  const sel  = document.getElementById('modelo-select');
+  if (warn) warn.style.display = m ? 'none' : 'block';
+  if (sel)  sel.style.borderColor = m ? '#8fa832' : 'var(--border)';
+}
 function setModelo(m) {
   window._modeloSel = m;
-  const configs = {
-    claude: { id: 'mbtn-claude', bg: '#2d3a2e', border: '#2d3a2e' },
-    gemini: { id: 'mbtn-gemini', bg: '#1a73e8', border: '#1a73e8' },
-    groq:   { id: 'mbtn-groq',   bg: '#f55036', border: '#f55036' },
-
-  };
-  // Reset all
-  Object.values(configs).forEach(c => {
-    const el = document.getElementById(c.id);
-    if (el) { el.style.background = 'transparent'; el.style.borderColor = '#d4dcc0'; el.style.color = '#7a8a6a'; }
-  });
-  // Activate selected
-  const sel = configs[m];
-  if (sel) {
-    const el = document.getElementById(sel.id);
-    if (el) { el.style.background = sel.bg; el.style.borderColor = sel.border; el.style.color = '#fff'; }
-  }
 }
 
 // Show model selector on last step
