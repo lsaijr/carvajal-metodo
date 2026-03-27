@@ -95,7 +95,7 @@ def enviar():
     job_id = uuid.uuid4().hex[:16]
     jobs[job_id] = {'status': 'working', 'msg': 'Iniciando generacion del plan...'}
 
-    modelo = form.get('modelo', 'claude')
+    modelo = request.form.get('modelo', 'claude')  # viene del FormData, no del JSON
     t = threading.Thread(target=worker, args=(job_id, data, [], fotos, modelo), daemon=True)
     t.start()
 
@@ -840,9 +840,8 @@ function mostrarToast(msg, tipo='success') {
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.get_json(silent=True) or {}
-    pwd  = data.get('password', '').strip()
+    pwd    = data.get('password', '').strip()
     stored = ADMIN_PASSWORD.strip()
-    print(f'[login] recibido={repr(pwd)} esperado={repr(stored)} match={pwd==stored}')
     if pwd == stored:
         tok = secrets.token_hex(32)
         admin_tokens.add(tok)
