@@ -878,7 +878,7 @@ def _llamar_gemini(num, total, system_prompt, user_msg, max_tok=8000):
     """Llama a Gemini 2.0 Flash con el mismo contrato que _llamar_claude."""
     print(f"[Gemini {num}/{total}] Iniciando...")
     t0 = time.time()
-    model = 'gemini-2.0-flash-lite'
+    model = 'gemini-1.5-flash'
     url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}'
     payload = {
         'system_instruction': {'parts': [{'text': system_prompt}]},
