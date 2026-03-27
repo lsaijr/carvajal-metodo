@@ -1,4 +1,4 @@
-import os, json, uuid, threading, calendar, secrets, hashlib
+import os, json, uuid, threading, calendar
 import cloudinary
 import cloudinary.uploader
 WEASYPRINT_OK = False
@@ -14,9 +14,7 @@ app = Flask(__name__)
 CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
 GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 GROQ_KEY    = os.environ.get('GROQ_KEY', '')
-COHERE_KEY      = os.environ.get('COHERE_KEY', '')
-RESEND_KEY      = os.environ.get('RESEND_KEY', '')
-ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
+RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
@@ -37,7 +35,6 @@ if CLOUDINARY_CLOUD_NAME:
 
 # ── Jobs en memoria ───────────────────────────────────────────
 jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
-admin_tokens = set()  # tokens de sesión activos
 
 # ════════════════════════════════════════════════════════════
 # RUTAS
@@ -164,102 +161,6 @@ def guardar_borrador(job_id):
 
 
 
-
-
-# ════════════════════════════════════════════════════════════
-# ADMIN — Planes listado
-# ════════════════════════════════════════════════════════════
-
-@app.route('/planes', methods=['GET'])
-def admin_planes():
-    with open(os.path.join(os.path.dirname(__file__), 'planes.html'), encoding='utf-8') as f:
-        return f.read()
-
-
-@app.route('/api/login', methods=['POST'])
-def api_login():
-    data = request.get_json(silent=True) or {}
-    pwd  = data.get('password', '')
-    if pwd == ADMIN_PASSWORD:
-        tok = secrets.token_hex(32)
-        admin_tokens.add(tok)
-        return jsonify({'ok': True, 'token': tok})
-    return jsonify({'ok': False}), 401
-
-
-def _check_token():
-    tok = request.headers.get('X-Token', '')
-    return tok in admin_tokens
-
-
-@app.route('/api/planes', methods=['GET'])
-def api_listar_planes():
-    if not _check_token():
-        return jsonify({'error': 'No autorizado'}), 401
-
-    planes = []
-    try:
-        import cloudinary.api
-        resultado = cloudinary.api.resources(
-            type='upload',
-            resource_type='raw',
-            prefix='carvajal/planes/',
-            max_results=200,
-        )
-        for r in resultado.get('resources', []):
-            public_id = r.get('public_id', '')        # carvajal/planes/Plan_Nombre_YYYYMMDD_claude
-            nombre_archivo = public_id.split('/')[-1] + '.html'
-
-            # Extraer nombre del paciente y modelo del nombre de archivo
-            # Formato: Plan_Nombre_Apellido_YYYYMMDD_modelo
-            parts = nombre_archivo.replace('.html', '').split('_')
-            modelo = 'claude'
-            fecha_raw = ''
-            nombre_parts = []
-            for i, p in enumerate(parts):
-                if p in ('claude', 'gemini', 'groq', 'cohere'):
-                    modelo = p
-                elif len(p) == 8 and p.isdigit():
-                    fecha_raw = p
-                elif p not in ('Plan',):
-                    nombre_parts.append(p)
-
-            nombre_paciente = ' '.join(nombre_parts) if nombre_parts else nombre_archivo
-
-            # Formatear fecha legible
-            fecha_legible = ''
-            if fecha_raw and len(fecha_raw) == 8:
-                try:
-                    from datetime import datetime as dt
-                    fecha_legible = dt.strptime(fecha_raw, '%Y%m%d').strftime('%d/%m/%Y')
-                except:
-                    fecha_legible = fecha_raw
-
-            # Intentar obtener job_id desde borradores existentes para el link de edición
-            # El job_id está guardado en jobs{} en memoria — si el server se reinició no está
-            # Usamos el public_id como identificador estable para el borrador
-            job_id_guess = public_id.split('/')[-1]  # nombre sin extensión como fallback
-
-            # Buscar si hay un borrador con el mismo nombre base
-            planes.append({
-                'url'           : r.get('secure_url', ''),
-                'nombre_archivo': nombre_archivo,
-                'nombre'        : nombre_paciente,
-                'modelo'        : modelo,
-                'fecha'         : fecha_legible or 'Sin fecha',
-                'fecha_raw'     : fecha_raw,
-                'job_id'        : job_id_guess,
-                'created_at'    : r.get('created_at', ''),
-            })
-
-        # Ordenar por fecha de creación descendente
-        planes.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-
-    except Exception as e:
-        print(f'[api/planes] Error Cloudinary: {e}')
-        return jsonify({'planes': [], 'error': str(e)})
-
-    return jsonify({'planes': planes, 'total': len(planes)})
 
 
 # ════════════════════════════════════════════════════════════
@@ -458,8 +359,6 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
             sufijo_modelo = '_gemini'
         elif modelo == 'groq':
             sufijo_modelo = '_groq'
-        elif modelo == 'cohere':
-            sufijo_modelo = '_cohere'
         else:
             sufijo_modelo = '_claude'
         html_name = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + sufijo_modelo + '.html'
@@ -973,62 +872,6 @@ def _llamar_groq(num, total, system_prompt, user_msg, max_tok=8000):
 
 
 
-def _llamar_cohere(num, total, system_prompt, user_msg, max_tok=8000):
-    """Llama a Cohere command-r-plus con el mismo contrato que _llamar_claude."""
-    print(f"[Cohere {num}/{total}] Iniciando...")
-    t0 = time.time()
-    url = 'https://api.cohere.com/v2/chat'
-    prefijo = (
-        "INSTRUCCION CRITICA DE CALIDAD: Eres un experto medico y de salud integral. "
-        "Debes ser EXTREMADAMENTE detallado, especifico y personalizado. "
-        "PROHIBIDO usar frases genericas o vagas. "
-        "Cada campo del JSON debe tener minimo 2-3 oraciones ricas en contenido clinico. "
-        "El menu semanal debe tener comidas COMPLETAS y VARIADAS para cada dia. "
-        "Los protocolos deben tener pasos numerados con tiempos y cantidades exactas. "
-        "Completa ABSOLUTAMENTE TODOS los campos sin omitir ninguno.\n\n"
-    )
-    payload = {
-        'model': 'command-r-plus-08-2024',
-        'messages': [
-            {'role': 'system', 'content': prefijo + system_prompt},
-            {'role': 'user',   'content': user_msg}
-        ],
-        'max_tokens': max_tok,
-        'temperature': 0.4,
-    }
-    try:
-        resp = req.post(
-            url,
-            headers={
-                'Authorization': f'Bearer {COHERE_KEY}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            json=payload,
-            timeout=300
-        )
-        elapsed = round(time.time() - t0, 1)
-        if resp.status_code != 200:
-            print(f"[Cohere {num}/{total}] ERROR {resp.status_code}: {resp.text[:300]}")
-            return None, f'Error API Cohere ({resp.status_code}): {resp.text[:200]}'
-        rj = resp.json()
-        txt = rj['message']['content'][0]['text']
-        print(f"[Cohere {num}/{total}] OK — {elapsed}s")
-        txt = re.sub(r'^```json\s*', '', txt.strip())
-        txt = re.sub(r'^```\s*', '', txt)
-        txt = re.sub(r'```\s*$', '', txt).strip()
-        try:
-            result = json.loads(txt)
-            print(f"[Cohere {num}/{total}] JSON OK — claves: {list(result.keys())}")
-            return result, None
-        except Exception as e:
-            print(f"[Cohere {num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
-            return None, f'JSON invalido en llamada Cohere {num}: {str(e)[:150]}'
-    except Exception as e:
-        return None, f'Error llamando Cohere: {str(e)[:200]}'
-
-
-
 
 def generar_plan_ia(d, job_id=None, modelo='claude'):
     datos = _datos_paciente(d)
@@ -1070,10 +913,6 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
         _llamar = _llamar_groq
         tok1, tok2, tok3 = 8000, 12000, 10000  # más tokens = más detalle
         nombre_modelo = 'Groq (Llama)'
-    elif modelo == 'cohere':
-        _llamar = _llamar_cohere
-        tok1, tok2, tok3 = 6000, 10000, 8000
-        nombre_modelo = 'Cohere'
     else:
         _llamar = _llamar_claude
         tok1, tok2, tok3 = 4000, 10000, 8000
@@ -1083,14 +922,18 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
     r1, err = _llamar(1, 3, SYS1, datos, max_tok=tok1)
     if err: return {'error': err}
 
-    if modelo in ('gemini', 'groq', 'cohere'):
+    if modelo == 'claude':
+        time.sleep(2)  # pausa entre secciones para evitar overloaded (529)
+    elif modelo in ('gemini', 'groq'):
         time.sleep(5)  # pausa para evitar rate limit en APIs con cuota baja
 
     actualizar(f'Sección 2/3 — Nutrición, ejercicio y bienestar mental... ({nombre_modelo})', 45)
     r2, err = _llamar(2, 3, SYS2, datos, max_tok=tok2)
     if err: return {'error': err}
 
-    if modelo in ('gemini', 'groq', 'cohere'):
+    if modelo == 'claude':
+        time.sleep(2)
+    elif modelo in ('gemini', 'groq'):
         time.sleep(5)
 
     actualizar(f'Sección 3/3 — Sueño, tratamientos y plan de compromiso... ({nombre_modelo})', 75)
