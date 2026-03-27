@@ -1,4 +1,4 @@
-import os, json, uuid, threading, calendar
+import os, json, uuid, threading, calendar, secrets, hashlib
 import cloudinary
 import cloudinary.uploader
 WEASYPRINT_OK = False
@@ -15,9 +15,9 @@ CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
 GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 GROQ_KEY    = os.environ.get('GROQ_KEY', '')
 COHERE_KEY      = os.environ.get('COHERE_KEY', '')
-RESEND_KEY  = os.environ.get('RESEND_KEY', '')
+RESEND_KEY      = os.environ.get('RESEND_KEY', '')
+ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
-MAIL_CC     = [m.strip() for m in os.environ.get('MAIL_CC', 'centrocarvajal1@gmail.com').split(',') if m.strip()]
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
 os.makedirs(PLANES_DIR, exist_ok=True)
@@ -37,6 +37,7 @@ if CLOUDINARY_CLOUD_NAME:
 
 # ── Jobs en memoria ───────────────────────────────────────────
 jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
+admin_tokens = set()  # tokens de sesión activos
 
 # ════════════════════════════════════════════════════════════
 # RUTAS
@@ -163,6 +164,102 @@ def guardar_borrador(job_id):
 
 
 
+
+
+# ════════════════════════════════════════════════════════════
+# ADMIN — Planes listado
+# ════════════════════════════════════════════════════════════
+
+@app.route('/planes', methods=['GET'])
+def admin_planes():
+    with open(os.path.join(os.path.dirname(__file__), 'planes.html'), encoding='utf-8') as f:
+        return f.read()
+
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json(silent=True) or {}
+    pwd  = data.get('password', '')
+    if pwd == ADMIN_PASSWORD:
+        tok = secrets.token_hex(32)
+        admin_tokens.add(tok)
+        return jsonify({'ok': True, 'token': tok})
+    return jsonify({'ok': False}), 401
+
+
+def _check_token():
+    tok = request.headers.get('X-Token', '')
+    return tok in admin_tokens
+
+
+@app.route('/api/planes', methods=['GET'])
+def api_listar_planes():
+    if not _check_token():
+        return jsonify({'error': 'No autorizado'}), 401
+
+    planes = []
+    try:
+        import cloudinary.api
+        resultado = cloudinary.api.resources(
+            type='upload',
+            resource_type='raw',
+            prefix='carvajal/planes/',
+            max_results=200,
+        )
+        for r in resultado.get('resources', []):
+            public_id = r.get('public_id', '')        # carvajal/planes/Plan_Nombre_YYYYMMDD_claude
+            nombre_archivo = public_id.split('/')[-1] + '.html'
+
+            # Extraer nombre del paciente y modelo del nombre de archivo
+            # Formato: Plan_Nombre_Apellido_YYYYMMDD_modelo
+            parts = nombre_archivo.replace('.html', '').split('_')
+            modelo = 'claude'
+            fecha_raw = ''
+            nombre_parts = []
+            for i, p in enumerate(parts):
+                if p in ('claude', 'gemini', 'groq', 'cohere'):
+                    modelo = p
+                elif len(p) == 8 and p.isdigit():
+                    fecha_raw = p
+                elif p not in ('Plan',):
+                    nombre_parts.append(p)
+
+            nombre_paciente = ' '.join(nombre_parts) if nombre_parts else nombre_archivo
+
+            # Formatear fecha legible
+            fecha_legible = ''
+            if fecha_raw and len(fecha_raw) == 8:
+                try:
+                    from datetime import datetime as dt
+                    fecha_legible = dt.strptime(fecha_raw, '%Y%m%d').strftime('%d/%m/%Y')
+                except:
+                    fecha_legible = fecha_raw
+
+            # Intentar obtener job_id desde borradores existentes para el link de edición
+            # El job_id está guardado en jobs{} en memoria — si el server se reinició no está
+            # Usamos el public_id como identificador estable para el borrador
+            job_id_guess = public_id.split('/')[-1]  # nombre sin extensión como fallback
+
+            # Buscar si hay un borrador con el mismo nombre base
+            planes.append({
+                'url'           : r.get('secure_url', ''),
+                'nombre_archivo': nombre_archivo,
+                'nombre'        : nombre_paciente,
+                'modelo'        : modelo,
+                'fecha'         : fecha_legible or 'Sin fecha',
+                'fecha_raw'     : fecha_raw,
+                'job_id'        : job_id_guess,
+                'created_at'    : r.get('created_at', ''),
+            })
+
+        # Ordenar por fecha de creación descendente
+        planes.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+
+    except Exception as e:
+        print(f'[api/planes] Error Cloudinary: {e}')
+        return jsonify({'planes': [], 'error': str(e)})
+
+    return jsonify({'planes': planes, 'total': len(planes)})
 
 
 # ════════════════════════════════════════════════════════════
@@ -343,190 +440,6 @@ def _render_borrador_legacy(plan_json, data, job_id):
     return tpl
 
 
-def generar_docx_cuestionario(data):
-    """Genera un .docx estructurado con los datos del formulario, similar al cuestionario Word original."""
-    from docx import Document
-    from docx.shared import Pt, RGBColor, Cm
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    from docx.enum.table import WD_TABLE_ALIGNMENT
-    from docx.oxml.ns import qn
-    from docx.oxml import OxmlElement
-
-    doc = Document()
-
-    # Márgenes
-    for section in doc.sections:
-        section.top_margin    = Cm(2)
-        section.bottom_margin = Cm(2)
-        section.left_margin   = Cm(2.5)
-        section.right_margin  = Cm(2.5)
-
-    VERDE  = RGBColor(0x2d, 0x3a, 0x2e)
-    OLIVE  = RGBColor(0x8f, 0xa8, 0x32)
-    GOLD   = RGBColor(0xb8, 0x93, 0x5a)
-    BLANCO = RGBColor(0xff, 0xff, 0xff)
-    GRIS   = RGBColor(0x6b, 0x72, 0x80)
-
-    def set_cell_bg(cell, color_hex):
-        tc   = cell._tc
-        tcPr = tc.get_or_add_tcPr()
-        shd  = OxmlElement('w:shd')
-        shd.set(qn('w:val'),   'clear')
-        shd.set(qn('w:color'), 'auto')
-        shd.set(qn('w:fill'), color_hex)
-        tcPr.append(shd)
-
-    def heading(text, level=1):
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        run = p.add_run(text)
-        run.bold = True
-        run.font.size = Pt(13 if level == 1 else 11)
-        run.font.color.rgb = OLIVE if level == 1 else VERDE
-        p.paragraph_format.space_before = Pt(12)
-        p.paragraph_format.space_after  = Pt(4)
-        return p
-
-    def row_tabla(tabla, label, value, shade_label=True):
-        cells = tabla.add_row().cells
-        cells[0].text = label
-        cells[0].paragraphs[0].runs[0].bold = True
-        cells[0].paragraphs[0].runs[0].font.color.rgb = VERDE
-        cells[0].paragraphs[0].runs[0].font.size = Pt(9)
-        if shade_label:
-            set_cell_bg(cells[0], '2d3a2e')
-            cells[0].paragraphs[0].runs[0].font.color.rgb = BLANCO
-        val_str = value if isinstance(value, str) else (', '.join(value) if isinstance(value, list) else str(value or '—'))
-        cells[1].text = val_str or '—'
-        cells[1].paragraphs[0].runs[0].font.size = Pt(10)
-
-    def tabla_dos_col(widths=(5.5, 9.5)):
-        t = doc.add_table(rows=0, cols=2)
-        t.style = 'Table Grid'
-        t.alignment = WD_TABLE_ALIGNMENT.LEFT
-        for i, w in enumerate(widths):
-            for cell in t.columns[i].cells:
-                cell.width = Cm(w)
-        return t
-
-    # ── ENCABEZADO ──────────────────────────────────────────
-    p_titulo = doc.add_paragraph()
-    p_titulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p_titulo.add_run('CENTRO CARVAJAL')
-    run.bold = True
-    run.font.size = Pt(16)
-    run.font.color.rgb = VERDE
-
-    p_sub = doc.add_paragraph()
-    p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run2 = p_sub.add_run('Cuestionario del Paciente — Método de Rejuvenecimiento Carvajal')
-    run2.font.size = Pt(10)
-    run2.font.color.rgb = GOLD
-
-    doc.add_paragraph()  # espacio
-
-    # ── SECCIÓN 1: DATOS PERSONALES ──────────────────────────
-    heading('1. DATOS PERSONALES')
-    t1 = tabla_dos_col()
-    row_tabla(t1, 'nombre_completo',    data.get('nombre', ''))
-    row_tabla(t1, 'edad',               data.get('edad', ''))
-    row_tabla(t1, 'sexo',               data.get('sexo', ''))
-    row_tabla(t1, 'ocupacion',          data.get('ocupacion', ''))
-    row_tabla(t1, 'actividad_laboral',  data.get('actLaboral', ''))
-    row_tabla(t1, 'horario_laboral',    data.get('horarioLaboral', ''))
-    row_tabla(t1, 'email',              data.get('email', ''))
-    row_tabla(t1, 'fecha_evaluacion',   data.get('fecha', ''))
-
-    # ── SECCIÓN 2: MEDIDAS ────────────────────────────────────
-    heading('2. MEDIDAS CORPORALES')
-    t2 = tabla_dos_col()
-    row_tabla(t2, 'estatura_cm',  data.get('estatura', ''))
-    row_tabla(t2, 'peso_kg',      data.get('peso', ''))
-    row_tabla(t2, 'imc',          data.get('imc', ''))
-
-    # ── SECCIÓN 3: SALUD GENERAL ─────────────────────────────
-    heading('3. SALUD GENERAL')
-    t3 = tabla_dos_col()
-    row_tabla(t3, 'condicion_sistemica',  data.get('condicionSistemica', ''))
-    row_tabla(t3, 'condiciones_medicas',  data.get('condiciones', ''))
-    row_tabla(t3, 'medicamentos',         data.get('medicamentos', ''))
-    row_tabla(t3, 'cirugias_previas',     data.get('cirugias', ''))
-    row_tabla(t3, 'alergias',             data.get('alergias', ''))
-    row_tabla(t3, 'fuma',                 data.get('fuma', ''))
-    row_tabla(t3, 'consume_alcohol',      data.get('alcohol', ''))
-
-    # Contraindicaciones si existen
-    contra = data.get('contraindications', {})
-    if contra and any(v == 'Si' for v in contra.values()):
-        heading('Contraindicaciones', level=2)
-        t_contra = tabla_dos_col()
-        for k, v in contra.items():
-            if v == 'Si':
-                row_tabla(t_contra, k, v)
-
-    # ── SECCIÓN 4: PIEL Y RUTINA FACIAL ──────────────────────
-    heading('4. EVALUACIÓN CUTÁNEA Y RUTINA FACIAL')
-    t4 = tabla_dos_col()
-    row_tabla(t4, 'tipo_piel',            data.get('pielTipo', ''))
-    row_tabla(t4, 'problemas_faciales',   data.get('pielProblemas', ''))
-    row_tabla(t4, 'areas_corporales',     data.get('areasCorporales', ''))
-    row_tabla(t4, 'rutina_manana',        data.get('rutinaManana', ''))
-    row_tabla(t4, 'rutina_noche',         data.get('rutinaNoche', ''))
-    row_tabla(t4, 'productos_frecuentes', data.get('productosFrecuentes', ''))
-    row_tabla(t4, 'usa_solar',            data.get('solar', ''))
-    row_tabla(t4, 'spf_factor',           data.get('spf', ''))
-    row_tabla(t4, 'laser_activo',         data.get('laserActivo', ''))
-    hist = data.get('historialEstetico', [])
-    if hist:
-        row_tabla(t4, 'historial_estetico', hist if isinstance(hist, str) else ', '.join(hist))
-
-    # ── SECCIÓN 5: ALIMENTACIÓN ───────────────────────────────
-    heading('5. ALIMENTACIÓN Y NUTRICIÓN')
-    t5 = tabla_dos_col()
-    row_tabla(t5, 'intolerancias_alim',  data.get('intolerancias', ''))
-    row_tabla(t5, 'sintomas_digestivos', data.get('sintomasDigestivos', ''))
-    row_tabla(t5, 'proteinas_frecuentes', data.get('proteinas', ''))
-    row_tabla(t5, 'carbohidratos',        data.get('carbohidratos', ''))
-    row_tabla(t5, 'verduras',             data.get('verduras', ''))
-    row_tabla(t5, 'frutas',               data.get('frutas', ''))
-    row_tabla(t5, 'alimentos_evitar',     data.get('alimentosEvitar', ''))
-    row_tabla(t5, 'postres_dulces',       data.get('postres', ''))
-    row_tabla(t5, 'bebidas_habituales',   data.get('bebidas', ''))
-    row_tabla(t5, 'notas_alimentacion',   data.get('notasAlimentacion', ''))
-
-    # ── SECCIÓN 6: ACTIVIDAD FÍSICA Y SUEÑO ──────────────────
-    heading('6. ACTIVIDAD FÍSICA Y SUEÑO')
-    t6 = tabla_dos_col()
-    row_tabla(t6, 'actividad_fisica',  data.get('actFisica', ''))
-    row_tabla(t6, 'horas_sueno',       data.get('sueno', ''))
-    row_tabla(t6, 'hora_despierta',    data.get('horaDespierta', ''))
-    row_tabla(t6, 'hora_duerme',       data.get('horaDuerme', ''))
-    row_tabla(t6, 'cansancio_diurno',  data.get('cansancioDia', ''))
-    row_tabla(t6, 'nivel_estres',      data.get('nivelEstres', ''))
-    row_tabla(t6, 'num_hijos',         data.get('numHijos', ''))
-
-    # ── SECCIÓN 7: OBJETIVOS ──────────────────────────────────
-    heading('7. OBJETIVOS Y PRIORIDADES')
-    t7 = tabla_dos_col()
-    row_tabla(t7, 'prioridad_principal',  data.get('prioridad', ''))
-    row_tabla(t7, 'expectativas',         data.get('expectativas', ''))
-    row_tabla(t7, 'satisfaccion_actual',  str(data.get('satisfaccion', '')) + '/10')
-
-    # ── PIE ───────────────────────────────────────────────────
-    doc.add_paragraph()
-    p_pie = doc.add_paragraph()
-    p_pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_pie = p_pie.add_run('Centro Carvajal · Líderes en Medicina Estética en Panamá · centrocarvajal.com')
-    run_pie.font.size = Pt(8)
-    run_pie.font.color.rgb = GRIS
-
-    # Guardar en /tmp
-    nombre_safe = re.sub(r'[^a-zA-Z0-9]', '_', data.get('nombre', 'Paciente'))
-    docx_path   = f'/tmp/Cuestionario_{nombre_safe}_{uuid.uuid4().hex[:6]}.docx'
-    doc.save(docx_path)
-    return docx_path
-
-
 def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
     try:
         jobs[job_id] = {'status': 'working', 'msg': 'Generando plan con IA (puede tomar 1-2 min)...'}
@@ -569,29 +482,16 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
         jobs[job_id] = {'status': 'working', 'msg': 'Enviando correos...'}
         fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
 
-        # Generar .docx cuestionario para adjuntar al correo del staff
-        docx_cuestionario = None
-        try:
-            docx_cuestionario = generar_docx_cuestionario(data)
-            print(f'[worker] Cuestionario .docx generado: {docx_cuestionario}')
-        except Exception as e:
-            print(f'[worker] Error generando docx cuestionario: {e}')
-
-        # Correo 1: cuestionario + borrador + .docx adjunto
-        adjuntos = list(fotos or [])
-        if docx_cuestionario and os.path.exists(docx_cuestionario):
-            adjuntos.append(docx_cuestionario)
-
+        # Correo 1: cuestionario + link al borrador editable
         enviar_resend(
             f'Nuevo Plan IA - {nombre} ({fecha_hoy})',
             email_formulario(data, faltantes, borrador_url),
             MAIL_TO,
-            adjuntos_extra=adjuntos,
-            cc=MAIL_CC
+            adjuntos_extra=fotos or []
         )
 
-        # Limpiar temporales (fotos + docx cuestionario)
-        for f_path in adjuntos:
+        # Limpiar fotos temporales
+        for f_path in (fotos or []):
             try: os.unlink(f_path)
             except: pass
 
@@ -1423,7 +1323,7 @@ def generar_calendario():
 # EMAILS con Resend
 # ════════════════════════════════════════════════════════════
 
-def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adjuntos_extra=None, cc=None):
+def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adjuntos_extra=None):
     if not RESEND_KEY:
         print('RESEND_KEY no configurado')
         return
@@ -1433,8 +1333,6 @@ def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adju
         'subject': asunto,
         'html': cuerpo,
     }
-    if cc:
-        payload['cc'] = cc if isinstance(cc, list) else [cc]
     attachments = []
     if adjunto_path and adjunto_name and os.path.exists(adjunto_path):
         import base64
