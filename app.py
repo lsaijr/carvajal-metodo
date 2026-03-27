@@ -876,19 +876,21 @@ def api_listar_planes():
             nombre_archivo = public_id.split('/')[-1] + '.html'
 
             # Extraer campos del nombre de archivo
-            # Formato: Plan_Nombre_Apellido_YYYYMMDD_modelo
-            base   = public_id.split('/')[-1]  # sin extensión
-            parts  = base.split('_')
+            # Formato: Plan_Nombre_Apellido_YYYYMMDD_modelo(.html)
+            base  = public_id.split('/')[-1]
+            base  = re.sub(r'\.html$', '', base, flags=re.IGNORECASE)  # quitar .html si viene
+            parts = base.split('_')
             modelo = 'claude'
             fecha_raw = ''
             nombre_parts = []
             for p in parts:
-                if p.lower() in ('claude', 'gemini', 'groq'):
-                    modelo = p.lower()
-                elif len(p) == 8 and p.isdigit():
-                    fecha_raw = p
-                elif p not in ('Plan',):
-                    nombre_parts.append(p)
+                p_clean = re.sub(r'\.html$', '', p, flags=re.IGNORECASE)  # limpiar .html en cada parte
+                if p_clean.lower() in ('claude', 'gemini', 'groq'):
+                    modelo = p_clean.lower()
+                elif len(p_clean) == 8 and p_clean.isdigit():
+                    fecha_raw = p_clean
+                elif p_clean not in ('Plan',) and p_clean:
+                    nombre_parts.append(p_clean)
             nombre_paciente = ' '.join(nombre_parts) if nombre_parts else base
 
             # Fecha legible desde nombre de archivo
