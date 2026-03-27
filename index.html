@@ -169,19 +169,11 @@ header p{margin-top:10px;font-size:13px;color:var(--muted);font-weight:300}
       <button class="remove-btn" onclick="removeFile()">✕ Quitar archivo</button>
     </div>
 
-    <div id="model-btns" style="display:none;flex-direction:column;gap:6px;margin-top:16px;width:100%">
-      <div style="display:flex;gap:6px">
-        <button id="btn-claude" onclick="iniciar('claude')" style="flex:1;background:var(--dark);color:#f5efe8;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">✦ Claude</button>
-        <button id="btn-gemini" onclick="iniciar('gemini')" style="flex:1;background:#1a73e8;color:#fff;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">◆ Gemini</button>
-        <button id="btn-groq" onclick="iniciar('groq')" style="flex:1;background:#f55036;color:#fff;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">▲ Groq</button>
-        <button id="btn-cohere" onclick="iniciar('cohere')" style="flex:1;background:#39594d;color:#fff;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">⬡ Cohere</button>
-      </div>
-      <div style="display:flex;gap:6px">
-        <div style="font-size:8px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding-top:2px;white-space:nowrap">OpenRouter:</div>
-        <button id="btn-or-llama" onclick="iniciar('openrouter-llama')" style="flex:1;background:#7c3aed;color:#fff;padding:10px 4px;border-radius:2px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">Llama 3.3</button>
-        <button id="btn-or-gemini" onclick="iniciar('openrouter-gemini')" style="flex:1;background:#0891b2;color:#fff;padding:10px 4px;border-radius:2px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">Gemini Flash</button>
-        <button id="btn-or-deepseek" onclick="iniciar('openrouter-deepseek')" style="flex:1;background:#065f46;color:#fff;padding:10px 4px;border-radius:2px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">DeepSeek R1</button>
-      </div>
+    <div id="model-btns" style="display:none;flex-direction:row;gap:6px;margin-top:16px;width:100%">
+      <button id="btn-claude" onclick="iniciar('claude')" style="flex:1;background:var(--dark);color:#f5efe8;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">✦ Claude</button>
+      <button id="btn-gemini" onclick="iniciar('gemini')" style="flex:1;background:#1a73e8;color:#fff;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">◆ Gemini</button>
+      <button id="btn-groq" onclick="iniciar('groq')" style="flex:1;background:#f55036;color:#fff;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">▲ Groq</button>
+      <button id="btn-cohere" onclick="iniciar('cohere')" style="flex:1;background:#39594d;color:#fff;padding:12px 4px;border-radius:2px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">⬡ Cohere</button>
     </div>
     <input type="hidden" id="modelo-sel" value="claude">
 

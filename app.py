@@ -15,7 +15,6 @@ CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
 GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 GROQ_KEY    = os.environ.get('GROQ_KEY', '')
 COHERE_KEY      = os.environ.get('COHERE_KEY', '')
-OPENROUTER_KEY  = os.environ.get('OPENROUTER_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
@@ -459,8 +458,6 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
             sufijo_modelo = '_groq'
         elif modelo == 'cohere':
             sufijo_modelo = '_cohere'
-        elif modelo.startswith('openrouter'):
-            sufijo_modelo = '_' + modelo.replace('openrouter-', 'or_')
         else:
             sufijo_modelo = '_claude'
         html_name = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + sufijo_modelo + '.html'
@@ -989,7 +986,7 @@ def _llamar_cohere(num, total, system_prompt, user_msg, max_tok=8000):
         "Completa ABSOLUTAMENTE TODOS los campos sin omitir ninguno.\n\n"
     )
     payload = {
-        'model': 'command-r-plus',
+        'model': 'command-r-plus-08-2024',
         'messages': [
             {'role': 'system', 'content': prefijo + system_prompt},
             {'role': 'user',   'content': user_msg}
@@ -1029,61 +1026,6 @@ def _llamar_cohere(num, total, system_prompt, user_msg, max_tok=8000):
         return None, f'Error llamando Cohere: {str(e)[:200]}'
 
 
-
-def _llamar_openrouter(num, total, system_prompt, user_msg, max_tok=8000, or_model='meta-llama/llama-3.3-70b-instruct:free'):
-    """Llama a OpenRouter — acceso a múltiples modelos con una sola API key."""
-    print(f"[OpenRouter {num}/{total}] Modelo: {or_model} — Iniciando...")
-    t0 = time.time()
-    url = 'https://openrouter.ai/api/v1/chat/completions'
-    prefijo = (
-        "INSTRUCCION CRITICA DE CALIDAD: Eres un experto medico y de salud integral. "
-        "Debes ser EXTREMADAMENTE detallado, especifico y personalizado. "
-        "PROHIBIDO usar frases genericas o vagas. "
-        "Cada campo del JSON debe tener minimo 2-3 oraciones ricas en contenido clinico. "
-        "El menu semanal debe tener comidas COMPLETAS y VARIADAS para cada dia. "
-        "Los protocolos deben tener pasos numerados con tiempos y cantidades exactas. "
-        "Completa ABSOLUTAMENTE TODOS los campos sin omitir ninguno.\n\n"
-    )
-    payload = {
-        'model': or_model,
-        'messages': [
-            {'role': 'system', 'content': prefijo + system_prompt},
-            {'role': 'user',   'content': user_msg}
-        ],
-        'max_tokens': max_tok,
-        'temperature': 0.4,
-    }
-    try:
-        resp = req.post(
-            url,
-            headers={
-                'Authorization': f'Bearer {OPENROUTER_KEY}',
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://metodo.centrocarvajal.com',
-                'X-Title': 'Metodo Carvajal',
-            },
-            json=payload,
-            timeout=300
-        )
-        elapsed = round(time.time() - t0, 1)
-        if resp.status_code != 200:
-            print(f"[OpenRouter {num}/{total}] ERROR {resp.status_code}: {resp.text[:300]}")
-            return None, f'Error API OpenRouter ({resp.status_code}): {resp.text[:200]}'
-        rj = resp.json()
-        txt = rj['choices'][0]['message']['content']
-        print(f"[OpenRouter {num}/{total}] OK — {elapsed}s")
-        txt = re.sub(r'^```json\s*', '', txt.strip())
-        txt = re.sub(r'^```\s*', '', txt)
-        txt = re.sub(r'```\s*$', '', txt).strip()
-        try:
-            result = json.loads(txt)
-            print(f"[OpenRouter {num}/{total}] JSON OK — claves: {list(result.keys())}")
-            return result, None
-        except Exception as e:
-            print(f"[OpenRouter {num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
-            return None, f'JSON invalido en llamada OpenRouter {num}: {str(e)[:150]}'
-    except Exception as e:
-        return None, f'Error llamando OpenRouter: {str(e)[:200]}'
 
 
 def generar_plan_ia(d, job_id=None, modelo='claude'):
@@ -1130,18 +1072,6 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
         _llamar = _llamar_cohere
         tok1, tok2, tok3 = 6000, 10000, 8000
         nombre_modelo = 'Cohere'
-    elif modelo == 'openrouter-llama':
-        _llamar = lambda n,t,s,u,max_tok=8000: _llamar_openrouter(n,t,s,u,max_tok,'meta-llama/llama-3.3-70b-instruct:free')
-        tok1, tok2, tok3 = 6000, 10000, 8000
-        nombre_modelo = 'Llama 3.3 (OR)'
-    elif modelo == 'openrouter-gemini':
-        _llamar = lambda n,t,s,u,max_tok=8000: _llamar_openrouter(n,t,s,u,max_tok,'google/gemini-2.0-flash-exp:free')
-        tok1, tok2, tok3 = 6000, 10000, 8000
-        nombre_modelo = 'Gemini Flash (OR)'
-    elif modelo == 'openrouter-deepseek':
-        _llamar = lambda n,t,s,u,max_tok=8000: _llamar_openrouter(n,t,s,u,max_tok,'deepseek/deepseek-r1:free')
-        tok1, tok2, tok3 = 6000, 10000, 8000
-        nombre_modelo = 'DeepSeek R1 (OR)'
     else:
         _llamar = _llamar_claude
         tok1, tok2, tok3 = 4000, 10000, 8000
@@ -1151,7 +1081,7 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
     r1, err = _llamar(1, 3, SYS1, datos, max_tok=tok1)
     if err: return {'error': err}
 
-    if modelo in ('gemini', 'groq', 'cohere') or modelo.startswith('openrouter'):
+    if modelo in ('gemini', 'groq', 'cohere'):
         time.sleep(5)  # pausa para evitar rate limit en APIs con cuota baja
 
     actualizar(f'Sección 2/3 — Nutrición, ejercicio y bienestar mental... ({nombre_modelo})', 45)
