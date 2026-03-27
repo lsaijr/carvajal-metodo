@@ -290,4 +290,331 @@ nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.9);back
     <div class="field">
       <label>¿Consume dulces/postres?</label>
       <div class="radio-group">
-        <label class="radio-item"><input type="radio" name="dulces_
+        <label class="radio-item"><input type="radio" name="dulces_frec" value="Nunca"><span>Nunca</span></label>
+        <label class="radio-item"><input type="radio" name="dulces_frec" value="Ocasional"><span>Ocasional</span></label>
+        <label class="radio-item"><input type="radio" name="dulces_frec" value="Diario"><span>Diario</span></label>
+      </div>
+    </div>
+    <div class="field"><label>Postres favoritos:</label><input type="text" id="f-postres"></div>
+    <div class="field"><label>Bebidas (Té, café, soda, etc):</label><input type="text" id="f-bebidas-cuales"></div>
+    <div class="field"><label>Notas adicionales sobre alimentación:</label><textarea id="f-nota-alim" rows="2"></textarea></div>
+  </section>
+
+  <section class="step-panel" id="step-9">
+    <div class="step-head"><span class="step-num">Paso 9</span><h2>Piel y Estética Facial</h2></div>
+    <div class="field">
+      <label>Tipo de piel:</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="tipo_piel" value="Seca"><span>Seca</span></label>
+        <label class="radio-item"><input type="radio" name="tipo_piel" value="Grasa"><span>Grasa</span></label>
+        <label class="radio-item"><input type="radio" name="tipo_piel" value="Mixta"><span>Mixta</span></label>
+        <label class="radio-item"><input type="radio" name="tipo_piel" value="Sensible"><span>Sensible</span></label>
+      </div>
+    </div>
+    <div class="field"><label>¿Cuál es su prioridad estética hoy?</label><input type="text" id="f-prioridad" placeholder="Ej: Manchas, arrugas, acné..."></div>
+    <div class="field"><label>Expectativas del tratamiento:</label><textarea id="f-expectativas" rows="2"></textarea></div>
+    
+    <div class="field">
+      <label>¿Se le cae el cabello?</label>
+      <div class="yn-row"><div class="yn-btn" onclick="toggleYN(this,'cabello')">Sí</div><div class="yn-btn" onclick="toggleYN(this,'cabello')">No</div></div>
+      <input type="hidden" id="f-cabello">
+    </div>
+
+    <div class="field"><label>Rutina Mañana:</label><input type="text" id="f-rutina-manana"></div>
+    <div class="field"><label>Rutina Noche:</label><input type="text" id="f-rutina-noche"></div>
+    <div class="field"><label>Productos que usa (marcas):</label><input type="text" id="f-productos"></div>
+    <div class="field"><label>¿Usa Protector Solar? ¿Cuál?</label><input type="text" id="f-spf"></div>
+  </section>
+
+  <section class="step-panel" id="step-10">
+    <div class="step-head"><span class="step-num">Paso 10</span><h2>Estilo de Vida</h2></div>
+    <div class="field">
+      <label>Actividad Física:</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="act_fisica" value="Sedentario"><span>Sedentario</span></label>
+        <label class="radio-item"><input type="radio" name="act_fisica" value="1-2 veces/sem"><span>1-2 veces</span></label>
+        <label class="radio-item"><input type="radio" name="act_fisica" value="3-5 veces/sem"><span>3-5 veces</span></label>
+        <label class="radio-item"><input type="radio" name="act_fisica" value="Atleta"><span>Atleta</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Exposición al Sol:</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="sol" value="Baja"><span>Baja</span></label>
+        <label class="radio-item"><input type="radio" name="sol" value="Moderada"><span>Moderada</span></label>
+        <label class="radio-item"><input type="radio" name="sol" value="Alta"><span>Alta</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label>¿Fuma?</label>
+      <div class="yn-row"><div class="yn-btn" onclick="toggleYN(this,'fuma')">Sí</div><div class="yn-btn" onclick="toggleYN(this,'fuma')">No</div></div>
+      <input type="hidden" id="f-fuma">
+    </div>
+    <div class="field">
+      <label>¿Consume alcohol?</label>
+      <div class="yn-row"><div class="yn-btn" onclick="toggleYN(this,'alcohol')">Sí</div><div class="yn-btn" onclick="toggleYN(this,'alcohol')">No</div></div>
+      <input type="hidden" id="f-alcohol">
+    </div>
+  </section>
+
+  <section class="step-panel" id="step-11">
+    <div class="step-head"><span class="step-num">Final</span><h2>Consentimiento y Envío</h2></div>
+    
+    <div class="field" style="margin-bottom:32px">
+      <div class="check-item" onclick="toggleSimpleCheck(this,'c-veracidad')"><div class="indicator"></div><span>Declaro que la información proporcionada es veraz.</span></div>
+      <input type="hidden" id="c-veracidad">
+    </div>
+
+    <div class="field" style="margin-bottom:32px">
+      <div class="check-item" onclick="toggleSimpleCheck(this,'c-datos')"><div class="indicator"></div><span>Acepto el tratamiento de mis datos para fines médicos.</span></div>
+      <input type="hidden" id="c-datos">
+    </div>
+
+    <div class="field" style="border-top:1px solid var(--border); padding-top:20px;">
+      <label style="color:var(--dark); font-weight:600">IA Engine para generación de plan:</label>
+      <div class="model-selector" id="model-btns">
+        <div class="m-btn" id="mbtn-claude" onclick="setModelo('claude')">Claude 3.5</div>
+        <div class="m-btn" id="mbtn-gemini" onclick="setModelo('gemini')">Gemini 1.5</div>
+        <div class="m-btn" id="mbtn-groq"   onclick="setModelo('groq')">Groq (Llama)</div>
+      </div>
+    </div>
+
+    <input type="hidden" id="fecha-envio">
+  </section>
+
+  <div id="screen-loading">
+    <div class="loader"></div>
+    <div class="ls-title">Generando su Plan Personalizado</div>
+    <div class="ls-sub">Nuestra IA está analizando su perfil metabólico y estético...</div>
+    <div id="ls-timer" style="font-size:12px; color:var(--gold); margin-bottom:20px; font-weight:bold">⏱ 0s transcurridos...</div>
+    
+    <div class="ls-steps">
+      <div class="ls-item active" id="ls-1"><div class="dot"></div>Procesando cuestionario médico</div>
+      <div class="ls-item" id="ls-2"><div class="dot"></div>IA redactando recomendaciones</div>
+      <div class="ls-item" id="ls-3"><div class="dot"></div>Enviando plan a su correo</div>
+    </div>
+  </div>
+
+  <div id="success">
+    <div class="success-icon">✓</div>
+    <h2 style="font-family:Georgia,serif; margin-bottom:12px">Plan Generado Exitosamente</h2>
+    <p style="color:var(--muted); line-height:1.6; margin-bottom:30px">
+      Hemos enviado su Plan del Método Carvajal a su correo electrónico.<br>
+      Por favor, revise su bandeja de entrada (y carpeta de spam).
+    </p>
+    <button class="btn btn-next" onclick="location.reload()">Llenar otro formulario</button>
+  </div>
+
+  <nav id="nav-bar">
+    <div class="nav-inner">
+      <button class="btn btn-prev" id="btn-prev" onclick="changeStep(-1)">Anterior</button>
+      <button class="btn btn-next" id="btn-next" onclick="changeStep(1)">Siguiente</button>
+    </div>
+  </nav>
+
+</main>
+
+<script>
+let current = 1;
+const total = 11;
+
+function updateUI() {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step-' + current).classList.add('active');
+  document.getElementById('btn-prev').style.visibility = (current === 1) ? 'hidden' : 'visible';
+  document.getElementById('btn-next').textContent = (current === total) ? 'Generar mi Plan' : 'Siguiente';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function changeStep(n) {
+  if (current === total && n === 1) {
+    submitForm();
+    return;
+  }
+  current += n;
+  if (current < 1) current = 1;
+  if (current > total) current = total;
+  updateUI();
+}
+
+// Lógica de escala 1-10
+function buildScales() {
+  const containers = ['sc-estres', 'sc-energia'];
+  containers.forEach(id => {
+    const box = document.getElementById(id);
+    const hiddenId = 'f-' + id.split('-')[1];
+    for(let i=1; i<=10; i++){
+      const b = document.createElement('div');
+      b.className = 'scale-btn';
+      b.textContent = i;
+      b.onclick = function() {
+        box.querySelectorAll('.scale-btn').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(hiddenId).value = i;
+      };
+      box.appendChild(b);
+    }
+  });
+}
+
+function toggleYN(el, hiddenId) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('f-' + hiddenId).value = el.textContent;
+}
+
+function toggleCheck(el, hiddenId, val) {
+  el.classList.toggle('checked');
+  const hidden = document.getElementById(hiddenId);
+  let vals = hidden.value ? hidden.value.split(', ') : [];
+  if (el.classList.contains('checked')) {
+    vals.push(val);
+  } else {
+    vals = vals.filter(v => v !== val);
+  }
+  hidden.value = vals.join(', ');
+}
+
+function toggleSimpleCheck(el, hiddenId) {
+  el.classList.toggle('checked');
+  document.getElementById(hiddenId).value = el.classList.contains('checked') ? 'Aceptado' : '';
+}
+
+function initCheckboxes() {
+  document.querySelectorAll('.radio-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const name = this.querySelector('input').name;
+      document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+        input.parentElement.classList.remove('checked');
+      });
+      this.classList.add('checked');
+      this.querySelector('input').checked = true;
+    });
+  });
+}
+
+function collectData() {
+  const data = {};
+  // Inputs directos
+  document.querySelectorAll('input[id^="f-"], textarea[id^="f-"], input[id^="c-"]').forEach(el => {
+    const key = el.id.replace('f-', '').replace('c-', '');
+    data[key] = el.value;
+  });
+  // Radios
+  const radioGroups = ['sexo', 'trabaja', 'horario_laboral', 'act_laboral', 'num_hijos', 'ayuda_casa', 'enfermedad', 'horas_sueno', 'calidad_sueno', 'banio_hora', 'evacuacion', 'dulces_frec', 'comidas', 'tipo_piel', 'act_fisica', 'sol'];
+  radioGroups.forEach(g => {
+    const sel = document.querySelector(`input[name="${g}"]:checked`);
+    if (sel) data[g] = sel.value;
+  });
+  data['modelo'] = window._modeloSel;
+  return data;
+}
+
+async function submitForm() {
+  const payload = collectData();
+  
+  // Validaciones básicas
+  if (!payload.nombre || !payload.email) {
+    alert("Por favor, complete nombre y correo en el paso 1.");
+    current = 1;
+    updateUI();
+    return;
+  }
+
+  document.getElementById('nav-bar').style.display = 'none';
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('screen-loading').style.display = 'flex';
+
+  try {
+    const resp = await fetch('/enviar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const result = await resp.json();
+    if (result.job_id) {
+      pollStatus(result.job_id);
+      setTimeout(animateLoadingSteps, 2000);
+    } else {
+      throw new Error(result.error || "Fallo al iniciar el proceso");
+    }
+  } catch (e) {
+    alert("Error: " + e.message);
+    document.getElementById('screen-loading').style.display = 'none';
+    document.getElementById('nav-bar').style.display = 'flex';
+    updateUI();
+  }
+}
+
+// FUNCIÓN CORREGIDA
+function pollStatus(jobId) {
+  let secs = 0;
+  const ticker = setInterval(() => {
+    secs++;
+    document.getElementById('ls-timer').textContent = '⏱ ' + secs + 's transcurridos...';
+  }, 1000);
+
+  const poll = setInterval(async () => {
+    try {
+      const r = await fetch('/status?job=' + jobId);
+      const data = await r.json();
+
+      if (data.status === 'working') return;
+
+      // FIX: Separar éxito de error
+      if (data.status === 'done') {
+        clearInterval(poll);
+        clearInterval(ticker);
+        showThanks();
+      } else if (data.status === 'error') {
+        clearInterval(poll);
+        clearInterval(ticker);
+        document.getElementById('screen-loading').style.display = 'none';
+        
+        // Muestra el mensaje de error real del backend
+        alert("Error del sistema: " + (data.msg || "Ocurrió un fallo inesperado."));
+        
+        // Restaurar navegación
+        document.getElementById('nav-bar').style.display = 'flex';
+        document.getElementById('step-' + current).classList.add('active');
+      }
+    } catch (e) {
+      console.error("Polling error:", e);
+    }
+  }, 4000);
+}
+
+function showThanks() {
+  document.getElementById('screen-loading').style.display = 'none';
+  document.getElementById('success').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function animateLoadingSteps() {
+  setTimeout(() => document.getElementById('ls-1').className = 'ls-item done', 500);
+  setTimeout(() => document.getElementById('ls-2').className = 'ls-item active', 3000);
+}
+
+// Modelo inicial
+window._modeloSel = 'claude';
+function setModelo(m) {
+  window._modeloSel = m;
+  document.querySelectorAll('.m-btn').forEach(b => {
+    b.style.background = 'transparent';
+    b.style.color = 'var(--muted)';
+  });
+  const sel = document.getElementById('mbtn-' + m);
+  sel.style.background = 'var(--gold)';
+  sel.style.color = '#fff';
+}
+
+// Inits
+document.getElementById('fecha-envio').value = new Date().toISOString().split('T')[0];
+buildScales();
+initCheckboxes();
+setModelo('claude');
+</script>
+
+</body>
+</html>
