@@ -250,7 +250,7 @@ def _render_borrador_legacy(plan_json, data, job_id):
     badge_map = {'warning': 'badge-warning', 'critical': 'badge-critical', 'normal': 'badge-normal'}
     badge_label = {'warning': '⚠ Atención', 'critical': '✕ Crítico', 'normal': 'Normal'}
     diag_html = ''.join(
-        f'<tr><td style="font-weight:500">{esc(f["area"])}</td><td contenteditable="true">{esc(f["estado"])}</td><td contenteditable="true">{esc(f["hallazgos"])}</td><td><span class="{badge_map.get(f.get("alerta","normal"),"badge-normal")}">{badge_label.get(f.get("alerta","normal"),"Normal")}</span></td></tr>'
+        f'<tr><td style="font-weight:500">{esc(f.get("area",""))}</td><td contenteditable="true">{esc(f.get("estado",""))}</td><td contenteditable="true">{esc(f.get("hallazgos",""))}</td><td><span class="{badge_map.get(f.get("alerta","normal"),"badge-normal")}">{badge_label.get(f.get("alerta","normal"),"Normal")}</span></td></tr>'
         for f in plan_json.get('diagnostico', {}).get('filas', [])
     )
 
@@ -272,7 +272,7 @@ def _render_borrador_legacy(plan_json, data, job_id):
     p1_perm = ''.join(f'<li contenteditable="true">{esc(i)}</li>' for i in p1.get('permitidos',[]))
     p1_evit = ''.join(f'<li contenteditable="true">{esc(i)}</li>' for i in p1.get('evitar',[]))
     p1_menu = ''.join(
-        f'<tr><td class="dia">{esc(m["dia"])}</td><td contenteditable="true">{esc(m["desayuno"])}</td><td contenteditable="true">{esc(m["almuerzo"])}</td><td contenteditable="true">{esc(m["cena"])}</td><td contenteditable="true">{esc(m["snack"])}</td></tr>'
+        f'<tr><td class="dia">{esc(m.get("dia",""))}</td><td contenteditable="true">{esc(m.get("desayuno",""))}</td><td contenteditable="true">{esc(m.get("almuerzo",""))}</td><td contenteditable="true">{esc(m.get("cena",""))}</td><td contenteditable="true">{esc(m.get("snack",""))}</td></tr>'
         for m in p1.get('menu',[])
     )
     p1_supl = ''
@@ -288,8 +288,8 @@ def _render_borrador_legacy(plan_json, data, job_id):
     # Pilar 5 bimestres
     p5_bim = ''
     for bim in p5.get('bimestres',[]):
-        rows = ''.join(f'<tr><td contenteditable="true" style="font-weight:500">{esc(t["nombre"])}</td><td contenteditable="true">{esc(t["sesiones"])}</td><td contenteditable="true" style="font-weight:500">{esc(t["inversion"])}</td><td contenteditable="true">{esc(t["beneficio"])}</td></tr>' for t in bim.get('tratamientos',[]))
-        p5_bim += f'<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:#8fa832;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px" contenteditable="true">{esc(bim["periodo"])} · {esc(bim["titulo"])}</div><table><thead><tr><th>Tratamiento</th><th>Sesiones</th><th>Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table><div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right" contenteditable="true">Total bimestre: ${bim.get("total",0):,}</div></div>'
+        rows = ''.join(f'<tr><td contenteditable="true" style="font-weight:500">{esc(t.get("nombre",""))}</td><td contenteditable="true">{esc(t.get("sesiones",""))}</td><td contenteditable="true" style="font-weight:500">{esc(t.get("inversion",""))}</td><td contenteditable="true">{esc(t.get("beneficio",""))}</td></tr>' for t in bim.get('tratamientos',[]))
+        p5_bim += f'<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:#8fa832;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px" contenteditable="true">{esc(bim.get("periodo",""))} · {esc(bim.get("titulo",""))}</div><table><thead><tr><th>Tratamiento</th><th>Sesiones</th><th>Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table><div style="font-size:12px;color:#6b7280;margin-top:6px;text-align:right" contenteditable="true">Total bimestre: ${bim.get("total",0):,}</div></div>'
 
     notas = p5.get('notas_criticas',[])
     p5_notas = ''
@@ -297,8 +297,8 @@ def _render_borrador_legacy(plan_json, data, job_id):
         items = ''.join(f'<p style="font-size:13px;padding:3px 0;border-bottom:1px solid #e5e7eb" contenteditable="true">{esc(n)}</p>' for n in notas)
         p5_notas = f'<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:12px 16px;margin-bottom:12px"><strong style="font-size:11px;color:#9a3412;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Notas críticas</strong>{items}</div>'
 
-    p5_am = ''.join(f'<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e5e7eb"><span style="font-size:11px;font-weight:600;background:#8fa832;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{s["paso"]}</span><div><div style="font-size:12px;font-weight:500" contenteditable="true">{esc(s["producto"])}</div><div style="font-size:11px;color:#6b7280" contenteditable="true">{esc(s["descripcion"])}</div></div></div>' for s in p5.get('rutina_am',[]))
-    p5_pm = ''.join(f'<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e5e7eb"><span style="font-size:11px;font-weight:600;background:#2d3a2e;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{s["paso"]}</span><div><div style="font-size:12px;font-weight:500" contenteditable="true">{esc(s["producto"])}</div><div style="font-size:11px;color:#6b7280" contenteditable="true">{esc(s["descripcion"])}</div></div></div>' for s in p5.get('rutina_pm',[]))
+    p5_am = ''.join(f'<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e5e7eb"><span style="font-size:11px;font-weight:600;background:#8fa832;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{s.get("paso","")}</span><div><div style="font-size:12px;font-weight:500" contenteditable="true">{esc(s.get("producto",""))}</div><div style="font-size:11px;color:#6b7280" contenteditable="true">{esc(s.get("descripcion",""))}</div></div></div>' for s in p5.get('rutina_am',[]))
+    p5_pm = ''.join(f'<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e5e7eb"><span style="font-size:11px;font-weight:600;background:#2d3a2e;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">{s.get("paso","")}</span><div><div style="font-size:12px;font-weight:500" contenteditable="true">{esc(s.get("producto",""))}</div><div style="font-size:11px;color:#6b7280" contenteditable="true">{esc(s.get("descripcion",""))}</div></div></div>' for s in p5.get('rutina_pm',[]))
 
     comp_res = ''.join(f'<li contenteditable="true">{esc(r["texto"])}</li>' for r in comp.get('resultados',[]))
     comp_pasos = ''.join(f'<li style="padding:4px 0;font-size:13px" contenteditable="true">{esc(p)}</li>' for p in comp.get('proximos_pasos',[]))
@@ -2205,7 +2205,7 @@ def render_plan(j, d, job_id=''):
     # ── Diagnóstico ──
     badge_map = {'warning':'<span class="badge-w">⚠</span> ','critical':'<span class="badge-c">✕ Crítico</span> ','normal':''}
     diag_html = ''.join(
-        f'<tr><td class="diag-left">{badge_map.get(f.get("alerta","normal"),"")}{esc(f["area"])}</td><td><span class="diag-val-strong" contenteditable="true">{esc(f["estado"])}</span><span class="diag-val-sub" contenteditable="true">{esc(f["hallazgos"])}</span></td></tr>'
+        f'<tr><td class="diag-left">{badge_map.get(f.get("alerta","normal"),"")}{esc(f.get("area",""))}</td><td><span class="diag-val-strong" contenteditable="true">{esc(f.get("estado",""))}</span><span class="diag-val-sub" contenteditable="true">{esc(f.get("hallazgos",""))}</span></td></tr>'
         for f in j.get('diagnostico', {}).get('filas', [])
     )
 
@@ -2227,7 +2227,7 @@ def render_plan(j, d, job_id=''):
 
     # ── Pág 2: pilares cards ──
     pilares_cards = ''.join(
-        f'<div class="pilar-card"><div class="pilar-icon">{pi.get("emoji","")}</div><div><div class="pilar-title" contenteditable="true">Pilar {pi["num"]} · {esc(pi["titulo"])}</div><div class="pilar-desc" contenteditable="true">{esc(pi["descripcion"])}</div></div></div>'
+        f'<div class="pilar-card"><div class="pilar-icon">{pi.get("emoji","")}</div><div><div class="pilar-title" contenteditable="true">Pilar {pi.get("num","")} · {esc(pi.get("titulo",""))}</div><div class="pilar-desc" contenteditable="true">{esc(pi.get("descripcion",""))}</div></div></div>'
         for pi in j.get('portada', {}).get('pilares_resumen', [])
     )
 
@@ -2243,7 +2243,7 @@ def render_plan(j, d, job_id=''):
     p1_perm = ''.join(f'<div class="pe-item"><div class="pe-dot p"></div><span contenteditable="true">{esc(i)}</span></div>' for i in p1.get('permitidos',[]))
     p1_evit = ''.join(f'<div class="pe-item"><div class="pe-dot e"></div><span contenteditable="true">{esc(i)}</span></div>' for i in p1.get('evitar',[]))
     p1_menu = ''.join(
-        f'<tr><td class="dia">{esc(m["dia"])}</td><td contenteditable="true">{esc(m["desayuno"])}</td><td contenteditable="true">{esc(m["almuerzo"])}</td><td contenteditable="true">{esc(m["cena"])}</td><td contenteditable="true">{esc(m["snack"])}</td></tr>'
+        f'<tr><td class="dia">{esc(m.get("dia",""))}</td><td contenteditable="true">{esc(m.get("desayuno",""))}</td><td contenteditable="true">{esc(m.get("almuerzo",""))}</td><td contenteditable="true">{esc(m.get("cena",""))}</td><td contenteditable="true">{esc(m.get("snack",""))}</td></tr>'
         for m in p1.get('menu',[])
     )
     p1_supl = ''.join(
@@ -2273,12 +2273,12 @@ def render_plan(j, d, job_id=''):
 
     def render_bim(bim):
         rows = ''.join(
-            f'<tr><td contenteditable="true"><strong>{esc(t["nombre"])}</strong></td><td contenteditable="true">{esc(t["sesiones"])}</td><td contenteditable="true"><strong>{esc(t["inversion"])}</strong></td><td contenteditable="true">{esc(t["beneficio"])}</td></tr>'
+            f'<tr><td contenteditable="true"><strong>{esc(t.get("nombre",""))}</strong></td><td contenteditable="true">{esc(t.get("sesiones",""))}</td><td contenteditable="true"><strong>{esc(t.get("inversion",""))}</strong></td><td contenteditable="true">{esc(t.get("beneficio",""))}</td></tr>'
             for t in bim.get('tratamientos',[])
         )
         total = bim.get('total',0)
         return (
-            f'<div class="bim-header">{esc(bim["periodo"])} · {esc(bim["titulo"])}<span style="font-size:7pt;color:rgba(143,168,50,0.6)">Bimestre {bim.get("bimestre","")}</span></div>'
+            f'<div class="bim-header">{esc(bim.get("periodo",""))} · {esc(bim.get("titulo",""))}<span style="font-size:7pt;color:rgba(143,168,50,0.6)">Bimestre {bim.get("bimestre","")}</span></div>'
             f'<div class="bim-body"><table class="bim-table"><thead><tr><th>Tratamiento</th><th style="width:75px">Sesiones</th><th style="width:65px">Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table>'
             f'<div class="bim-total">💰 Inversión: ${total:,}</div></div>'
         )
@@ -2292,11 +2292,11 @@ def render_plan(j, d, job_id=''):
     p5_bim_b = ''.join(render_bim(b) for b in bimestres[half:])
 
     p5_am = ''.join(
-        f'<div class="rut-step"><div class="rut-num">{s["paso"]}</div><div><div class="rut-prod" contenteditable="true">{esc(s["producto"])}</div><div class="rut-desc" contenteditable="true">{esc(s["descripcion"])}</div></div></div>'
+        f'<div class="rut-step"><div class="rut-num">{s.get("paso","")}</div><div><div class="rut-prod" contenteditable="true">{esc(s.get("producto",""))}</div><div class="rut-desc" contenteditable="true">{esc(s.get("descripcion",""))}</div></div></div>'
         for s in p5.get('rutina_am',[])
     )
     p5_pm = ''.join(
-        f'<div class="rut-step"><div class="rut-num">{s["paso"]}</div><div><div class="rut-prod" contenteditable="true">{esc(s["producto"])}</div><div class="rut-desc" contenteditable="true">{esc(s["descripcion"])}</div></div></div>'
+        f'<div class="rut-step"><div class="rut-num">{s.get("paso","")}</div><div><div class="rut-prod" contenteditable="true">{esc(s.get("producto",""))}</div><div class="rut-desc" contenteditable="true">{esc(s.get("descripcion",""))}</div></div></div>'
         for s in p5.get('rutina_pm',[])
     )
     notas = p5.get('notas_criticas',[])
