@@ -55,6 +55,7 @@ header p{margin-top:10px;font-size:13px;color:var(--muted);font-weight:300}
 .remove-btn:hover{color:#8b2020}
 
 .btn{width:100%;padding:14px;border:none;border-radius:2px;font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:.2em;text-transform:uppercase;font-weight:500;transition:all .2s;margin-top:16px}
+.model-btn{flex:1;padding:13px;border:none;border-radius:2px;font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:.15em;text-transform:uppercase;font-weight:500;transition:all .2s}
 .btn-primary{background:var(--dark);color:#f5efe8}
 .btn-primary:hover:not(:disabled){background:#1a2a1b}
 .btn-primary:disabled{background:#aaa;cursor:not-allowed}
@@ -168,11 +169,11 @@ header p{margin-top:10px;font-size:13px;color:var(--muted);font-weight:300}
       <button class="remove-btn" onclick="removeFile()">✕ Quitar archivo</button>
     </div>
 
-    <div id="model-btns" style="display:none;gap:10px;margin-top:16px">
-      <button class="btn" id="btn-claude" onclick="iniciar('claude')" style="flex:1;background:var(--dark);color:#f5efe8;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s">
+    <div id="model-btns" style="display:none;flex-direction:row;gap:10px;margin-top:16px;width:100%">
+      <button id="btn-claude" onclick="iniciar('claude')" style="flex:1;background:var(--dark);color:#f5efe8;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">
         ✦ Claude
       </button>
-      <button class="btn" id="btn-gemini" onclick="iniciar('gemini')" style="flex:1;background:#1a73e8;color:#fff;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s">
+      <button id="btn-gemini" onclick="iniciar('gemini')" style="flex:1;background:#1a73e8;color:#fff;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">
         ◆ Gemini
       </button>
     </div>
@@ -256,7 +257,9 @@ fi.addEventListener('change', function() {
     document.getElementById('file-name-display').textContent = name;
     document.getElementById('file-actions').classList.add('visible');
     // Mostrar botones de modelo
-    document.getElementById('model-btns').style.display = 'flex';
+    const mb = document.getElementById('model-btns');
+    mb.style.display = 'flex';
+    mb.style.flexDirection = 'row';
   }
 });
 
