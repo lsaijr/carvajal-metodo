@@ -394,9 +394,21 @@ textarea:focus{border-color:var(--gold)}
 
   <div class="subsection" style="margin-top:24px">
     <div class="subsection-title">Síntomas por grupo de alimento</div>
-    <div class="yn-row"><span class="yn-label">¿Síntomas al consumir lácteos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="yn-row"><span class="yn-label">¿Síntomas al consumir gluten (pan, pasta, galletas)? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="yn-row"><span class="yn-label">¿Síntomas con alimentos procesados o con aditivos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
+
+    <div class="yn-row"><span class="yn-label">¿Síntomas al consumir lácteos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSintAlim(this,'yes','sint-lacteos')">Sí</button><button class="yn-btn" onclick="toggleSintAlim(this,'no','sint-lacteos')">No</button></div></div>
+    <div id="sint-lacteos" style="display:none;padding:6px 0 10px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-lacteos-det" placeholder="Ej. hinchazón, gases, diarrea, náuseas..."></div>
+    </div>
+
+    <div class="yn-row"><span class="yn-label">¿Síntomas al consumir gluten (pan, pasta, galletas)? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSintAlim(this,'yes','sint-gluten')">Sí</button><button class="yn-btn" onclick="toggleSintAlim(this,'no','sint-gluten')">No</button></div></div>
+    <div id="sint-gluten" style="display:none;padding:6px 0 10px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-gluten-det" placeholder="Ej. hinchazón, fatiga, dolor abdominal..."></div>
+    </div>
+
+    <div class="yn-row"><span class="yn-label">¿Síntomas con alimentos procesados o con aditivos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSintAlim(this,'yes','sint-procesados')">Sí</button><button class="yn-btn" onclick="toggleSintAlim(this,'no','sint-procesados')">No</button></div></div>
+    <div id="sint-procesados" style="display:none;padding:6px 0 10px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-procesados-det" placeholder="Ej. inflamación, dolor de cabeza, fatiga..."></div>
+    </div>
   </div>
 </div>
 
@@ -1021,21 +1033,6 @@ textarea:focus{border-color:var(--gold)}
       </div>
     </div>
   </div>
-  <div class="subsection" style="margin-top:8px">
-    <div class="subsection-title">Antecedentes Familiares</div>
-    <div class="form-grid">
-      <div class="field full"><label class="field-label">¿Algún familiar directo con enfermedades relevantes?</label>
-        <div class="radio-group">
-          <label class="radio-item"><input type="radio" name="antecedentes_fam"><div class="radio-dot"></div>Sí</label>
-          <label class="radio-item"><input type="radio" name="antecedentes_fam"><div class="radio-dot"></div>No</label>
-        </div>
-      </div>
-      <div class="field full" id="antecedentes-det-wrap" style="display:none">
-        <label class="field-label">¿Cuáles? (diabetes, cáncer, enfermedades cardíacas, etc.)</label>
-        <textarea id="f-antecedentes-det" placeholder="Ej. Padre con diabetes tipo 2, madre con hipotiroidismo..."></textarea>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- STEP 11: Declaración y Consentimiento -->
@@ -1494,6 +1491,9 @@ function collectData(){
 
     // Alimentación
     intolerancias:       intolerancias,
+    sintLacteos:         document.getElementById('sint-lacteos')&&document.getElementById('sint-lacteos').style.display!=='none' ? (document.getElementById('sint-lacteos-det').value||'Sí') : 'No',
+    sintGluten:          document.getElementById('sint-gluten')&&document.getElementById('sint-gluten').style.display!=='none' ? (document.getElementById('sint-gluten-det').value||'Sí') : 'No',
+    sintProcesados:      document.getElementById('sint-procesados')&&document.getElementById('sint-procesados').style.display!=='none' ? (document.getElementById('sint-procesados-det').value||'Sí') : 'No',
     sintomasDigestivos:  sintomasDigestivos,
     proteinas:           proteinasSelec,
     carbohidratos:       carbosSelec,
@@ -1690,6 +1690,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+// Toggle síntomas por grupo de alimento
+function toggleSintAlim(btn, val, wrapId) {
+  const row = btn.closest('.yn-btns');
+  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const wrap = document.getElementById(wrapId);
+  if (wrap) wrap.style.display = val === 'yes' ? 'block' : 'none';
+}
 
 // Toggle síntomas en alergias
 function toggleAlergia(btn, val, key) {
