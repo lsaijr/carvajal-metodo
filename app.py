@@ -18,7 +18,6 @@ RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_CC         = [m.strip() for m in os.environ.get('MAIL_CC','').split(',') if m.strip()]
 ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com').strip()
-print(f'[config] MAIL_TO={repr(MAIL_TO)} | MAIL_FROM={repr(os.environ.get("MAIL_FROM",""))} | MAIL_CC={repr(os.environ.get("MAIL_CC",""))}')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
 os.makedirs(PLANES_DIR, exist_ok=True)
@@ -1482,7 +1481,7 @@ def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
             'anthropic-version': '2023-06-01',
         },
         json={
-            'model': 'claude-opus-4-6',
+            'model': 'claude-sonnet-4-6',
             'max_tokens': max_tok,
             'system': system_prompt,
             'messages': [{'role': 'user', 'content': user_msg}],
@@ -1660,7 +1659,7 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
         nombre_modelo = 'Groq (Llama)'
     else:
         _llamar = _llamar_claude
-        tok1, tok2, tok3 = 4000, 10000, 8000
+        tok1, tok2, tok3 = 8000, 12000, 10000
         nombre_modelo = 'Claude'
 
     actualizar(f'Sección 1/3 — Portada, diagnóstico y rutina diaria... ({nombre_modelo})', 15)
