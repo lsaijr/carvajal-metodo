@@ -1,4 +1,4 @@
-import os, json, uuid, threading, calendar
+import os, json, uuid, threading, calendar, secrets, hashlib
 import cloudinary
 import cloudinary.uploader
 WEASYPRINT_OK = False
@@ -15,6 +15,7 @@ CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
 GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 GROQ_KEY    = os.environ.get('GROQ_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
+ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
@@ -35,6 +36,7 @@ if CLOUDINARY_CLOUD_NAME:
 
 # ── Jobs en memoria ───────────────────────────────────────────
 jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
+admin_tokens = set()  # tokens de sesión activos
 
 # ════════════════════════════════════════════════════════════
 # RUTAS
@@ -339,6 +341,87 @@ def _render_borrador_legacy(plan_json, data, job_id):
     for k, v in replacements.items():
         tpl = tpl.replace(k, v)
     return tpl
+
+
+
+# ════════════════════════════════════════════════════════════
+# ADMIN — Página /planes con login
+# ════════════════════════════════════════════════════════════
+
+@app.route('/planes', methods=['GET'])
+def admin_planes():
+    with open(os.path.join(os.path.dirname(__file__), 'planes.html'), encoding='utf-8') as f:
+        return f.read()
+
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json(silent=True) or {}
+    pwd  = data.get('password', '')
+    if pwd == ADMIN_PASSWORD:
+        tok = secrets.token_hex(32)
+        admin_tokens.add(tok)
+        return jsonify({'ok': True, 'token': tok})
+    return jsonify({'ok': False}), 401
+
+
+def _check_token():
+    tok = request.headers.get('X-Token', '')
+    return tok in admin_tokens
+
+
+@app.route('/api/planes', methods=['GET'])
+def api_listar_planes():
+    if not _check_token():
+        return jsonify({'error': 'No autorizado'}), 401
+    planes = []
+    try:
+        import cloudinary.api
+        resultado = cloudinary.api.resources(
+            type='upload',
+            resource_type='raw',
+            prefix='carvajal/planes/',
+            max_results=200,
+        )
+        for r in resultado.get('resources', []):
+            public_id     = r.get('public_id', '')
+            nombre_archivo = public_id.split('/')[-1] + '.html'
+            parts = nombre_archivo.replace('.html', '').split('_')
+            modelo = 'claude'
+            fecha_raw = ''
+            nombre_parts = []
+            for p in parts:
+                if p in ('claude', 'gemini', 'groq'):
+                    modelo = p
+                elif len(p) == 8 and p.isdigit():
+                    fecha_raw = p
+                elif p not in ('Plan',):
+                    nombre_parts.append(p)
+            nombre_paciente = ' '.join(nombre_parts) if nombre_parts else nombre_archivo
+            fecha_legible = ''
+            if fecha_raw and len(fecha_raw) == 8:
+                try:
+                    from datetime import datetime as dt
+                    fecha_legible = dt.strptime(fecha_raw, '%Y%m%d').strftime('%d/%m/%Y')
+                except:
+                    fecha_legible = fecha_raw
+            job_id_guess = public_id.split('/')[-1]
+            planes.append({
+                'url'           : r.get('secure_url', ''),
+                'nombre_archivo': nombre_archivo,
+                'nombre'        : nombre_paciente,
+                'modelo'        : modelo,
+                'fecha'         : fecha_legible or 'Sin fecha',
+                'fecha_raw'     : fecha_raw,
+                'job_id'        : job_id_guess,
+                'created_at'    : r.get('created_at', ''),
+            })
+        planes.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    except Exception as e:
+        print(f'[api/planes] Error: {e}')
+        return jsonify({'planes': [], 'error': str(e)})
+    return jsonify({'planes': planes, 'total': len(planes)})
+
 
 
 def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
