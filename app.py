@@ -878,7 +878,7 @@ def _llamar_gemini(num, total, system_prompt, user_msg, max_tok=8000):
     """Llama a Gemini 2.0 Flash con el mismo contrato que _llamar_claude."""
     print(f"[Gemini {num}/{total}] Iniciando...")
     t0 = time.time()
-    model = 'gemini-1.5-flash'
+    model = 'gemini-2.5-flash-preview-04-17'
     url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}'
     payload = {
         'system_instruction': {'parts': [{'text': system_prompt}]},
@@ -1060,9 +1060,15 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
     r1, err = _llamar(1, 3, SYS1, datos, max_tok=tok1)
     if err: return {'error': err}
 
+    if modelo in ('gemini', 'groq'):
+        time.sleep(5)  # pausa para evitar rate limit en APIs con cuota baja
+
     actualizar(f'Sección 2/3 — Nutrición, ejercicio y bienestar mental... ({nombre_modelo})', 45)
     r2, err = _llamar(2, 3, SYS2, datos, max_tok=tok2)
     if err: return {'error': err}
+
+    if modelo in ('gemini', 'groq'):
+        time.sleep(5)
 
     actualizar(f'Sección 3/3 — Sueño, tratamientos y plan de compromiso... ({nombre_modelo})', 75)
     r3, err = _llamar(3, 3, SYS3, datos, max_tok=tok3)
