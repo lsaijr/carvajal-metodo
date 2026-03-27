@@ -17,7 +17,8 @@ GROQ_KEY    = os.environ.get('GROQ_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_CC         = [m.strip() for m in os.environ.get('MAIL_CC','').split(',') if m.strip()]
 ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
-MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
+MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com').strip()
+print(f'[config] MAIL_TO={repr(MAIL_TO)} | MAIL_FROM={repr(os.environ.get("MAIL_FROM",""))} | MAIL_CC={repr(os.environ.get("MAIL_CC",""))}')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
 os.makedirs(PLANES_DIR, exist_ok=True)
@@ -2437,10 +2438,11 @@ def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adju
     if attachments:
         payload['attachments'] = attachments
     try:
+        print(f'[resend] Enviando a to={to} cc={payload.get("cc")} from={payload.get("from")} asunto={payload.get("subject","")[:50]}')
         r = req.post('https://api.resend.com/emails',
             headers={'Authorization': f'Bearer {RESEND_KEY}', 'Content-Type': 'application/json'},
             json=payload, timeout=30)
-        print(f'Resend {to}: {r.status_code}')
+        print(f'[resend] Respuesta {r.status_code}: {r.text[:200]}')
     except Exception as e:
         print(f'Resend error: {e}')
 
