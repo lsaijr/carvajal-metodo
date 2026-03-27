@@ -40,9 +40,7 @@ h2{font-family:Georgia,serif;color:#2d3a2e;font-size:1.7rem;font-weight:400;marg
 .result-title{color:#2e7d32;font-weight:600;font-size:15px;margin-bottom:14px}
 .btn-plan{display:block;padding:14px;background:#b8935a;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;margin-bottom:10px;text-align:center;transition:background .2s}
 .btn-plan:hover{background:#a07840}
-.copy-wrap{position:relative;margin:10px 0}
-.copy-input{width:100%;padding:10px 40px 10px 12px;border:1px solid #e0d4c0;border-radius:6px;font-size:12px;color:#7a6040;background:#f9f6f0;cursor:pointer}
-.copy-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#b8935a}
+.copy-wrap{display:none}
 .missing{background:#fffbf0;border:1px solid #e8d89a;border-radius:6px;padding:12px 14px;margin:10px 0;text-align:left}
 .missing h5{font-size:11px;color:#8a7030;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .missing li{font-size:12px;color:#6a5a20;padding:2px 0;list-style:none;display:flex;align-items:center;gap:6px}
@@ -84,10 +82,10 @@ h2{font-family:Georgia,serif;color:#2d3a2e;font-size:1.7rem;font-weight:400;marg
   <!-- Result -->
   <div id="result">
     <p class="result-title">✅ Plan generado correctamente</p>
-    <a id="planLink" href="#" target="_blank" class="btn-plan">Ver Plan Completo</a>
+    <a id="planLink" href="#" target="_blank" class="btn-plan">👁 Ver Plan en el navegador</a>
+    <a id="downloadBtn" href="#" download class="btn-plan" style="background:#2d3a2e;margin-top:8px">⬇ Descargar Plan (.html)</a>
     <div class="copy-wrap">
-      <input class="copy-input" id="copyInput" readonly onclick="copiar()" title="Clic para copiar">
-      <button class="copy-btn" onclick="copiar()" title="Copiar">📋</button>
+      <input class="copy-input" id="copyInput" readonly>
     </div>
     <div class="missing" id="missingBox" style="display:none">
       <h5>Campos sin datos en el cuestionario</h5>
@@ -174,6 +172,12 @@ async function checkStatus() {
         document.getElementById('result').style.display = 'block';
         document.getElementById('planLink').href = data.html_url;
         document.getElementById('copyInput').value = data.html_url;
+        // Botón descargar: fuerza descarga del HTML
+        const dl = document.getElementById('downloadBtn');
+        dl.href = data.html_url;
+        // Nombre sugerido para la descarga
+        const nombreArchivo = data.html_name || ('Plan_' + (data.nombre || 'Carvajal') + '.html');
+        dl.setAttribute('download', nombreArchivo);
 
         if (data.faltantes && data.faltantes.length > 0) {
           const box  = document.getElementById('missingBox');
@@ -196,14 +200,6 @@ async function checkStatus() {
   } catch(e) { console.error('Polling error:', e); }
 }
 
-function copiar() {
-  const input = document.getElementById('copyInput');
-  input.select();
-  navigator.clipboard.writeText(input.value).then(() => {
-    document.querySelector('.copy-btn').textContent = '✅';
-    setTimeout(() => { document.querySelector('.copy-btn').textContent = '📋'; }, 2000);
-  });
-}
 
 function setStep(n, state) {
   const el = document.getElementById('s' + n);
