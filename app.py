@@ -1093,14 +1093,20 @@ def generar_docx_cuestionario(data):
 
     heading('1. DATOS PERSONALES')
     t=tabla2()
-    row_tabla(t,'nombre_completo',data.get('nombre',''))
-    row_tabla(t,'edad',data.get('edad',''))
-    row_tabla(t,'sexo',data.get('sexo',''))
-    row_tabla(t,'ocupacion',data.get('ocupacion',''))
-    row_tabla(t,'actividad_laboral',data.get('actLaboral',''))
-    row_tabla(t,'horario_laboral',data.get('horarioLaboral',''))
-    row_tabla(t,'email',data.get('email',''))
-    row_tabla(t,'fecha_evaluacion',data.get('fecha',''))
+    row_tabla(t,'nombre_completo',   data.get('nombre',''))
+    row_tabla(t,'cedula_pasaporte',  data.get('cedula',''))
+    row_tabla(t,'fecha_nacimiento',  data.get('fechaNacimiento',''))
+    row_tabla(t,'edad',              data.get('edad',''))
+    row_tabla(t,'sexo',              data.get('sexo',''))
+    row_tabla(t,'celular',           data.get('celular',''))
+    row_tabla(t,'email',             data.get('email',''))
+    row_tabla(t,'direccion',         data.get('direccion',''))
+    row_tabla(t,'ocupacion',         data.get('ocupacion',''))
+    row_tabla(t,'actividad_laboral', data.get('actLaboral',''))
+    row_tabla(t,'horario_laboral',   data.get('horarioLaboral',''))
+    row_tabla(t,'como_conocio_clinica', data.get('comoConociste',''))
+    row_tabla(t,'contacto_emergencia', data.get('contactoEmergencia','') + ' (' + data.get('contactoRelacion','') + ') ' + data.get('contactoTel',''))
+    row_tabla(t,'fecha_evaluacion',  data.get('fecha',''))
 
     heading('2. MEDIDAS CORPORALES')
     t=tabla2()
@@ -1172,6 +1178,11 @@ def generar_docx_cuestionario(data):
     contra = data.get('contraindications', {})
     contra_si = [k for k,v in contra.items() if v == 'Si'] if isinstance(contra, dict) else []
     row_tabla(t,'contraindicaciones',    ', '.join(contra_si) if contra_si else 'Ninguna')
+
+    heading('9. ANTECEDENTES FAMILIARES')
+    t=tabla2()
+    row_tabla(t,'antecedentes_familiares', data.get('antecedentesFam',''))
+    row_tabla(t,'detalle_antecedentes',    data.get('antecedentesFamDet',''))
 
     doc.add_paragraph()
     p_pie = doc.add_paragraph(); p_pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -1345,12 +1356,17 @@ def _mapear_formulario(f):
 
     return {
         'nombre':              s('nombre'),
+        'cedula':              s('cedula'),
+        'direccion':           s('direccion'),
         'edad':                s('edad'),
+        'fechaNacimiento':     s('fechaNacimiento'),
         'sexo':                s('sexo'),
         'ocupacion':           s('ocupacion'),
         'actLaboral':          s('actLaboral'),
         'horarioLaboral':      s('horarioLaboral'),
         'email':               s('email'),
+        'celular':             s('celular'),
+        'comoConociste':       s('comoConociste'),
         'fecha':               datetime.now().strftime('%d de %B, %Y'),
         'estatura':            est or None,
         'peso':                pes or None,
@@ -1377,6 +1393,23 @@ def _mapear_formulario(f):
         'antecedentesFam':     'Ninguno',
         'alergias':            s('alergias') or 'Ninguna',
         'contraindications':   contra,
+        'embarazo':            s('embarazo'),
+        'lactancia':           s('lactancia'),
+        'anticonceptivos':     s('anticonceptivos'),
+        'sop':                 s('sop'),
+        'menopausia':          s('menopausia'),
+        'perimenopausia':      s('perimenopausia'),
+        'alergia_lidocaina':   s('alergia_lidocaina'),
+        'alergia_penicilina':  s('alergia_penicilina'),
+        'alergia_yodo':        s('alergia_yodo'),
+        'alergia_aines':       s('alergia_aines'),
+        'alergia_latex':       s('alergia_latex'),
+        'alergia_aloe':        s('alergia_aloe'),
+        'alergia_fragancias':  s('alergia_fragancias'),
+        'evacuacion':          s('evacuacion'),
+        'antecedentesFam':     s('antecedentesFam'),
+        'antecedentesFamDet':  s('antecedentesFamDet'),
+        'comoConociste':       s('comoConociste'),
         'areasFaciales':       faciales,
         'areasCorporales':     corporales,
         'prioridad':           s('prioridad'),

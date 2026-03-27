@@ -187,6 +187,8 @@ textarea:focus{border-color:var(--gold)}
   <div class="divider"></div>
   <div class="form-grid">
     <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-nombre" type="text" placeholder="Tu nombre y apellidos"></div>
+    <div class="field"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" type="text" placeholder="Ej. 8-123-456"></div>
+    <div class="field full"><label class="field-label">Dirección de residencia</label><input id="f-direccion" type="text" placeholder="Ej. Calle 50, Miraflores, Panamá"></div>
     <div class="field"><label class="field-label">Edad <span class="req">*</span></label><input id="f-edad" type="number" placeholder="Ej. 32" min="1" max="120"></div>
     <div class="field"><label class="field-label">Sexo <span class="req">*</span></label>
       <div class="radio-group">
@@ -256,6 +258,18 @@ textarea:focus{border-color:var(--gold)}
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Cuido de niños o adultos</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Acompañamiento diario</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Otro</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-grid" style="margin-top:8px">
+    <div class="field full"><label class="field-label">¿Cómo nos conociste?</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Internet / Google</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Redes sociales</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Recomendación de amigo/a</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Paciente anterior</label>
+        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Otro</label>
       </div>
     </div>
   </div>
@@ -706,6 +720,21 @@ textarea:focus{border-color:var(--gold)}
     <div class="yn-row"><span class="yn-label">¿Has tenido infecciones cutáneas en zonas a tratar? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="yn-row"><span class="yn-label">¿Tienes marcapasos, implantes metálicos o dispositivos médicos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   </div>
+  <div class="subsection" style="margin-top:8px">
+    <div class="subsection-title">Antecedentes Familiares</div>
+    <div class="form-grid">
+      <div class="field full"><label class="field-label">¿Algún familiar directo con enfermedades relevantes?</label>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="antecedentes_fam"><div class="radio-dot"></div>Sí</label>
+          <label class="radio-item"><input type="radio" name="antecedentes_fam"><div class="radio-dot"></div>No</label>
+        </div>
+      </div>
+      <div class="field full" id="antecedentes-det-wrap" style="display:none">
+        <label class="field-label">¿Cuáles? (diabetes, cáncer, enfermedades cardíacas, etc.)</label>
+        <textarea id="f-antecedentes-det" placeholder="Ej. Padre con diabetes tipo 2, madre con hipotiroidismo..."></textarea>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- STEP 11: Declaración y Consentimiento -->
@@ -720,17 +749,6 @@ textarea:focus{border-color:var(--gold)}
   <label class="consent-item"><input type="checkbox"><div class="consent-check"></div><div class="consent-text"><strong>Autorización de contacto <span style="color:var(--gold)">*</span></strong><span>Autorizo a la clínica a contactarme para seguimiento y recordatorios de citas.</span></div></label>
   <div class="form-grid" style="margin-top:24px">
     <div class="field"><label class="field-label">Fecha de envío <span class="req">*</span></label><input type="date" id="fecha-envio"></div>
-    <div class="field">
-      <label class="field-label">Modelo de IA <span class="req">*</span></label>
-      <select id="modelo-select" onchange="setModeloSelect(this.value)"
-        style="width:100%;padding:9px 36px 9px 0;border:none;border-bottom:1px solid var(--border);font-size:14px;font-family:inherit;color:var(--text);background:transparent;cursor:pointer;outline:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%238fa832%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 4px center;">
-        <option value="">— Selecciona una IA —</option>
-        <option value="claude">✦ Claude</option>
-        <option value="gemini">◆ Gemini</option>
-        <option value="groq">▲ Groq</option>
-      </select>
-      <div id="modelo-warning" style="display:none;margin-top:6px;font-size:11px;color:#c62828;font-weight:500">⚠ Debes seleccionar una IA</div>
-    </div>
   </div>
 </div>
 
@@ -738,7 +756,7 @@ textarea:focus{border-color:var(--gold)}
 <div id="screen-loading">
   <div class="loading-spinner"></div>
   <div class="loading-title">Procesando tu información</div>
-  <div class="loading-desc">Estamos generando tu plan personalizado con inteligencia artificial. Esto puede tardar entre 5 y 10 minutos según la cantidad y tipo de información — por favor no cierres esta ventana.</div>
+  <div class="loading-desc">Estamos generando tu plan personalizado con inteligencia artificial. Esto puede tardar entre 1 y 2 minutos — por favor no cierres esta ventana.</div>
   <div class="loading-steps">
     <div class="ls-item active" id="ls-1"><div class="ls-dot"></div>Enviando tu formulario al equipo</div>
     <div class="ls-item" id="ls-2"><div class="ls-dot"></div>Analizando tus objetivos con IA</div>
@@ -763,6 +781,19 @@ textarea:focus{border-color:var(--gold)}
 </div>
 
 <!-- NAV -->
+<div id="model-selector-bar" style="width:100%;max-width:900px;margin-bottom:12px;display:none">
+  <div style="background:#fff;border:1px solid #d4dcc0;border-radius:4px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a8a6a;font-weight:500;margin-bottom:4px">Modelo de IA</div>
+      <div style="font-size:12px;color:#2d3a2e">Selecciona con qué IA quieres generar el plan</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
+      <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
+      <button onclick="setModelo('groq')" id="mbtn-groq" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">▲ Groq</button>
+    </div>
+  </div>
+</div>
 
 <div class="nav" id="nav-bar">
   <span class="step-counter" id="step-counter">Paso 1 de 11</span>
@@ -1058,7 +1089,10 @@ function collectData(){
   return {
     // Identificación
     nombre:         document.getElementById('f-nombre').value||'',
+    cedula:         document.getElementById('f-cedula')?document.getElementById('f-cedula').value||'':'',
+    direccion:      document.getElementById('f-direccion')?document.getElementById('f-direccion').value||'':'',
     edad:           document.getElementById('f-edad').value||'',
+    fechaNacimiento: document.getElementById('f-fechanac')?document.getElementById('f-fechanac').value||'':'',
     sexo:           (document.querySelector('input[name="sexo"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     email:          document.getElementById('f-email').value||'',
     celular:        document.getElementById('f-celular').value||'',
@@ -1066,9 +1100,10 @@ function collectData(){
     horarioLaboral: horarioLaboral,
     actLaboral:     (document.querySelector('input[name="act_laboral"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     numHijos:       (document.querySelector('input[name="num_hijos"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    comoConociste:  (document.querySelector('input[name="como_conociste"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     fecha:          new Date().toLocaleDateString('es-CR',{day:'numeric',month:'long',year:'numeric'}),
 
-    // Contacto emergencia (para correo staff)
+    // Contacto emergencia
     contactoEmergencia: document.getElementById('f-cont-nombre').value||'',
     contactoRelacion:   document.getElementById('f-cont-relacion').value||'',
     contactoTel:        document.getElementById('f-cont-tel').value||'',
@@ -1139,23 +1174,42 @@ function collectData(){
     notasAlimentacion:   document.getElementById('f-nota-alim').value||'',
 
     // Nuevos campos
-    nivelEstres:     getScaleValue('scale-estres'),
-    numHijosVal:     (document.querySelector('input[name="num_hijos"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    nivelEstres:        getScaleValue('scale-estres'),
+    numHijosVal:        (document.querySelector('input[name="num_hijos"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+
+    // Condiciones ginecológicas / contraindicaciones detalladas
+    embarazo:           getYNValue(s3,'embarazada'),
+    lactancia:          getYNValue(s3,'lactancia'),
+    anticonceptivos:    getYNValue(s3,'anticonceptivos'),
+    sop:                getYNValue(s3,'ovario poliquístico'),
+    menopausia:         getYNValue(s3,'menopausia'),
+    perimenopausia:     getYNValue(s3,'perimenopausia'),
+
+    // Alergias detalladas
+    alergia_lidocaina:  getYNValue(document.getElementById('step-6'),'lidocaína'),
+    alergia_penicilina: getYNValue(document.getElementById('step-6'),'penicilina'),
+    alergia_yodo:       getYNValue(document.getElementById('step-6'),'yodopovidona'),
+    alergia_aines:      getYNValue(document.getElementById('step-6'),'antiinflamatorios'),
+    alergia_latex:      getYNValue(document.getElementById('step-6'),'látex'),
+    alergia_aloe:       getYNValue(document.getElementById('step-6'),'aloe'),
+    alergia_fragancias: getYNValue(document.getElementById('step-6'),'fragancias'),
+
+    // Hábitos digestivos
+    evacuacion:         (document.querySelector('input[name="evacuacion"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+
+    // Solar detallado
+    usaProtectorSolar:  getYNValue(document.getElementById('step-10')||document.getElementById('step-7b'),'protector solar'),
+    marcaSpf:           document.getElementById('f-spf')?document.getElementById('f-spf').value||'':'',
+
+    // Antecedentes familiares
+    antecedentesFam:    (document.querySelector('input[name="antecedentes_fam"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    antecedentesFamDet: document.getElementById('f-antecedentes-det')?document.getElementById('f-antecedentes-det').value||'':'',
 
     notasStaff: '',
   };
 }
 
 function submitForm(){
-  // Validar modelo seleccionado
-  if (!window._modeloSel) {
-    const warn = document.getElementById('modelo-warning');
-    const sel  = document.getElementById('modelo-select');
-    if (warn) { warn.style.display='block'; }
-    if (sel)  { sel.style.borderColor='#c62828'; sel.focus(); sel.scrollIntoView({behavior:'smooth',block:'center'}); }
-    return;
-  }
-
   const consents=document.querySelectorAll('#step-11 .consent-item input[type="checkbox"]');
   if(![...consents].every(c=>c.checked)){
     alert('Por favor acepta todas las declaraciones de consentimiento para continuar.');
@@ -1172,7 +1226,7 @@ function submitForm(){
   fd.append('data',JSON.stringify(collectData()));
   photoFiles.forEach((file,i)=>{ if(file)fd.append('foto_'+(i+1),file,file.name); });
 
-  fd.append('modelo', window._modeloSel);
+  fd.append('modelo', window._modeloSel || 'claude');
   fetch('/enviar',{method:'POST',body:fd})
     .then(r=>r.json())
     .then(data=>{
@@ -1240,19 +1294,19 @@ function animateLoadingSteps(){
 }
 
 document.getElementById('fecha-envio').valueAsDate=new Date();
+
+// Mostrar/ocultar detalle antecedentes familiares
+document.querySelectorAll('input[name="antecedentes_fam"]').forEach(r => {
+  r.addEventListener('change', function() {
+    const wrap = document.getElementById('antecedentes-det-wrap');
+    if (wrap) wrap.style.display = this.closest('.radio-item').textContent.trim() === 'Sí' ? 'block' : 'none';
+  });
+});
 buildLabels();
 initCheckboxes();
 updateUI();
 
-window._modeloSel = '';  // vacío — obliga a seleccionar
-
-function setModeloSelect(m) {
-  window._modeloSel = m;
-  const warn = document.getElementById('modelo-warning');
-  const sel  = document.getElementById('modelo-select');
-  if (warn) warn.style.display = m ? 'none' : 'block';
-  if (sel)  sel.style.borderColor = m ? '#8fa832' : '#d4dcc0';
-}
+window._modeloSel = 'claude';
 
 function setModelo(m) {
   window._modeloSel = m;
@@ -1279,6 +1333,8 @@ function setModelo(m) {
 const _origUpdateUI = updateUI;
 updateUI = function() {
   _origUpdateUI();
+  const bar = document.getElementById('model-selector-bar');
+  if (bar) bar.style.display = current === total ? 'block' : 'none';
 };
 </script>
 </body>
