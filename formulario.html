@@ -720,23 +720,16 @@ textarea:focus{border-color:var(--gold)}
   <label class="consent-item"><input type="checkbox"><div class="consent-check"></div><div class="consent-text"><strong>Autorización de contacto <span style="color:var(--gold)">*</span></strong><span>Autorizo a la clínica a contactarme para seguimiento y recordatorios de citas.</span></div></label>
   <div class="form-grid" style="margin-top:24px">
     <div class="field"><label class="field-label">Fecha de envío <span class="req">*</span></label><input type="date" id="fecha-envio"></div>
-  </div>
-
-  <!-- Selector de IA — obligatorio antes de enviar -->
-  <div style="margin-top:24px;background:#f9faf6;border:1.5px solid #d4dcc0;border-radius:4px;padding:18px 20px">
-    <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a8a6a;font-weight:500;margin-bottom:4px">
-      Modelo de IA <span style="color:#c62828">*</span>
-    </div>
-    <div style="font-size:12px;color:#2d3a2e;margin-bottom:12px">Selecciona con qué IA quieres generar el plan personalizado</div>
-    <select id="modelo-select" onchange="setModeloSelect(this.value)"
-      style="width:100%;padding:11px 36px 11px 14px;border:1.5px solid #d4dcc0;border-radius:4px;font-size:13px;font-family:inherit;color:#2d3a2e;background:#fff;cursor:pointer;outline:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%238fa832%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 12px center;">
-      <option value="">— Selecciona una IA —</option>
-      <option value="claude">✦ Claude</option>
-      <option value="gemini">◆ Gemini</option>
-      <option value="groq">▲ Groq</option>
-    </select>
-    <div id="modelo-warning" style="display:none;margin-top:8px;font-size:12px;color:#c62828;font-weight:500">
-      ⚠ Debes seleccionar una IA antes de enviar el formulario
+    <div class="field">
+      <label class="field-label">Modelo de IA <span class="req">*</span></label>
+      <select id="modelo-select" onchange="setModeloSelect(this.value)"
+        style="width:100%;padding:9px 36px 9px 0;border:none;border-bottom:1px solid var(--border);font-size:14px;font-family:inherit;color:var(--text);background:transparent;cursor:pointer;outline:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%238fa832%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 4px center;">
+        <option value="">— Selecciona una IA —</option>
+        <option value="claude">✦ Claude</option>
+        <option value="gemini">◆ Gemini</option>
+        <option value="groq">▲ Groq</option>
+      </select>
+      <div id="modelo-warning" style="display:none;margin-top:6px;font-size:11px;color:#c62828;font-weight:500">⚠ Debes seleccionar una IA</div>
     </div>
   </div>
 </div>
