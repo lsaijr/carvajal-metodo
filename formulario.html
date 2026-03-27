@@ -740,13 +740,18 @@ textarea:focus{border-color:var(--gold)}
   <div id="model-selector-bar" style="margin-top:32px;width:100%;max-width:560px;margin-left:auto;margin-right:auto">
     <div style="background:#fff;border:1px solid #d4dcc0;border-radius:4px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div>
-        <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a8a6a;font-weight:500;margin-bottom:4px">Modelo de IA</div>
+        <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a8a6a;font-weight:500;margin-bottom:4px">Modelo de IA <span style="color:#c62828">*</span></div>
         <div style="font-size:12px;color:#2d3a2e">Selecciona con qué IA quieres generar el plan</div>
       </div>
-      <div style="display:flex;gap:10px">
-        <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
-        <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
-        <button onclick="setModelo('groq')" id="mbtn-groq" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">▲ Groq</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <select id="modelo-select" onchange="setModeloSelect(this.value)"
+          style="padding:10px 36px 10px 14px;border:1.5px solid #d4dcc0;border-radius:4px;font-size:13px;font-family:inherit;color:#2d3a2e;background:#fff;cursor:pointer;outline:none;min-width:180px;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath d=%22M1 1l5 5 5-5%22 stroke=%22%238fa832%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 12px center;">
+          <option value="">— Selecciona una IA —</option>
+          <option value="claude">✦ Claude</option>
+          <option value="gemini">◆ Gemini</option>
+          <option value="groq">▲ Groq</option>
+        </select>
+        <span id="modelo-warning" style="display:none;font-size:12px;color:#c62828;font-weight:500">⚠ Debes elegir una IA</span>
       </div>
     </div>
   </div>
@@ -1156,6 +1161,15 @@ function submitForm(){
     alert('Por favor acepta todas las declaraciones de consentimiento para continuar.');
     return;
   }
+  // Validar que se haya elegido un modelo de IA
+  if (!window._modeloSel) {
+    const warn = document.getElementById('modelo-warning');
+    if (warn) { warn.style.display='inline'; warn.scrollIntoView({behavior:'smooth',block:'center'}); }
+    const sel = document.getElementById('modelo-select');
+    if (sel) { sel.style.borderColor='#c62828'; sel.focus(); }
+    return;
+  }
+
   document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('nav-bar').style.display='none';
   document.getElementById('progress-fill').style.width='100%';
@@ -1167,7 +1181,7 @@ function submitForm(){
   fd.append('data',JSON.stringify(collectData()));
   photoFiles.forEach((file,i)=>{ if(file)fd.append('foto_'+(i+1),file,file.name); });
 
-  fd.append('modelo', window._modeloSel || 'claude');
+  fd.append('modelo', window._modeloSel);
   fetch('/enviar',{method:'POST',body:fd})
     .then(r=>r.json())
     .then(data=>{
@@ -1242,27 +1256,14 @@ buildLabels();
 initCheckboxes();
 updateUI();
 
-window._modeloSel = 'claude';
+window._modeloSel = '';  // vacío — obliga a seleccionar
 
-function setModelo(m) {
+function setModeloSelect(m) {
   window._modeloSel = m;
-  const configs = {
-    claude: { id: 'mbtn-claude', bg: '#2d3a2e', border: '#2d3a2e' },
-    gemini: { id: 'mbtn-gemini', bg: '#1a73e8', border: '#1a73e8' },
-    groq:   { id: 'mbtn-groq',   bg: '#f55036', border: '#f55036' },
-
-  };
-  // Reset all
-  Object.values(configs).forEach(c => {
-    const el = document.getElementById(c.id);
-    if (el) { el.style.background = 'transparent'; el.style.borderColor = '#d4dcc0'; el.style.color = '#7a8a6a'; }
-  });
-  // Activate selected
-  const sel = configs[m];
-  if (sel) {
-    const el = document.getElementById(sel.id);
-    if (el) { el.style.background = sel.bg; el.style.borderColor = sel.border; el.style.color = '#fff'; }
-  }
+  const warn = document.getElementById('modelo-warning');
+  if (warn) warn.style.display = m ? 'none' : 'inline';
+  const sel = document.getElementById('modelo-select');
+  if (sel) sel.style.borderColor = m ? '#8fa832' : '#d4dcc0';
 }
 
 // Show model selector on last step
