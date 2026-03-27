@@ -309,7 +309,6 @@ def _render_borrador_legacy(plan_json, data, job_id):
         '{{EDAD}}': esc(data.get('edad','')),
         '{{OCUPACION}}': esc(data.get('ocupacion','')),
         '{{FECHA}}': esc(data.get('fecha','')),
-        '{{NOTA_MEDICA}}': esc(plan_json.get('diagnostico',{}).get('nota_medica','')),
         '{{DIAGNOSTICO_FILAS}}': diag_html,
         '{{RUTINA_NOTA}}': esc(plan_json.get('rutina',{}).get('nota','')),
         '{{RUTINA_FILAS}}': rutina_html,
@@ -1138,7 +1137,9 @@ Sé conciso pero completo. Usa terminología médica adecuada."""
         print(f'[analisis_medico] OK — {elapsed}s ({len(txt)} chars)')
         return txt
     except Exception as e:
+        import traceback
         print(f'[analisis_medico] Excepcion: {e}')
+        print(traceback.format_exc())
         return None
 
 
@@ -1343,8 +1344,19 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     t=tabla2()
     row_tabla(t,'areas_faciales',        data.get('areasFaciales',''))
     row_tabla(t,'areas_corporales_detalle', data.get('areasCorporales',''))
-    hist=data.get('historialEstetico',[])
-    row_tabla(t,'historial_estetico',    hist if isinstance(hist,str) else ', '.join(hist) if hist else '—')
+    hist    = data.get('historialEstetico', [])
+    det_map = data.get('historialDetalle', {})
+    if hist:
+        for trat in (hist if isinstance(hist, list) else [hist]):
+            det = det_map.get(trat, {}) if isinstance(det_map, dict) else {}
+            fecha = det.get('fecha', '') if det else ''
+            zona  = det.get('zona', '')  if det else ''
+            val   = trat
+            if fecha: val += f' — última sesión: {fecha}'
+            if zona:  val += f' — zona: {zona}'
+            row_tabla(t, 'tratamiento', val)
+    else:
+        row_tabla(t, 'historial_estetico', '—')
 
     # Contraindicaciones — solo las marcadas como Sí
     contra = data.get('contraindications', {})
@@ -1572,6 +1584,7 @@ def _mapear_formulario(f):
         'cirugias':            s('cirugias') or 'Ninguna',
         'antecedentesFam':     'Ninguno',
         'alergias':            s('alergias') or 'Ninguna',
+        'alergiasDetalle':     f.get('alergiasDetalle', {}),
         'contraindications':   contra,
         'embarazo':            s('embarazo'),
         'lactancia':           s('lactancia'),
@@ -1596,6 +1609,7 @@ def _mapear_formulario(f):
         'expectativas':        s('expectativas'),
         'satisfaccion':        s('satisfaccion'),
         'historialEstetico':   lst('historialEstetico'),
+        'historialDetalle':    f.get('historialDetalle', {}),
         'laserActivo':         'Si' if s('laserActivo').lower() in ['si','sí','yes'] else 'No',
         'intolerancias':       intolerancias,
         'sintomasDigestivos':  sintomas,
@@ -2292,7 +2306,6 @@ body{padding-top:44px}
   <div class="content">
     <div class="sec-label">Sección 01</div>
     <div class="sec-title">Diagnóstico Integral</div>
-    <div class="nota-medica"><strong>⚕ Nota para el equipo médico</strong><span contenteditable="true">{{NOTA_MEDICA}}</span></div>
     <div style="border-radius:6px;overflow:hidden;border:1px solid var(--border)">
       <table class="diag-table">
         <thead><tr><th style="width:105px">Área</th><th>Hallazgos Clave</th></tr></thead>
@@ -2669,7 +2682,6 @@ def render_plan(j, d, job_id=''):
         '{{CONDICION_CORTA}}': esc(cond_corta),
         '{{INTRO}}': esc(j.get('portada',{}).get('intro','')),
         '{{PILARES_PORTADA}}': portada_pilares,
-        '{{NOTA_MEDICA}}': esc(j.get('diagnostico',{}).get('nota_medica','')),
         '{{DIAGNOSTICO_FILAS}}': diag_html,
         '{{PILARES_CARDS}}': pilares_cards,
         '{{RUTINA_FILAS}}': rutina_html,
