@@ -762,6 +762,13 @@ textarea:focus{border-color:var(--gold)}
       <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
       <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
       <button onclick="setModelo('groq')" id="mbtn-groq" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">▲ Groq</button>
+      <button onclick="setModelo('cohere')" id="mbtn-cohere" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">⬡ Cohere</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+      <span style="font-size:10px;color:#7a8a6a;white-space:nowrap;letter-spacing:.06em">OpenRouter:</span>
+      <button onclick="setModelo('openrouter-llama')" id="mbtn-or-llama" style="flex:1;padding:8px 10px;border-radius:2px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">Llama 3.3</button>
+      <button onclick="setModelo('openrouter-gemini')" id="mbtn-or-gemini" style="flex:1;padding:8px 10px;border-radius:2px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">Gemini Flash</button>
+      <button onclick="setModelo('openrouter-deepseek')" id="mbtn-or-deepseek" style="flex:1;padding:8px 10px;border-radius:2px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">DeepSeek R1</button>
     </div>
   </div>
 </div>
@@ -1245,6 +1252,10 @@ function setModelo(m) {
     claude: { id: 'mbtn-claude', bg: '#2d3a2e', border: '#2d3a2e' },
     gemini: { id: 'mbtn-gemini', bg: '#1a73e8', border: '#1a73e8' },
     groq:   { id: 'mbtn-groq',   bg: '#f55036', border: '#f55036' },
+    cohere:              { id: 'mbtn-cohere',      bg: '#39594d', border: '#39594d' },
+    'openrouter-llama':  { id: 'mbtn-or-llama',    bg: '#7c3aed', border: '#7c3aed' },
+    'openrouter-gemini': { id: 'mbtn-or-gemini',   bg: '#0891b2', border: '#0891b2' },
+    'openrouter-deepseek':{ id: 'mbtn-or-deepseek',bg: '#065f46', border: '#065f46' },
   };
   // Reset all
   Object.values(configs).forEach(c => {
