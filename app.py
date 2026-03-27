@@ -354,7 +354,7 @@ def _render_borrador_legacy(plan_json, data, job_id):
 def admin_planes():
     return PLANES_HTML
 
-PLANES_HTML = """>
+PLANES_HTML = """<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -691,7 +691,6 @@ async function cargarPlanes() {
     const r    = await fetch('/api/planes', {
       headers: {'X-Token': token}
     });
-    if (r.status === 401) { doLogout(); return; }
     const data = await r.json();
     todosLosPlanes = data.planes || [];
     actualizarStats();
