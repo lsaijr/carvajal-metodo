@@ -1225,6 +1225,9 @@ function pollStatus(jobId){
 function showThanks(){
   document.getElementById('screen-loading').style.display='none';
   document.getElementById('success').style.display='block';
+  // Ocultar selector de modelo en pantalla de éxito
+  const bar = document.getElementById('model-selector-bar');
+  if (bar) bar.style.display='none';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
