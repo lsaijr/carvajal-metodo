@@ -13,6 +13,7 @@ app = Flask(__name__)
 # ── Config desde variables de entorno ────────────────────────
 CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
 GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
+GROQ_KEY    = os.environ.get('GROQ_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
@@ -171,10 +172,26 @@ def generar_pdf_final():
             except Exception as e:
                 return jsonify({'error': 'PDFSHIFT_KEY no configurada y WeasyPrint no disponible. Configura PDFSHIFT_KEY en Railway.'}), 500
         else:
+            # Limpiar HTML antes de enviar a PDFShift:
+            # Inyectar CSS que oculta elementos de UI del borrador
+            css_limpieza = '''<style>
+            #spinner, #toast, #topbar, #edit-notice, #btn-pdf,
+            .topbar-btns, #topbar .info { display: none !important; }
+            [contenteditable] { outline: none !important; background: transparent !important; box-shadow: none !important; }
+            body { padding-top: 0 !important; }
+            .container { padding-top: 20px !important; }
+            </style>'''
+            html_limpio = html_str.replace('</head>', css_limpieza + '</head>', 1)
+
             r_pdf = req.post(
                 'https://api.pdfshift.io/v3/convert/pdf',
                 auth=('api', PDFSHIFT_KEY),
-                json={'source': html_str, 'format': 'A4', 'margin': '15mm'},
+                json={
+                    'source': html_limpio,
+                    'format': 'A4',
+                    'margin': '15mm',
+                    'disable_javascript': False,
+                },
                 timeout=120
             )
             if r_pdf.status_code != 200:
@@ -434,7 +451,12 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
         borrador_html = render_borrador(plan_json, data, job_id)
 
         nombre    = data.get('nombre', 'Paciente')
-        sufijo_modelo = '_gemini' if modelo == 'gemini' else '_claude'
+        if modelo == 'gemini':
+            sufijo_modelo = '_gemini'
+        elif modelo == 'groq':
+            sufijo_modelo = '_groq'
+        else:
+            sufijo_modelo = '_claude'
         html_name = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + sufijo_modelo + '.html'
         html_path = os.path.join(PLANES_DIR, html_name)
         with open(html_path, 'w', encoding='utf-8') as f:
@@ -886,6 +908,49 @@ def _llamar_gemini(num, total, system_prompt, user_msg, max_tok=8000):
         return None, f'Error llamando Gemini: {str(e)[:200]}'
 
 
+
+def _llamar_groq(num, total, system_prompt, user_msg, max_tok=8000):
+    """Llama a Groq (Llama 3.3 70B) con el mismo contrato que _llamar_claude."""
+    print(f"[Groq {num}/{total}] Iniciando...")
+    t0 = time.time()
+    url = 'https://api.groq.com/openai/v1/chat/completions'
+    payload = {
+        'model': 'llama-3.3-70b-versatile',
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user',   'content': user_msg}
+        ],
+        'max_tokens': max_tok,
+        'temperature': 0.7,
+    }
+    try:
+        resp = req.post(
+            url,
+            headers={'Authorization': f'Bearer {GROQ_KEY}', 'Content-Type': 'application/json'},
+            json=payload,
+            timeout=300
+        )
+        elapsed = round(time.time() - t0, 1)
+        if resp.status_code != 200:
+            print(f"[Groq {num}/{total}] ERROR {resp.status_code}: {resp.text[:300]}")
+            return None, f'Error API Groq ({resp.status_code}): {resp.text[:200]}'
+        rj = resp.json()
+        txt = rj['choices'][0]['message']['content']
+        print(f"[Groq {num}/{total}] OK — {elapsed}s")
+        txt = re.sub(r'^```json\s*', '', txt.strip())
+        txt = re.sub(r'^```\s*', '', txt)
+        txt = re.sub(r'```\s*$', '', txt).strip()
+        try:
+            result = json.loads(txt)
+            print(f"[Groq {num}/{total}] JSON OK — claves: {list(result.keys())}")
+            return result, None
+        except Exception as e:
+            print(f"[Groq {num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
+            return None, f'JSON invalido en llamada Groq {num}: {str(e)[:150]}'
+    except Exception as e:
+        return None, f'Error llamando Groq: {str(e)[:200]}'
+
+
 def generar_plan_ia(d, job_id=None, modelo='claude'):
     datos = _datos_paciente(d)
     t_total = time.time()
@@ -918,11 +983,18 @@ Genera SOLO estas 3 claves: pilar4, pilar5, compromiso.
 {CATALOGO}
 REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_anual = suma todos bimestres. Satisfaccion baja = motor compromiso.'''
 
-    _llamar = _llamar_gemini if modelo == 'gemini' else _llamar_claude
-    tok1 = 6000 if modelo == 'gemini' else 4000
-    tok2 = 12000 if modelo == 'gemini' else 10000
-    tok3 = 10000 if modelo == 'gemini' else 8000
-    nombre_modelo = 'Gemini' if modelo == 'gemini' else 'Claude'
+    if modelo == 'gemini':
+        _llamar = _llamar_gemini
+        tok1, tok2, tok3 = 6000, 12000, 10000
+        nombre_modelo = 'Gemini'
+    elif modelo == 'groq':
+        _llamar = _llamar_groq
+        tok1, tok2, tok3 = 6000, 10000, 8000
+        nombre_modelo = 'Groq (Llama)'
+    else:
+        _llamar = _llamar_claude
+        tok1, tok2, tok3 = 4000, 10000, 8000
+        nombre_modelo = 'Claude'
 
     actualizar(f'Sección 1/3 — Portada, diagnóstico y rutina diaria... ({nombre_modelo})', 15)
     r1, err = _llamar(1, 3, SYS1, datos, max_tok=tok1)
