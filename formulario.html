@@ -733,6 +733,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="ls-item" id="ls-2"><div class="ls-dot"></div>Analizando tus objetivos con IA</div>
     <div class="ls-item" id="ls-3"><div class="ls-dot"></div>Generando tu plan personalizado</div>
     <div class="ls-item" id="ls-4"><div class="ls-dot"></div>Enviando plan al especialista</div>
+    <div id="ls-timer" style="font-size:11px;color:#9aaa8a;margin-top:12px;text-align:center">⏱ 0s transcurridos...</div>
   </div>
 </div>
 
@@ -751,6 +752,19 @@ textarea:focus{border-color:var(--gold)}
 </div>
 
 <!-- NAV -->
+<div id="model-selector-bar" style="width:100%;max-width:900px;margin-bottom:12px;display:none">
+  <div style="background:#fff;border:1px solid #d4dcc0;border-radius:4px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a8a6a;font-weight:500;margin-bottom:4px">Modelo de IA</div>
+      <div style="font-size:12px;color:#2d3a2e">Selecciona con qué IA quieres generar el plan</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 20px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
+      <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 20px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
+    </div>
+  </div>
+</div>
+
 <div class="nav" id="nav-bar">
   <span class="step-counter" id="step-counter">Paso 1 de 11</span>
   <div style="display:flex;gap:12px">
@@ -1150,6 +1164,7 @@ function submitForm(){
   fd.append('data',JSON.stringify(collectData()));
   photoFiles.forEach((file,i)=>{ if(file)fd.append('foto_'+(i+1),file,file.name); });
 
+  fd.append('modelo', window._modeloSel || 'claude');
   fetch('/enviar',{method:'POST',body:fd})
     .then(r=>r.json())
     .then(data=>{
@@ -1163,15 +1178,44 @@ function submitForm(){
 }
 
 function pollStatus(jobId){
+  let secs=0;
+  const ticker=setInterval(()=>{
+    secs++;
+    const m=Math.floor(secs/60);
+    const s=secs%60;
+    const t=m>0?m+'min '+String(s).padStart(2,'0')+'s':s+'s';
+    const el=document.getElementById('ls-timer');
+    if(el) el.textContent='⏱ '+t+' transcurridos...';
+  },1000);
+
   const poll=setInterval(async()=>{
     try{
       const r=await fetch('/status?job='+jobId);
       const data=await r.json();
+      if(data.status==='working'){
+        if(data.msg){
+          const ls2=document.getElementById('ls-2');
+          const ls3=document.getElementById('ls-3');
+          if(data.msg.includes('1/3')){
+            ls2.className='ls-item done';
+            ls3.className='ls-item active';
+            ls3.querySelector('div.ls-dot').nextSibling.textContent=' '+data.msg;
+          } else if(data.msg.includes('2/3')){
+            ls3.className='ls-item active';
+            ls3.querySelector('div.ls-dot').nextSibling.textContent=' '+data.msg;
+          } else if(data.msg.includes('3/3')){
+            ls3.className='ls-item active';
+            ls3.querySelector('div.ls-dot').nextSibling.textContent=' '+data.msg;
+          }
+        }
+        return;
+      }
       if(data.status==='done'||data.status==='error'){
         clearInterval(poll);
+        clearInterval(ticker);
         showThanks();
       }
-    }catch(e){clearInterval(poll);showThanks();}
+    }catch(e){clearInterval(poll);clearInterval(ticker);showThanks();}
   },4000);
 }
 
@@ -1182,20 +1226,38 @@ function showThanks(){
 }
 
 function animateLoadingSteps(){
-  const ids=['ls-1','ls-2','ls-3','ls-4'];
-  const delays=[0,4000,15000,55000];
-  ids.forEach((id,i)=>{
-    setTimeout(()=>{
-      if(i>0)document.getElementById(ids[i-1]).className='ls-item done';
-      document.getElementById(id).className='ls-item active';
-    },delays[i]);
-  });
+  document.getElementById('ls-1').className='ls-item done';
+  document.getElementById('ls-2').className='ls-item done';
+  document.getElementById('ls-3').className='ls-item active';
 }
 
 document.getElementById('fecha-envio').valueAsDate=new Date();
 buildLabels();
 initCheckboxes();
 updateUI();
+
+window._modeloSel = 'claude';
+
+function setModelo(m) {
+  window._modeloSel = m;
+  const btnC = document.getElementById('mbtn-claude');
+  const btnG = document.getElementById('mbtn-gemini');
+  if (m === 'claude') {
+    btnC.style.cssText += ';border-color:#2d3a2e;background:#2d3a2e;color:#fff';
+    btnG.style.cssText += ';border-color:#d4dcc0;background:transparent;color:#7a8a6a';
+  } else {
+    btnG.style.cssText += ';border-color:#1a73e8;background:#1a73e8;color:#fff';
+    btnC.style.cssText += ';border-color:#d4dcc0;background:transparent;color:#7a8a6a';
+  }
+}
+
+// Show model selector on last step
+const _origUpdateUI = updateUI;
+updateUI = function() {
+  _origUpdateUI();
+  const bar = document.getElementById('model-selector-bar');
+  if (bar) bar.style.display = current === total ? 'block' : 'none';
+};
 </script>
 </body>
 </html>

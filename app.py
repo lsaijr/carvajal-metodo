@@ -12,6 +12,7 @@ app = Flask(__name__)
 
 # ── Config desde variables de entorno ────────────────────────
 CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
+GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
@@ -90,10 +91,11 @@ def enviar():
     job_id = uuid.uuid4().hex[:16]
     jobs[job_id] = {'status': 'working', 'msg': 'Iniciando generacion del plan...'}
 
-    t = threading.Thread(target=worker, args=(job_id, data, [], fotos), daemon=True)
+    modelo = form.get('modelo', 'claude')
+    t = threading.Thread(target=worker, args=(job_id, data, [], fotos, modelo), daemon=True)
     t.start()
 
-    return jsonify({'jobId': job_id, 'nombre': data['nombre']})
+    return jsonify({'jobId': job_id, 'nombre': data['nombre'], 'modelo': modelo})
 
 
 # ── Endpoint carga .docx (/upload) ────────────────────────────
@@ -119,10 +121,11 @@ def upload():
     job_id = uuid.uuid4().hex[:16]
     jobs[job_id] = {'status': 'working', 'msg': 'Iniciando generacion del plan...'}
 
-    t = threading.Thread(target=worker, args=(job_id, data, faltantes), daemon=True)
+    modelo = request.form.get('modelo', 'claude')
+    t = threading.Thread(target=worker, args=(job_id, data, faltantes, [], modelo), daemon=True)
     t.start()
 
-    return jsonify({'jobId': job_id, 'nombre': data['nombre']})
+    return jsonify({'jobId': job_id, 'nombre': data['nombre'], 'modelo': modelo})
 
 
 # ════════════════════════════════════════════════════════════
@@ -132,15 +135,14 @@ def upload():
 @app.route('/borrador/<job_id>', methods=['GET'])
 def ver_borrador(job_id):
     """Sirve el borrador editable. Descarga desde Cloudinary si no está en memoria."""
-    # Intentar desde Cloudinary primero (sobrevive reinicios)
+    from flask import Response
     html = descargar_borrador_cloudinary(job_id)
     if html:
-        return html
-    # Fallback: regenerar desde job en memoria si existe
+        return Response(html, content_type='text/html; charset=utf-8')
     job = jobs.get(job_id)
     if not job or job.get('status') != 'done':
-        return '<h2 style="font-family:sans-serif;padding:40px;color:#666">Borrador no encontrado o aún procesando.</h2>', 404
-    return '<h2 style="font-family:sans-serif;padding:40px;color:#666">Borrador no disponible. Verifica Cloudinary.</h2>', 404
+        return Response('<h2 style="font-family:sans-serif;padding:40px;color:#666">Borrador no encontrado o aún procesando.</h2>', status=404, content_type='text/html; charset=utf-8')
+    return Response('<h2 style="font-family:sans-serif;padding:40px;color:#666">Borrador no disponible. Verifica Cloudinary.</h2>', status=404, content_type='text/html; charset=utf-8')
 
 
 @app.route('/generar-pdf', methods=['POST'])
@@ -418,11 +420,11 @@ def render_borrador(plan_json, data, job_id):
     return tpl
 
 
-def worker(job_id, data, faltantes, fotos=None):
+def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
     try:
         jobs[job_id] = {'status': 'working', 'msg': 'Generando plan con IA (puede tomar 1-2 min)...'}
 
-        plan_json = generar_plan_ia(data, job_id)
+        plan_json = generar_plan_ia(data, job_id, modelo=modelo)
         if 'error' in plan_json:
             jobs[job_id] = {'status': 'error', 'msg': plan_json['error']}
             return
@@ -432,7 +434,8 @@ def worker(job_id, data, faltantes, fotos=None):
         borrador_html = render_borrador(plan_json, data, job_id)
 
         nombre    = data.get('nombre', 'Paciente')
-        html_name = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + '.html'
+        sufijo_modelo = '_gemini' if modelo == 'gemini' else '_claude'
+        html_name = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + sufijo_modelo + '.html'
         html_path = os.path.join(PLANES_DIR, html_name)
         with open(html_path, 'w', encoding='utf-8') as f:
             f.write(html)
@@ -845,7 +848,45 @@ def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
         return None, f'JSON invalido en llamada {num}: {str(e)[:150]}'
 
 
-def generar_plan_ia(d, job_id=None):
+
+def _llamar_gemini(num, total, system_prompt, user_msg, max_tok=8000):
+    """Llama a Gemini 2.0 Flash con el mismo contrato que _llamar_claude."""
+    print(f"[Gemini {num}/{total}] Iniciando...")
+    t0 = time.time()
+    model = 'gemini-2.0-flash'
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}'
+    payload = {
+        'system_instruction': {'parts': [{'text': system_prompt}]},
+        'contents': [{'role': 'user', 'parts': [{'text': user_msg}]}],
+        'generationConfig': {
+            'maxOutputTokens': max_tok,
+            'temperature': 0.7,
+        }
+    }
+    try:
+        resp = req.post(url, json=payload, timeout=300)
+        elapsed = round(time.time() - t0, 1)
+        if resp.status_code != 200:
+            print(f"[Gemini {num}/{total}] ERROR {resp.status_code}: {resp.text[:300]}")
+            return None, f'Error API Gemini ({resp.status_code}): {resp.text[:200]}'
+        rj = resp.json()
+        txt = rj['candidates'][0]['content']['parts'][0]['text']
+        print(f"[Gemini {num}/{total}] OK — {elapsed}s")
+        txt = re.sub(r'^```json\s*', '', txt.strip())
+        txt = re.sub(r'^```\s*', '', txt)
+        txt = re.sub(r'```\s*$', '', txt).strip()
+        try:
+            result = json.loads(txt)
+            print(f"[Gemini {num}/{total}] JSON OK — claves: {list(result.keys())}")
+            return result, None
+        except Exception as e:
+            print(f"[Gemini {num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
+            return None, f'JSON invalido en llamada Gemini {num}: {str(e)[:150]}'
+    except Exception as e:
+        return None, f'Error llamando Gemini: {str(e)[:200]}'
+
+
+def generar_plan_ia(d, job_id=None, modelo='claude'):
     datos = _datos_paciente(d)
     t_total = time.time()
 
@@ -877,16 +918,22 @@ Genera SOLO estas 3 claves: pilar4, pilar5, compromiso.
 {CATALOGO}
 REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_anual = suma todos bimestres. Satisfaccion baja = motor compromiso.'''
 
-    actualizar('Sección 1/3 — Portada, diagnóstico y rutina diaria...', 15)
-    r1, err = _llamar_claude(1, 3, SYS1, datos, max_tok=4000)
+    _llamar = _llamar_gemini if modelo == 'gemini' else _llamar_claude
+    tok1 = 6000 if modelo == 'gemini' else 4000
+    tok2 = 12000 if modelo == 'gemini' else 10000
+    tok3 = 10000 if modelo == 'gemini' else 8000
+    nombre_modelo = 'Gemini' if modelo == 'gemini' else 'Claude'
+
+    actualizar(f'Sección 1/3 — Portada, diagnóstico y rutina diaria... ({nombre_modelo})', 15)
+    r1, err = _llamar(1, 3, SYS1, datos, max_tok=tok1)
     if err: return {'error': err}
 
-    actualizar('Sección 2/3 — Nutrición, ejercicio y bienestar mental...', 45)
-    r2, err = _llamar_claude(2, 3, SYS2, datos, max_tok=10000)
+    actualizar(f'Sección 2/3 — Nutrición, ejercicio y bienestar mental... ({nombre_modelo})', 45)
+    r2, err = _llamar(2, 3, SYS2, datos, max_tok=tok2)
     if err: return {'error': err}
 
-    actualizar('Sección 3/3 — Sueño, tratamientos y plan de compromiso...', 75)
-    r3, err = _llamar_claude(3, 3, SYS3, datos, max_tok=8000)
+    actualizar(f'Sección 3/3 — Sueño, tratamientos y plan de compromiso... ({nombre_modelo})', 75)
+    r3, err = _llamar(3, 3, SYS3, datos, max_tok=tok3)
     if err: return {'error': err}
 
     resultado = {}

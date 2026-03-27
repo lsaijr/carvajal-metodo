@@ -168,7 +168,15 @@ header p{margin-top:10px;font-size:13px;color:var(--muted);font-weight:300}
       <button class="remove-btn" onclick="removeFile()">✕ Quitar archivo</button>
     </div>
 
-    <button class="btn btn-primary" id="btn-upload" disabled onclick="iniciar()">Generar plan con IA</button>
+    <div id="model-btns" style="display:none;gap:10px;margin-top:16px">
+      <button class="btn" id="btn-claude" onclick="iniciar('claude')" style="flex:1;background:var(--dark);color:#f5efe8;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s">
+        ✦ Claude
+      </button>
+      <button class="btn" id="btn-gemini" onclick="iniciar('gemini')" style="flex:1;background:#1a73e8;color:#fff;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s">
+        ◆ Gemini
+      </button>
+    </div>
+    <input type="hidden" id="modelo-sel" value="claude">
 
     <div id="progress">
       <div class="progress-card">
@@ -260,9 +268,8 @@ function removeFile() {
   document.getElementById('zone').classList.remove('has-file');
   document.getElementById('file-actions').classList.remove('visible');
   document.getElementById('file-name-display').textContent = '';
-  btnUp.disabled = true;
-  btnUp.classList.remove('btn-gold');
-  btnUp.classList.add('btn-primary');
+  document.getElementById('model-btns').style.display = 'none';
+  document.querySelectorAll('#model-btns .btn').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
 }
 
 // ── Upload y polling ──
@@ -271,9 +278,12 @@ let poll  = null;
 let secs  = 0;
 let ticker = null;
 
-async function iniciar() {
+async function iniciar(modelo) {
   if (!fi.files || !fi.files[0]) return;
-  btnUp.disabled = true;
+  modelo = modelo || 'claude';
+  document.getElementById('modelo-sel').value = modelo;
+  // Disable both buttons
+  document.querySelectorAll('#model-btns .btn').forEach(b => { b.disabled = true; b.style.opacity = '.5'; });
   document.getElementById('progress').style.display = 'block';
   setStep(1, 'active');
   setPbar(10);
@@ -288,6 +298,7 @@ async function iniciar() {
 
   const fd = new FormData();
   fd.append('docx', fi.files[0]);
+  fd.append('modelo', modelo);
 
   try {
     const r    = await fetch('/upload', {method:'POST', body:fd});
