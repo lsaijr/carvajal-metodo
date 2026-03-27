@@ -584,7 +584,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
 <body>
 
 <!-- ══ LOGIN ══ -->
-<div id="login-screen">
+<div id="login-screen" style="display:none">
   <div class="login-box">
     <svg class="login-logo" width="48" height="48" viewBox="0 0 48 48" fill="none">
       <circle cx="24" cy="24" r="22" stroke="#b8935a" stroke-width="1.5"/>
@@ -599,7 +599,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
 </div>
 
 <!-- ══ APP ══ -->
-<div id="app">
+<div id="app" style="display:flex">
 
   <!-- Topbar -->
   <div class="topbar">
@@ -612,7 +612,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
     </div>
     <div class="topbar-right">
       <div class="topbar-count" id="total-count">— planes</div>
-      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+
     </div>
   </div>
 
@@ -675,46 +675,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Auth ────────────────────────────────────────────────────
-let token = sessionStorage.getItem('cc_token') || '';
+// ── Sin autenticación — acceso libre ────────────────────────
+let token = 'open';
 
-async function doLogin() {
-  const pass = document.getElementById('login-pass').value.trim();
-  if (!pass) return;
-  const r    = await fetch('/api/login', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({password: pass})
-  });
-  const data = await r.json();
-  if (data.ok) {
-    token = data.token;
-    sessionStorage.setItem('cc_token', token);
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('login-error').style.display = 'none';
-    cargarPlanes();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-    document.getElementById('login-pass').value = '';
-    document.getElementById('login-pass').focus();
-  }
-}
-
-function doLogout() {
-  token = '';
-  sessionStorage.removeItem('cc_token');
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-pass').value = '';
-}
-
-// Auto-login si ya hay token
-if (token) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  cargarPlanes();
-}
+function doLogout() {}  // no-op
 
 // ── Datos ────────────────────────────────────────────────────
 let todosLosPlanes = [];
@@ -1001,8 +965,6 @@ def _check_token():
 
 @app.route('/api/planes', methods=['GET'])
 def api_listar_planes():
-    if not _check_token():
-        return jsonify({'error': 'No autorizado'}), 401
     planes = []
     try:
         import cloudinary.api
