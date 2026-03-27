@@ -840,8 +840,10 @@ function mostrarToast(msg, tipo='success') {
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.get_json(silent=True) or {}
-    pwd  = data.get('password', '')
-    if pwd == ADMIN_PASSWORD:
+    pwd  = data.get('password', '').strip()
+    stored = ADMIN_PASSWORD.strip()
+    print(f'[login] recibido={repr(pwd)} esperado={repr(stored)} match={pwd==stored}')
+    if pwd == stored:
         tok = secrets.token_hex(32)
         admin_tokens.add(tok)
         return jsonify({'ok': True, 'token': tok})
