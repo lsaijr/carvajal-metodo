@@ -1033,7 +1033,116 @@ def api_listar_planes():
 
 
 
-def generar_docx_cuestionario(data):
+def generar_analisis_medico(data):
+    """Llama a Claude para generar un análisis clínico técnico orientado al médico."""
+    print("[analisis_medico] Generando análisis clínico con Claude...")
+    t0 = time.time()
+
+    # Construir resumen de datos clínicos relevantes
+    campos = {
+        'Nombre': data.get('nombre',''),
+        'Edad': data.get('edad',''),
+        'Sexo': data.get('sexo',''),
+        'Fecha nacimiento': data.get('fechaNacimiento',''),
+        'IMC': data.get('imc',''),
+        'Estatura': data.get('estatura','') + ' cm',
+        'Peso': data.get('peso','') + ' kg',
+        'Condicion sistemica': data.get('condicionSistemica',''),
+        'Otras condiciones': data.get('condiciones',''),
+        'Medicamentos': data.get('medicamentos',''),
+        'Cirugias': data.get('cirugias',''),
+        'Fuma': data.get('fuma',''),
+        'Alcohol': data.get('alcohol',''),
+        'Embarazo': data.get('embarazo',''),
+        'Lactancia': data.get('lactancia',''),
+        'Anticonceptivos': data.get('anticonceptivos',''),
+        'SOP': data.get('sop',''),
+        'Menopausia': data.get('menopausia',''),
+        'Perimenopausia': data.get('perimenopausia',''),
+        'Alergia lidocaina': data.get('alergia_lidocaina',''),
+        'Alergia penicilina': data.get('alergia_penicilina',''),
+        'Alergia yodo': data.get('alergia_yodo',''),
+        'Alergia AINEs': data.get('alergia_aines',''),
+        'Alergia latex': data.get('alergia_latex',''),
+        'Alergia aloe': data.get('alergia_aloe',''),
+        'Alergia fragancias': data.get('alergia_fragancias',''),
+        'Sueno': data.get('sueno',''),
+        'Hora duerme': data.get('horaDuerme',''),
+        'Hora despierta': data.get('horaDespierta',''),
+        'Cansancio diurno': data.get('cansancioDia',''),
+        'Nivel estres': data.get('nivelEstres',''),
+        'Actividad fisica': data.get('actFisica',''),
+        'Evacuacion': data.get('evacuacion',''),
+        'Intolerancias': data.get('intolerancias',''),
+        'Sintomas digestivos': data.get('sintomasDigestivos',''),
+        'Tipo piel': data.get('pielTipo',''),
+        'Problemas piel': data.get('pielProblemas',''),
+        'Exposicion solar': data.get('solar',''),
+        'SPF': data.get('spf',''),
+        'Historial estetico': data.get('historialEstetico',''),
+        'Laser activo': data.get('laserActivo',''),
+        'Contraindicaciones': data.get('contraindications',''),
+        'Antecedentes familiares': data.get('antecedentesFam','') + ' ' + data.get('antecedentesFamDet',''),
+        'Satisfaccion actual': str(data.get('satisfaccion','')) + '/10',
+        'Prioridad': data.get('prioridad',''),
+        'Areas faciales': data.get('areasFaciales',''),
+        'Areas corporales': data.get('areasCorporales',''),
+    }
+    resumen = '\n'.join(f'{k}: {v}' for k, v in campos.items() if v and v.strip() not in ('', '0', 'No registrado'))
+
+    system_prompt = """Eres un médico especialista en medicina estética y bienestar integral.
+Recibes los datos del cuestionario de un paciente nuevo de Centro Carvajal, clínica de medicina estética en Panamá.
+Tu tarea es generar un ANÁLISIS CLÍNICO TÉCNICO para el expediente médico interno — NO para el paciente.
+El análisis debe ser en lenguaje médico técnico, objetivo y clínicamente relevante.
+
+Estructura tu respuesta en estas secciones exactas, usando encabezados con ##:
+
+## RESUMEN DEL PERFIL CLÍNICO
+2-3 oraciones que resuman el cuadro general del paciente desde perspectiva clínica.
+
+## HALLAZGOS RELEVANTES
+Lista de hallazgos clínicamente significativos (metabólicos, hormonales, dermatológicos, nutricionales, etc.).
+
+## POSIBLES CONDICIONES A EVALUAR
+Si alguna combinación de síntomas o factores sugiere una condición subyacente, mencionarla con justificación clínica breve. Ser claro que son hipótesis diagnósticas que requieren evaluación, no diagnósticos definitivos.
+
+## CONTRAINDICACIONES Y PRECAUCIONES PARA TRATAMIENTOS ESTÉTICOS
+Lista específica de contraindicaciones absolutas y relativas según el perfil del paciente.
+
+## RECOMENDACIONES PARA EL EQUIPO MÉDICO
+Acciones sugeridas antes de iniciar tratamientos (exámenes, consultas con especialistas, ajustes de protocolo, etc.).
+
+Sé conciso pero completo. Usa terminología médica adecuada."""
+
+    try:
+        resp = req.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': CLAUDE_KEY,
+                'anthropic-version': '2023-06-01',
+            },
+            json={
+                'model': 'claude-opus-4-6',
+                'max_tokens': 2000,
+                'system': system_prompt,
+                'messages': [{'role': 'user', 'content': f'Datos del paciente:\n{resumen}'}],
+            },
+            timeout=120
+        )
+        elapsed = round(time.time() - t0, 1)
+        if resp.status_code != 200:
+            print(f'[analisis_medico] ERROR {resp.status_code}: {resp.text[:200]}')
+            return None
+        txt = resp.json()['content'][0]['text'].strip()
+        print(f'[analisis_medico] OK — {elapsed}s ({len(txt)} chars)')
+        return txt
+    except Exception as e:
+        print(f'[analisis_medico] Excepcion: {e}')
+        return None
+
+
+def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     """Genera .docx estructurado con los datos del formulario."""
     from docx import Document
     from docx.shared import Pt, RGBColor, Cm
@@ -1090,6 +1199,69 @@ def generar_docx_cuestionario(data):
     r2 = p2.add_run('Cuestionario del Paciente — Método de Rejuvenecimiento Carvajal')
     r2.font.size=Pt(10); r2.font.color.rgb=GOLD
     doc.add_paragraph()
+
+    # ── Análisis clínico para el médico ──
+    if analisis_medico:
+        # Título de sección
+        p_title = doc.add_paragraph()
+        r_title = p_title.add_run('ANÁLISIS CLÍNICO — USO INTERNO DEL EQUIPO MÉDICO')
+        r_title.bold = True
+        r_title.font.size = Pt(11)
+        r_title.font.color.rgb = BLANCO
+        p_title.paragraph_format.space_before = Pt(0)
+        p_title.paragraph_format.space_after  = Pt(0)
+        # Fondo verde oscuro para el título
+        pPr = p_title._p.get_or_add_pPr()
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'), 'clear'); shd.set(qn('w:color'), 'auto')
+        shd.set(qn('w:fill'), '1c1c1c'); pPr.append(shd)
+        p_title.paragraph_format.left_indent  = Cm(0.4)
+        p_title.paragraph_format.right_indent = Cm(0.4)
+
+        # Renderizar secciones del análisis
+        import re as _re
+        secciones = _re.split(r'\n## ', analisis_medico)
+        for i, seccion in enumerate(secciones):
+            if not seccion.strip():
+                continue
+            # Primera sección puede no tener ##
+            if i == 0 and not seccion.startswith('##'):
+                lineas = seccion.replace('## ', '').strip().split('\n')
+            else:
+                lineas = seccion.strip().split('\n')
+
+            if not lineas:
+                continue
+
+            # Primera línea es el título de subsección
+            titulo_sec = lineas[0].strip().replace('## ', '').replace('# ', '')
+            p_sec = doc.add_paragraph()
+            p_sec.paragraph_format.space_before = Pt(8)
+            p_sec.paragraph_format.space_after  = Pt(2)
+            r_sec = p_sec.add_run(titulo_sec)
+            r_sec.bold = True
+            r_sec.font.size = Pt(10)
+            r_sec.font.color.rgb = OLIVE
+
+            # Resto del contenido
+            cuerpo = '\n'.join(lineas[1:]).strip()
+            if cuerpo:
+                for linea in cuerpo.split('\n'):
+                    linea = linea.strip()
+                    if not linea:
+                        continue
+                    # Limpiar markdown básico
+                    linea = _re.sub(r'\*\*(.+?)\*\*', r'\1', linea)
+                    linea = linea.lstrip('- •').strip()
+                    p_l = doc.add_paragraph(style='List Bullet') if linea else doc.add_paragraph()
+                    if linea:
+                        run = p_l.add_run(linea)
+                        run.font.size = Pt(9.5)
+                        run.font.color.rgb = RGBColor(0x1c, 0x1c, 0x1c)
+                    p_l.paragraph_format.space_before = Pt(1)
+                    p_l.paragraph_format.space_after  = Pt(1)
+
+        doc.add_paragraph()  # espacio antes de datos personales
 
     heading('1. DATOS PERSONALES')
     t=tabla2()
@@ -1240,10 +1412,18 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
         jobs[job_id] = {'status': 'working', 'msg': 'Enviando correos...'}
         fecha_hoy = datetime.now().strftime('%d/%m/%Y a las %H:%M')
 
+        # Generar análisis clínico con Claude (para el médico)
+        analisis_medico = None
+        try:
+            time.sleep(2)  # pausa tras las 3 secciones del plan
+            analisis_medico = generar_analisis_medico(data)
+        except Exception as e:
+            print(f'[worker] Error analisis medico: {e}')
+
         # Generar .docx del cuestionario para adjuntar
         docx_cuestionario = None
         try:
-            docx_cuestionario = generar_docx_cuestionario(data)
+            docx_cuestionario = generar_docx_cuestionario(data, plan_json=plan_json, analisis_medico=analisis_medico)
             print(f'[worker] Cuestionario .docx: {docx_cuestionario}')
         except Exception as e:
             print(f'[worker] Error docx cuestionario: {e}')
