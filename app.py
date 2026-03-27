@@ -1087,7 +1087,16 @@ def generar_analisis_medico(data):
         'Areas faciales': data.get('areasFaciales',''),
         'Areas corporales': data.get('areasCorporales',''),
     }
-    resumen = '\n'.join(f'{k}: {v}' for k, v in campos.items() if v and v.strip() not in ('', '0', 'No registrado'))
+    def _str(v):
+        if isinstance(v, list):  return ', '.join(str(i) for i in v) if v else ''
+        if isinstance(v, dict):  return '; '.join(f'{k}: {val}' for k, val in v.items()) if v else ''
+        return str(v) if v else ''
+
+    resumen = '\n'.join(
+        f'{k}: {_str(v)}'
+        for k, v in campos.items()
+        if _str(v).strip() not in ('', '0', 'No registrado', ' ')
+    )
 
     system_prompt = """Eres un médico especialista en medicina estética y bienestar integral.
 Recibes los datos del cuestionario de un paciente nuevo de Centro Carvajal, clínica de medicina estética en Panamá.
