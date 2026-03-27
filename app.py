@@ -1019,146 +1019,176 @@ def render_plan(j, d, job_id=''):
 
     def esc(s): return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
-    def make_quote(txt):
-        return f'<div class="quote"><svg viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg><p>{esc(txt)}</p></div>'
-
-    def make_tips(tips):
-        return ''.join(f'<div class="tip"><svg viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>{esc(t.get("texto",""))}</p></div>' for t in tips)
-
-    def pos_q(pos, q, target): return q if pos == target else ''
-
-    yr = date.today().year
     nombre = d.get('nombre', '')
-    imc = d.get('imc', 'No registrado')
 
-    # Portada
-    pilares_html = ''.join(
-        f'<div class="pilar-mini"><div class="pm-icon">{p["emoji"]}</div><div><h4><strong>Pilar {p["num"]}: {esc(p["titulo"])}</strong></h4><p>{esc(p["descripcion"])}</p></div></div>'
-        for p in j.get('portada', {}).get('pilares_resumen', [])
-    )
-
-    # Diagnostico
-    badge_map = {'warning':'<span class="a-badge warning">⚠ Atención</span> ','critical':'<span class="a-badge critical">✕ Crítico</span> ','normal':''}
+    # ── Diagnóstico ──
+    badge_map = {'warning':'<span class="badge-w">⚠</span> ','critical':'<span class="badge-c">✕ Crítico</span> ','normal':''}
     diag_html = ''.join(
-        f'<tr><td class="diag-left">{badge_map.get(f.get("alerta","normal"),"")}{esc(f["area"])}</td><td><strong contenteditable="true">{esc(f["estado"])}</strong><br><span style="color:#666;font-size:0.85rem" contenteditable="true">{esc(f["hallazgos"])}</span></td></tr>'
+        f'<tr><td class="diag-left">{badge_map.get(f.get("alerta","normal"),"")}{esc(f["area"])}</td><td><span class="diag-val-strong" contenteditable="true">{esc(f["estado"])}</span><span class="diag-val-sub" contenteditable="true">{esc(f["hallazgos"])}</span></td></tr>'
         for f in j.get('diagnostico', {}).get('filas', [])
     )
 
-    # Rutina
-    tag_map = {'Nutricion':'tag-n','Sueno':'tag-s','Actividad':'tag-a','Mental':'tag-m','Estetico':'tag-e','Salud':'tag-h','Trabajo':'tag-n'}
+    # ── Portada: pilares masonry ──
+    pr = j.get('portada', {}).get('pilares_resumen', [{}]*5)
+    def get_p(i): return pr[i] if i < len(pr) else {}
+    p = [get_p(i) for i in range(5)]
+    portada_pilares = (
+        f'<div class="cp-row">'
+        f'<div class="cp-item cp-wide"><div class="cp-icon">{p[0].get("emoji","🥗")}</div><div class="cp-num">Pilar 1</div><div class="cp-label" contenteditable="true">{esc(p[0].get("titulo",""))}</div></div>'
+        f'<div class="cp-item cp-narrow"><div class="cp-icon">{p[1].get("emoji","🏃")}</div><div class="cp-num">Pilar 2</div><div class="cp-label" contenteditable="true">{esc(p[1].get("titulo",""))}</div></div>'
+        f'</div>'
+        f'<div class="cp-row">'
+        f'<div class="cp-item"><div class="cp-icon">{p[2].get("emoji","🧠")}</div><div class="cp-num">Pilar 3</div><div class="cp-label" contenteditable="true">{esc(p[2].get("titulo",""))}</div></div>'
+        f'<div class="cp-item"><div class="cp-icon">{p[3].get("emoji","😴")}</div><div class="cp-num">Pilar 4</div><div class="cp-label" contenteditable="true">{esc(p[3].get("titulo",""))}</div></div>'
+        f'<div class="cp-item"><div class="cp-icon">{p[4].get("emoji","✨")}</div><div class="cp-num">Pilar 5</div><div class="cp-label" contenteditable="true">{esc(p[4].get("titulo",""))}</div></div>'
+        f'</div>'
+    )
+
+    # ── Pág 2: pilares cards ──
+    pilares_cards = ''.join(
+        f'<div class="pilar-card"><div class="pilar-icon">{pi.get("emoji","")}</div><div><div class="pilar-title" contenteditable="true">Pilar {pi["num"]} · {esc(pi["titulo"])}</div><div class="pilar-desc" contenteditable="true">{esc(pi["descripcion"])}</div></div></div>'
+        for pi in j.get('portada', {}).get('pilares_resumen', [])
+    )
+
+    # ── Rutina ──
+    tag_css = {'Nutricion':'rtag-n','Nutrición':'rtag-n','Sueno':'rtag-s','Sueño':'rtag-s','Actividad':'rtag-a','Mental':'rtag-m','Estetico':'rtag-e','Estético':'rtag-e','Salud':'rtag-h','Imagen':'rtag-e','Trabajo':'rtag-n'}
     rutina_html = ''.join(
-        f'<tr><td style="font-weight:600;color:var(--gold)">{esc(r["hora"])}</td><td style="text-align:center"><input type="checkbox"></td><td contenteditable="true">{esc(r["actividad"])}</td><td><span class="pilar-tag {tag_map.get(r["pilar"],"tag-n")}">{esc(r["pilar"])}</span></td></tr>'
+        f'<div class="rutina-row"><div class="rutina-hora">{esc(r["hora"])}</div><div class="rutina-text" contenteditable="true">{esc(r["actividad"])}</div><div class="rtag {tag_css.get(r["pilar"],"rtag-n")}">{esc(r["pilar"])}</div></div>'
         for r in j.get('rutina', {}).get('items', [])
     )
 
-    # Calendario
-    cal_html = generar_calendario()
-
-    # Helper pilar
-    def build_pilar(p):
-        q = make_quote(p.get('frase_motivacional', ''))
-        pos = p.get('frase_posicion', 'medio')
-        tips = make_tips(p.get('tips', []))
-        return q, pos, tips
-
-    # Pilar 1
+    # ── P1 Nutrición ──
     p1 = j.get('pilar1', {})
-    p1q, p1pos, p1tips = build_pilar(p1)
-    p1_perm = ''.join(f'<li><svg viewBox="0 0 24 24" style="stroke:var(--green);fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg><span>{esc(i)}</span></li>' for i in p1.get('permitidos', []))
-    p1_evit = ''.join(f'<li><svg viewBox="0 0 24 24" style="stroke:#b71c1c;fill:none;stroke-width:2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>{esc(i)}</span></li>' for i in p1.get('evitar', []))
-    p1_menu = ''.join(f'<tr><td style="font-weight:600">{esc(m["dia"])}</td><td contenteditable="true">{esc(m["desayuno"])}</td><td contenteditable="true">{esc(m["almuerzo"])}</td><td contenteditable="true">{esc(m["cena"])}</td><td contenteditable="true">{esc(m["snack"])}</td></tr>' for m in p1.get('menu', []))
-    p1_compras = ''.join(f'<div class="compra-cat"><h5>{c["emoji"]} {esc(c["categoria"])}</h5><ul>{"".join(f"<li>{esc(i)}</li>" for i in c["items"])}</ul></div>' for c in p1.get('compras', []))
-    p1_supl = ''
-    if p1.get('suplementacion'):
-        items = ''.join(f'<p style="font-size:0.83rem;color:#555;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.05)">{esc(s)}</p>' for s in p1['suplementacion'])
-        p1_supl = f'<div class="suppl" style="margin-top:20px"><h4 style="font-family:Cormorant Garamond,serif;font-size:1.1rem;margin-bottom:10px">Suplementación Sugerida</h4>{items}<p style="font-size:0.75rem;color:#999;margin-top:8px">* Bajo supervisión médica.</p></div>'
+    p1_perm = ''.join(f'<div class="pe-item"><div class="pe-dot p"></div><span contenteditable="true">{esc(i)}</span></div>' for i in p1.get('permitidos',[]))
+    p1_evit = ''.join(f'<div class="pe-item"><div class="pe-dot e"></div><span contenteditable="true">{esc(i)}</span></div>' for i in p1.get('evitar',[]))
+    p1_menu = ''.join(
+        f'<tr><td class="dia">{esc(m["dia"])}</td><td contenteditable="true">{esc(m["desayuno"])}</td><td contenteditable="true">{esc(m["almuerzo"])}</td><td contenteditable="true">{esc(m["cena"])}</td><td contenteditable="true">{esc(m["snack"])}</td></tr>'
+        for m in p1.get('menu',[])
+    )
+    p1_supl = ''.join(
+        f'<div class="suppl-item"><div class="suppl-bullet">{i+1}</div><div><div class="suppl-name" contenteditable="true">{esc(s)}</div></div></div>'
+        for i, s in enumerate(p1.get('suplementacion',[]))
+    )
 
-    # Pilar 2
+    # ── P2 Actividad ──
     p2 = j.get('pilar2', {})
-    p2q, p2pos, p2tips = build_pilar(p2)
 
-    # Pilar 3
+    # ── P3 Bienestar ──
     p3 = j.get('pilar3', {})
-    p3q, p3pos, p3tips = build_pilar(p3)
-    p3_tec = ''.join(f'<li style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.05)"><span style="background:var(--gold-light);color:var(--gold);border-radius:50%;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700">{i+1}</span><span style="font-size:0.87rem">{esc(t)}</span></li>' for i, t in enumerate(p3.get('tecnicas', [])))
+    icons3 = ['🧘','📵','📓','🌿','🛁','👩‍⚕️']
+    p3_cards = ''.join(
+        f'<div class="mini-card"><div class="mc-icon">{icons3[i] if i < len(icons3) else "✦"}</div><div class="mc-title" contenteditable="true">{esc(t)}</div></div>'
+        for i, t in enumerate(p3.get('tecnicas',[]))
+    )
 
-    # Pilar 4
+    # ── P4 Sueño ──
     p4 = j.get('pilar4', {})
-    p4q, p4pos, p4tips = build_pilar(p4)
-    p4_proto = ''.join(f'<li style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.05)"><span style="background:var(--gold-light);color:var(--gold);border-radius:50%;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700">{i+1}</span><span style="font-size:0.87rem">{esc(s)}</span></li>' for i, s in enumerate(p4.get('protocolo', [])))
-    p4_reglas = ''.join(f'<li style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.05)"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#b71c1c;fill:none;stroke-width:2;flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style="font-size:0.87rem">{esc(r)}</span></li>' for r in p4.get('reglas', []))
+    p4_proto_text = '<br>'.join(f'<strong>{i+1}.</strong> {esc(s)}' for i, s in enumerate(p4.get('protocolo',[])))
+    p4_reglas_text = '<br>'.join(f'• {esc(r)}' for r in p4.get('reglas',[]))
 
-    # Pilar 5
+    # ── P5 Tratamientos (split bimestres A=1-4, B=5-6) ──
     p5 = j.get('pilar5', {})
-    p5q, p5pos, p5tips = build_pilar(p5)
-    p5_bim = ''
-    for bim in p5.get('bimestres', []):
-        rows = ''.join(f'<tr><td><strong contenteditable="true">{esc(t["nombre"])}</strong></td><td contenteditable="true">{esc(t["sesiones"])}</td><td><strong contenteditable="true">{esc(t["inversion"])}</strong></td><td contenteditable="true">{esc(t["beneficio"])}</td></tr>' for t in bim.get('tratamientos', []))
-        total = bim.get('total', 0)
-        p5_bim += f'<div class="bim"><div class="bim-hdr">{esc(bim["periodo"])} · {esc(bim["titulo"])}</div><div class="bim-body"><table><thead><tr><th>Tratamiento</th><th>Sesiones</th><th>Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table><div class="bim-total">💰 Inversión Bimestre: ${total:,}</div></div></div>'
+    bimestres = p5.get('bimestres',[])
 
-    p5_am = ''.join(f'<div class="rstep"><div class="snum">{s["paso"]}</div><div><div class="prod">{esc(s["producto"])}</div><div class="desc">{esc(s["descripcion"])}</div></div></div>' for s in p5.get('rutina_am', []))
-    p5_pm = ''.join(f'<div class="rstep"><div class="snum">{s["paso"]}</div><div><div class="prod">{esc(s["producto"])}</div><div class="desc">{esc(s["descripcion"])}</div></div></div>' for s in p5.get('rutina_pm', []))
+    def render_bim(bim):
+        rows = ''.join(
+            f'<tr><td contenteditable="true"><strong>{esc(t["nombre"])}</strong></td><td contenteditable="true">{esc(t["sesiones"])}</td><td contenteditable="true"><strong>{esc(t["inversion"])}</strong></td><td contenteditable="true">{esc(t["beneficio"])}</td></tr>'
+            for t in bim.get('tratamientos',[])
+        )
+        total = bim.get('total',0)
+        return (
+            f'<div class="bim-header">{esc(bim["periodo"])} · {esc(bim["titulo"])}<span style="font-size:7pt;color:rgba(143,168,50,0.6)">Bimestre {bim.get("bimestre","")}</span></div>'
+            f'<div class="bim-body"><table class="bim-table"><thead><tr><th>Tratamiento</th><th style="width:75px">Sesiones</th><th style="width:65px">Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table>'
+            f'<div class="bim-total">💰 Inversión: ${total:,}</div></div>'
+        )
 
-    notas = p5.get('notas_criticas', [])
+    # Enumerate bimestres to add bimestre number
+    for idx, bim in enumerate(bimestres):
+        bim['bimestre'] = idx + 1
+
+    half = max(4, len(bimestres) // 2 + len(bimestres) % 2)  # first 4 on page 6
+    p5_bim_a = ''.join(render_bim(b) for b in bimestres[:half])
+    p5_bim_b = ''.join(render_bim(b) for b in bimestres[half:])
+
+    p5_am = ''.join(
+        f'<div class="rut-step"><div class="rut-num">{s["paso"]}</div><div><div class="rut-prod" contenteditable="true">{esc(s["producto"])}</div><div class="rut-desc" contenteditable="true">{esc(s["descripcion"])}</div></div></div>'
+        for s in p5.get('rutina_am',[])
+    )
+    p5_pm = ''.join(
+        f'<div class="rut-step"><div class="rut-num">{s["paso"]}</div><div><div class="rut-prod" contenteditable="true">{esc(s["producto"])}</div><div class="rut-desc" contenteditable="true">{esc(s["descripcion"])}</div></div></div>'
+        for s in p5.get('rutina_pm',[])
+    )
+    notas = p5.get('notas_criticas',[])
     p5_notas = ''
     if notas:
-        items = ''.join(f'<p style="font-size:0.83rem;padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.05)">{esc(n)}</p>' for n in notas)
-        p5_notas = f'<div style="background:#fff8e8;border:1px dashed rgba(184,147,90,0.5);border-radius:var(--radius);padding:16px 20px;margin:20px 0"><strong style="color:var(--gold);font-size:0.78rem;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px">Notas Críticas</strong>{items}</div>'
+        items = ''.join(f'<span contenteditable="true">{esc(n)}</span><br>' for n in notas)
+        p5_notas = f'<div class="nota-medica" style="margin-top:9px"><strong>⚠ Notas Críticas</strong>{items}</div>'
 
     total_anual = p5.get('total_anual', 0)
 
-    # Compromiso
+    # ── Compromiso ──
     comp = j.get('compromiso', {})
-    comp_res = ''.join(f'<div class="result-card"><div class="icon">{esc(r["icono"])}</div><p>{esc(r["texto"])}</p></div>' for r in comp.get('resultados', []))
-    comp_pasos = ''.join(f'<div class="chk-item"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:2;flex-shrink:0;margin-top:2px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>{esc(p)}</span></div>' for p in comp.get('proximos_pasos', []))
+    comp_res = ''.join(
+        f'<div class="result-item"><div class="result-check">✓</div><span contenteditable="true">{esc(r["texto"])}</span></div>'
+        for r in comp.get('resultados',[])
+    )
+    comp_pasos = ''.join(
+        f'<li><div class="chk-ico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span contenteditable="true">{esc(p_)}</span></li>'
+        for p_ in comp.get('proximos_pasos',[])
+    )
+    # Closing quote from any pilar frase
+    comp_frase = p5.get('frase_motivacional') or p3.get('frase_motivacional') or ''
 
-    # Portada emojis
-    pr = j.get('portada', {}).get('pilares_resumen', [{}]*5)
-    get_emoji = lambda i: pr[i]['emoji'] if i < len(pr) else ['🥗','🏃','🧠','😴','✨'][i]
+    # Condición corta para portada
+    cond = d.get('condicionSistemica','') or ''
+    cond_corta = cond[:20] + '…' if len(cond) > 20 else cond
 
     replacements = {
         '{{JOB_ID}}': job_id,
-        '{{NOMBRE}}': esc(nombre), '{{NOMBRE_COMPLETO}}': esc(nombre),
-        '{{EDAD}}': esc(d.get('edad','')), '{{OCUPACION}}': esc(d.get('ocupacion','')),
-        '{{FECHA}}': esc(d.get('fecha','')), '{{IMC}}': esc(imc), '{{YEAR}}': str(yr),
+        '{{NOMBRE}}': esc(nombre),
+        '{{EDAD}}': esc(d.get('edad','')),
+        '{{OCUPACION}}': esc(d.get('ocupacion','')),
+        '{{FECHA}}': esc(d.get('fecha','')),
+        '{{IMC}}': esc(d.get('imc','N/A')),
+        '{{SATISFACCION}}': esc(str(d.get('satisfaccion','?'))),
+        '{{CONDICION_CORTA}}': esc(cond_corta),
         '{{INTRO}}': esc(j.get('portada',{}).get('intro','')),
-        '{{TITULO_PILARES}}': esc(j.get('portada',{}).get('titulo_pilares','')),
-        '{{PILARES_RESUMEN}}': pilares_html,
-        '{{NOTA_MEDICA}}': f'<strong>Nota para el equipo médico:</strong> {esc(j.get("diagnostico",{}).get("nota_medica",""))}',
+        '{{PILARES_PORTADA}}': portada_pilares,
+        '{{NOTA_MEDICA}}': esc(j.get('diagnostico',{}).get('nota_medica','')),
         '{{DIAGNOSTICO_FILAS}}': diag_html,
-        '{{RUTINA_NOTA}}': esc(j.get('rutina',{}).get('nota','')),
+        '{{PILARES_CARDS}}': pilares_cards,
         '{{RUTINA_FILAS}}': rutina_html,
-        '{{CALENDARIO_HTML}}': cal_html,
-        '{{P1_EMOJI}}': get_emoji(0), '{{P1_TITULO}}': esc(p1.get('titulo','')),
+        '{{P1_TITULO}}': esc(p1.get('titulo','Nutrición')),
         '{{P1_OBJETIVO}}': esc(p1.get('objetivo','')),
-        '{{P1_QUOTE_TOP}}': pos_q(p1pos,p1q,'inicio'), '{{P1_QUOTE_MID}}': pos_q(p1pos,p1q,'medio'), '{{P1_QUOTE_END}}': pos_q(p1pos,p1q,'final'),
-        '{{P1_PERMITIDOS}}': p1_perm, '{{P1_EVITAR}}': p1_evit,
-        '{{P1_TIPS_TOP}}': p1tips if p1pos=='inicio' else '', '{{P1_TIPS_END}}': p1tips if p1pos!='inicio' else '',
-        '{{P1_MENU}}': p1_menu, '{{P1_COMPRAS}}': p1_compras, '{{P1_SUPLEMENTACION}}': p1_supl,
-        '{{P2_EMOJI}}': get_emoji(1), '{{P2_TITULO}}': esc(p2.get('titulo','')),
+        '{{P1_PERMITIDOS}}': p1_perm,
+        '{{P1_EVITAR}}': p1_evit,
+        '{{P1_MENU}}': p1_menu,
+        '{{P1_SUPLEMENTACION}}': p1_supl,
+        '{{P2_TITULO}}': esc(p2.get('titulo','Actividad Física')),
         '{{P2_OBJETIVO}}': esc(p2.get('objetivo','')),
-        '{{P2_QUOTE_TOP}}': pos_q(p2pos,p2q,'inicio'), '{{P2_QUOTE_MID}}': pos_q(p2pos,p2q,'medio'), '{{P2_QUOTE_END}}': pos_q(p2pos,p2q,'final'),
-        '{{P2_PLAN}}': esc(p2.get('plan_semanal','')), '{{P2_ADAPTACIONES}}': esc(p2.get('adaptaciones','')),
-        '{{P2_TIPS}}': p2tips,
-        '{{P3_EMOJI}}': get_emoji(2), '{{P3_TITULO}}': esc(p3.get('titulo','')),
+        '{{P2_PLAN}}': esc(p2.get('plan_semanal','')),
+        '{{P2_ADAPTACIONES}}': esc(p2.get('adaptaciones','')),
+        '{{P3_TITULO}}': esc(p3.get('titulo','Bienestar Mental')),
         '{{P3_OBJETIVO}}': esc(p3.get('objetivo','')),
-        '{{P3_QUOTE_TOP}}': pos_q(p3pos,p3q,'inicio'), '{{P3_QUOTE_MID}}': pos_q(p3pos,p3q,'medio'), '{{P3_QUOTE_END}}': pos_q(p3pos,p3q,'final'),
-        '{{P3_TECNICAS}}': p3_tec, '{{P3_TIPS}}': p3tips,
-        '{{P4_EMOJI}}': get_emoji(3), '{{P4_TITULO}}': esc(p4.get('titulo','')),
+        '{{P3_TECNICAS_CARDS}}': p3_cards,
+        '{{P3_FRASE}}': esc(p3.get('frase_motivacional','')),
+        '{{P4_TITULO}}': esc(p4.get('titulo','Optimización del Sueño')),
         '{{P4_OBJETIVO}}': esc(p4.get('objetivo','')),
-        '{{P4_QUOTE_TOP}}': pos_q(p4pos,p4q,'inicio'), '{{P4_QUOTE_MID}}': pos_q(p4pos,p4q,'medio'), '{{P4_QUOTE_END}}': pos_q(p4pos,p4q,'final'),
-        '{{P4_PROTOCOLO}}': p4_proto, '{{P4_REGLAS}}': p4_reglas, '{{P4_TIPS}}': p4tips,
-        '{{P5_EMOJI}}': get_emoji(4), '{{P5_TITULO}}': esc(p5.get('titulo','')),
+        '{{P4_PROTOCOLO_TEXT}}': p4_proto_text,
+        '{{P4_REGLAS_TEXT}}': p4_reglas_text,
+        '{{P5_TITULO}}': esc(p5.get('titulo','Tratamientos')),
         '{{P5_OBJETIVO}}': esc(p5.get('objetivo','')),
-        '{{P5_QUOTE_TOP}}': pos_q(p5pos,p5q,'inicio'), '{{P5_QUOTE_MID}}': pos_q(p5pos,p5q,'medio'), '{{P5_QUOTE_END}}': pos_q(p5pos,p5q,'final'),
-        '{{P5_BIMESTRES}}': p5_bim, '{{P5_TOTAL_ANUAL}}': f'${total_anual:,}',
-        '{{P5_RUTINA_AM}}': p5_am, '{{P5_RUTINA_PM}}': p5_pm,
-        '{{P5_NOTAS_CRITICAS}}': p5_notas, '{{P5_TIPS}}': p5tips,
+        '{{P5_BIMESTRES_A}}': p5_bim_a,
+        '{{P5_BIMESTRES_B}}': p5_bim_b,
+        '{{P5_TOTAL_ANUAL}}': f'${total_anual:,}',
+        '{{P5_RUTINA_AM}}': p5_am,
+        '{{P5_RUTINA_PM}}': p5_pm,
+        '{{P5_NOTAS_CRITICAS}}': p5_notas,
         '{{COMP_PARRAFO}}': esc(comp.get('parrafo','')),
-        '{{COMP_RESULTADOS}}': comp_res, '{{COMP_PASOS}}': comp_pasos,
+        '{{COMP_RESULTADOS}}': comp_res,
+        '{{COMP_PASOS}}': comp_pasos,
+        '{{COMP_FRASE}}': esc(comp_frase),
     }
-
     for k, v in replacements.items():
         tpl = tpl.replace(k, v)
     return tpl
