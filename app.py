@@ -1160,6 +1160,18 @@ def generar_docx_cuestionario(data):
     row_tabla(t,'expectativas',data.get('expectativas',''))
     row_tabla(t,'satisfaccion_actual',str(data.get('satisfaccion',''))+'/10')
 
+    heading('8. ÁREAS DE TRATAMIENTO E HISTORIAL ESTÉTICO')
+    t=tabla2()
+    row_tabla(t,'areas_faciales',        data.get('areasFaciales',''))
+    row_tabla(t,'areas_corporales_detalle', data.get('areasCorporales',''))
+    hist=data.get('historialEstetico',[])
+    row_tabla(t,'historial_estetico',    hist if isinstance(hist,str) else ', '.join(hist) if hist else '—')
+
+    # Contraindicaciones — solo las marcadas como Sí
+    contra = data.get('contraindications', {})
+    contra_si = [k for k,v in contra.items() if v == 'Si'] if isinstance(contra, dict) else []
+    row_tabla(t,'contraindicaciones',    ', '.join(contra_si) if contra_si else 'Ninguna')
+
     doc.add_paragraph()
     p_pie = doc.add_paragraph(); p_pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
     rp = p_pie.add_run('Centro Carvajal · Líderes en Medicina Estética en Panamá · centrocarvajal.com')
