@@ -1,12 +1,8 @@
 import os, json, uuid, threading, calendar
 import cloudinary
 import cloudinary.uploader
-try:
-    from weasyprint import HTML as WeasyprintHTML
-    WEASYPRINT_OK = True
-except ImportError:
-    WEASYPRINT_OK = False
-    print('WeasyPrint no disponible')
+WEASYPRINT_OK = False
+WeasyprintHTML = None
 from datetime import date, datetime
 from flask import Flask, request, jsonify, render_template_string, send_from_directory
 import requests as req
@@ -160,14 +156,28 @@ def generar_pdf_final():
     if not html_str:
         return jsonify({'error': 'HTML vacío'}), 400
 
-    if not WEASYPRINT_OK:
-        return jsonify({'error': 'WeasyPrint no está instalado en el servidor'}), 500
-
     try:
         import tempfile, base64
 
-        # Generar PDF con WeasyPrint
-        pdf_bytes = WeasyprintHTML(string=html_str, base_url=request.host_url).write_pdf()
+        # Generar PDF via API externa (PDFShift) — sin dependencias del sistema
+        PDFSHIFT_KEY = os.environ.get('PDFSHIFT_KEY', '')
+        if not PDFSHIFT_KEY:
+            # Fallback: intentar weasyprint si está disponible
+            try:
+                from weasyprint import HTML as _WHP
+                pdf_bytes = _WHP(string=html_str, base_url=request.host_url).write_pdf()
+            except Exception as e:
+                return jsonify({'error': 'PDFSHIFT_KEY no configurada y WeasyPrint no disponible. Configura PDFSHIFT_KEY en Railway.'}), 500
+        else:
+            r_pdf = req.post(
+                'https://api.pdfshift.io/v3/convert/pdf',
+                auth=('api', PDFSHIFT_KEY),
+                json={'source': html_str, 'format': 'A4', 'margin': '15mm'},
+                timeout=120
+            )
+            if r_pdf.status_code != 200:
+                return jsonify({'error': f'PDFShift error {r_pdf.status_code}: {r_pdf.text[:200]}'}), 500
+            pdf_bytes = r_pdf.content
 
         # Guardar PDF temporal
         pdf_name = f'PlanFinal_{job_id}_{datetime.now().strftime("%Y%m%d")}.pdf'
