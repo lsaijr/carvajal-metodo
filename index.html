@@ -239,7 +239,7 @@ function showSelector() {
 
 // ── Manejo del archivo .docx ──
 const fi    = document.getElementById('fi');
-const btnUp = document.getElementById('btn-upload');
+const btnUp = document.getElementById('btn-upload'); // puede ser null si se usan botones de modelo
 
 function triggerFile() {
   // Solo abre el selector si no hay archivo ya cargado
@@ -255,10 +255,8 @@ fi.addEventListener('change', function() {
     // Mostrar barra de acciones con nombre y botón quitar
     document.getElementById('file-name-display').textContent = name;
     document.getElementById('file-actions').classList.add('visible');
-    // Habilitar botón
-    btnUp.disabled = false;
-    btnUp.classList.add('btn-gold');
-    btnUp.classList.remove('btn-primary');
+    // Mostrar botones de modelo
+    document.getElementById('model-btns').style.display = 'flex';
   }
 });
 
@@ -373,7 +371,8 @@ async function checkStatus() {
       clearInterval(ticker);
       setStep(2, 'error');
       alert('Error: ' + (data.msg || 'Error desconocido'));
-      btnUp.disabled = false;
+      if(btnUp) btnUp.disabled = false;
+      document.querySelectorAll('#model-btns .btn').forEach(b=>{b.disabled=false;b.style.opacity='1';});
     }
   } catch(e) { console.error('Polling error:', e); }
 }

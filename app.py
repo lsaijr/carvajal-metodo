@@ -279,8 +279,8 @@ def subir_borrador_cloudinary(html_content, job_id):
         return None
     try:
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as tmp:
-            tmp.write(html_content)
+        with tempfile.NamedTemporaryFile(mode='wb', suffix='.html', delete=False) as tmp:
+            tmp.write(html_content.encode('utf-8'))  # escribir bytes UTF-8 explícito
             tmp_path = tmp.name
         resultado = cloudinary.uploader.upload(
             tmp_path,
@@ -304,7 +304,7 @@ def descargar_borrador_cloudinary(job_id):
         url = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/raw/upload/carvajal/borradores/borrador_{job_id}.html'
         r = req.get(url, timeout=30)
         if r.status_code == 200:
-            return r.text
+            return r.content.decode('utf-8')  # forzar UTF-8, Cloudinary no declara charset
         return None
     except Exception as e:
         print(f'Error descargando borrador: {e}')
