@@ -14,6 +14,7 @@ app = Flask(__name__)
 CLAUDE_KEY  = os.environ.get('CLAUDE_KEY', '')
 GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 GROQ_KEY    = os.environ.get('GROQ_KEY', '')
+GROK_KEY    = os.environ.get('GROK_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com')
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
@@ -455,6 +456,8 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
             sufijo_modelo = '_gemini'
         elif modelo == 'groq':
             sufijo_modelo = '_groq'
+        elif modelo == 'grok':
+            sufijo_modelo = '_grok'
         else:
             sufijo_modelo = '_claude'
         html_name = 'Plan_' + re.sub(r'[^a-zA-Z0-9]', '_', nombre) + '_' + datetime.now().strftime('%Y%m%d') + sufijo_modelo + '.html'
@@ -914,14 +917,24 @@ def _llamar_groq(num, total, system_prompt, user_msg, max_tok=8000):
     print(f"[Groq {num}/{total}] Iniciando...")
     t0 = time.time()
     url = 'https://api.groq.com/openai/v1/chat/completions'
+
+    # Prefijo que fuerza respuestas detalladas y completas
+    prefijo = (
+        "INSTRUCCION CRITICA: Debes ser EXTREMADAMENTE detallado y especifico. "
+        "NO uses respuestas cortas ni genericas. Cada campo del JSON debe contener "
+        "informacion rica, personalizada y clinicamente relevante para este paciente especifico. "
+        "Completa TODOS los campos solicitados sin omitir ninguno. "
+        "El JSON debe estar completamente lleno con contenido de alta calidad.\n\n"
+    )
+
     payload = {
         'model': 'llama-3.3-70b-versatile',
         'messages': [
-            {'role': 'system', 'content': system_prompt},
+            {'role': 'system', 'content': prefijo + system_prompt},
             {'role': 'user',   'content': user_msg}
         ],
         'max_tokens': max_tok,
-        'temperature': 0.7,
+        'temperature': 0.4,  # más bajo = más preciso y consistente
     }
     try:
         resp = req.post(
@@ -949,6 +962,49 @@ def _llamar_groq(num, total, system_prompt, user_msg, max_tok=8000):
             return None, f'JSON invalido en llamada Groq {num}: {str(e)[:150]}'
     except Exception as e:
         return None, f'Error llamando Groq: {str(e)[:200]}'
+
+
+
+def _llamar_grok(num, total, system_prompt, user_msg, max_tok=8000):
+    """Llama a Grok (xAI) — compatible con OpenAI API."""
+    print(f"[Grok {num}/{total}] Iniciando...")
+    t0 = time.time()
+    url = 'https://api.x.ai/v1/chat/completions'
+    payload = {
+        'model': 'grok-3-mini',
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user',   'content': user_msg}
+        ],
+        'max_tokens': max_tok,
+        'temperature': 0.7,
+    }
+    try:
+        resp = req.post(
+            url,
+            headers={'Authorization': f'Bearer {GROK_KEY}', 'Content-Type': 'application/json'},
+            json=payload,
+            timeout=300
+        )
+        elapsed = round(time.time() - t0, 1)
+        if resp.status_code != 200:
+            print(f"[Grok {num}/{total}] ERROR {resp.status_code}: {resp.text[:300]}")
+            return None, f'Error API Grok ({resp.status_code}): {resp.text[:200]}'
+        rj = resp.json()
+        txt = rj['choices'][0]['message']['content']
+        print(f"[Grok {num}/{total}] OK — {elapsed}s")
+        txt = re.sub(r'^```json\s*', '', txt.strip())
+        txt = re.sub(r'^```\s*', '', txt)
+        txt = re.sub(r'```\s*$', '', txt).strip()
+        try:
+            result = json.loads(txt)
+            print(f"[Grok {num}/{total}] JSON OK — claves: {list(result.keys())}")
+            return result, None
+        except Exception as e:
+            print(f"[Grok {num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
+            return None, f'JSON invalido en llamada Grok {num}: {str(e)[:150]}'
+    except Exception as e:
+        return None, f'Error llamando Grok: {str(e)[:200]}'
 
 
 def generar_plan_ia(d, job_id=None, modelo='claude'):
@@ -989,8 +1045,12 @@ REGLAS: No usar tratamientos contraindicados. total bimestre = suma real. total_
         nombre_modelo = 'Gemini'
     elif modelo == 'groq':
         _llamar = _llamar_groq
-        tok1, tok2, tok3 = 6000, 10000, 8000
+        tok1, tok2, tok3 = 8000, 12000, 10000  # más tokens = más detalle
         nombre_modelo = 'Groq (Llama)'
+    elif modelo == 'grok':
+        _llamar = _llamar_grok
+        tok1, tok2, tok3 = 6000, 10000, 8000
+        nombre_modelo = 'Grok (xAI)'
     else:
         _llamar = _llamar_claude
         tok1, tok2, tok3 = 4000, 10000, 8000
