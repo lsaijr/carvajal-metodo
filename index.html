@@ -169,12 +169,15 @@ header p{margin-top:10px;font-size:13px;color:var(--muted);font-weight:300}
       <button class="remove-btn" onclick="removeFile()">✕ Quitar archivo</button>
     </div>
 
-    <div id="model-btns" style="display:none;flex-direction:row;gap:10px;margin-top:16px;width:100%">
-      <button id="btn-claude" onclick="iniciar('claude')" style="flex:1;background:var(--dark);color:#f5efe8;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">
+    <div id="model-btns" style="display:none;flex-direction:row;gap:8px;margin-top:16px;width:100%">
+      <button id="btn-claude" onclick="iniciar('claude')" style="flex:1;background:var(--dark);color:#f5efe8;padding:12px 6px;border-radius:2px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">
         ✦ Claude
       </button>
-      <button id="btn-gemini" onclick="iniciar('gemini')" style="flex:1;background:#1a73e8;color:#fff;padding:13px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">
+      <button id="btn-gemini" onclick="iniciar('gemini')" style="flex:1;background:#1a73e8;color:#fff;padding:12px 6px;border-radius:2px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">
         ◆ Gemini
+      </button>
+      <button id="btn-groq" onclick="iniciar('groq')" style="flex:1;background:#f55036;color:#fff;padding:12px 6px;border-radius:2px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:inherit">
+        ▲ Groq
       </button>
     </div>
     <input type="hidden" id="modelo-sel" value="claude">

@@ -759,8 +759,9 @@ textarea:focus{border-color:var(--gold)}
       <div style="font-size:12px;color:#2d3a2e">Selecciona con qué IA quieres generar el plan</div>
     </div>
     <div style="display:flex;gap:10px">
-      <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 20px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
-      <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 20px;border-radius:2px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
+      <button onclick="setModelo('claude')" id="mbtn-claude" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #2d3a2e;background:#2d3a2e;color:#fff;transition:all .2s">✦ Claude</button>
+      <button onclick="setModelo('gemini')" id="mbtn-gemini" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">◆ Gemini</button>
+      <button onclick="setModelo('groq')" id="mbtn-groq" style="padding:10px 16px;border-radius:2px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:2px solid #d4dcc0;background:transparent;color:#7a8a6a;transition:all .2s">▲ Groq</button>
     </div>
   </div>
 </div>
@@ -1240,14 +1241,21 @@ window._modeloSel = 'claude';
 
 function setModelo(m) {
   window._modeloSel = m;
-  const btnC = document.getElementById('mbtn-claude');
-  const btnG = document.getElementById('mbtn-gemini');
-  if (m === 'claude') {
-    btnC.style.cssText += ';border-color:#2d3a2e;background:#2d3a2e;color:#fff';
-    btnG.style.cssText += ';border-color:#d4dcc0;background:transparent;color:#7a8a6a';
-  } else {
-    btnG.style.cssText += ';border-color:#1a73e8;background:#1a73e8;color:#fff';
-    btnC.style.cssText += ';border-color:#d4dcc0;background:transparent;color:#7a8a6a';
+  const configs = {
+    claude: { id: 'mbtn-claude', bg: '#2d3a2e', border: '#2d3a2e' },
+    gemini: { id: 'mbtn-gemini', bg: '#1a73e8', border: '#1a73e8' },
+    groq:   { id: 'mbtn-groq',   bg: '#f55036', border: '#f55036' },
+  };
+  // Reset all
+  Object.values(configs).forEach(c => {
+    const el = document.getElementById(c.id);
+    if (el) { el.style.background = 'transparent'; el.style.borderColor = '#d4dcc0'; el.style.color = '#7a8a6a'; }
+  });
+  // Activate selected
+  const sel = configs[m];
+  if (sel) {
+    const el = document.getElementById(sel.id);
+    if (el) { el.style.background = sel.bg; el.style.borderColor = sel.border; el.style.color = '#fff'; }
   }
 }
 
