@@ -671,10 +671,41 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
   </div>
 </div>
 
+
+  <!-- ── SECCIÓN CALENDARIO ── -->
+  <div style="background:#f4f5ef;border-top:1px solid rgba(143,168,50,.2);padding:28px;margin-top:8px">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--olive);margin-bottom:4px">Herramienta</div>
+        <div style="font-size:18px;font-weight:700;color:var(--dark)">Generador de Calendario</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:3px">Genera un calendario de seguimiento listo para imprimir como PDF desde Chrome</div>
+      </div>
+      <div style="background:white;border:1px solid rgba(143,168,50,.2);border-radius:10px;padding:20px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray)">Mes de inicio</label>
+          <input type="month" id="cal-desde" style="padding:9px 12px;border:1px solid #d4dcc0;border-radius:6px;font-size:13px;font-family:inherit;outline:none;color:var(--dark);min-width:160px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray)">Mes final</label>
+          <input type="month" id="cal-hasta" style="padding:9px 12px;border:1px solid #d4dcc0;border-radius:6px;font-size:13px;font-family:inherit;outline:none;color:var(--dark);min-width:160px">
+        </div>
+        <button onclick="generarCalendario()" style="padding:10px 24px;background:var(--olive);color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;white-space:nowrap">
+          Generar e Imprimir
+        </button>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--gray)">
+        Al generar se abrira una nueva ventana lista para imprimir. Usa <strong>Ctrl+P</strong> &rarr; <strong>Guardar como PDF</strong> &rarr; Orientacion <strong>Horizontal</strong> &rarr; Sin margenes.
+      </div>
+    </div>
+  </div>
+
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+</div>
 <script>
+
 // ── Sin autenticación — acceso libre ────────────────────────
 let token = 'open';
 
@@ -796,39 +827,6 @@ function mostrarToast(msg, tipo='success') {
 }
 
 
-  <!-- ── SECCIÓN CALENDARIO ── -->
-  <div style="background:#f4f5ef;border-top:1px solid rgba(143,168,50,.2);padding:28px;margin-top:8px">
-    <div style="max-width:1200px;margin:0 auto">
-      <div style="margin-bottom:16px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--olive);margin-bottom:4px">Herramienta</div>
-        <div style="font-size:18px;font-weight:700;color:var(--dark)">Generador de Calendario</div>
-        <div style="font-size:12px;color:var(--gray);margin-top:3px">Genera un calendario de seguimiento listo para imprimir como PDF desde Chrome</div>
-      </div>
-      <div style="background:white;border:1px solid rgba(143,168,50,.2);border-radius:10px;padding:20px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray)">Mes de inicio</label>
-          <input type="month" id="cal-desde" style="padding:9px 12px;border:1px solid #d4dcc0;border-radius:6px;font-size:13px;font-family:inherit;outline:none;color:var(--dark);min-width:160px">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gray)">Mes final</label>
-          <input type="month" id="cal-hasta" style="padding:9px 12px;border:1px solid #d4dcc0;border-radius:6px;font-size:13px;font-family:inherit;outline:none;color:var(--dark);min-width:160px">
-        </div>
-        <button onclick="generarCalendario()" style="padding:10px 24px;background:var(--olive);color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;white-space:nowrap">
-          Generar e Imprimir
-        </button>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--gray)">
-        Al generar se abrira una nueva ventana lista para imprimir. Usa <strong>Ctrl+P</strong> &rarr; <strong>Guardar como PDF</strong> &rarr; Orientacion <strong>Horizontal</strong> &rarr; Sin margenes.
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
-
-</div>
-
-// ── Calendario ──────────────────────────────────────────────
 function generarCalendario() {
   var desde = document.getElementById('cal-desde').value;
   var hasta = document.getElementById('cal-hasta').value;
@@ -940,6 +938,9 @@ function generarCalendario() {
   win.document.write(printHtml);
   win.document.close();
 }
+
+// Cargar planes al iniciar
+cargarPlanes();
 </script>
 </body>
 </html>""" 
