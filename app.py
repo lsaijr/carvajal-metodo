@@ -49,6 +49,49 @@ def index():
     with open(os.path.join(os.path.dirname(__file__), 'index.html'), encoding='utf-8') as f:
         return f.read()
 
+# ── Demo — formulario estético simplificado ──────────────────
+@app.route('/demo')
+def demo():
+    with open(os.path.join(os.path.dirname(__file__), 'formulario-estetica-v1.html'), encoding='utf-8') as f:
+        return f.read()
+
+@app.route('/demo/recomendar', methods=['POST'])
+def demo_recomendar():
+    """Proxy a Claude para el formulario demo — la API key nunca sale del servidor."""
+    try:
+        data = request.get_json(force=True)
+        perfil = data.get('perfil', '')
+        if not perfil:
+            return jsonify({'error': 'Sin datos de perfil'}), 400
+
+        headers = {
+            'Content-Type':        'application/json',
+            'x-api-key':           CLAUDE_KEY,
+            'anthropic-version':   '2023-06-01',
+        }
+        payload = {
+            'model':      'claude-haiku-4-5-20251001',
+            'max_tokens': 800,
+            'system': (
+                'Eres una especialista en estética que evalúa perfiles de pacientes y recomienda tratamientos. '
+                'Responde SIEMPRE en HTML simple usando solo estas etiquetas: <p>, <strong>, <ul>, <li>. '
+                'NO uses markdown, NO uses encabezados grandes, NO uses tablas. '
+                'Sé cálida, profesional y concisa. Máximo 300 palabras. '
+                'Estructura tu respuesta en 3 secciones: '
+                '1. Diagnóstico breve (1-2 oraciones sobre el perfil). '
+                '2. Tratamientos recomendados (lista con nombre y beneficio específico para este caso). '
+                '3. Próximo paso (1 oración invitando a agendar una consulta).'
+            ),
+            'messages': [{'role': 'user', 'content': 'Perfil del paciente:\n' + perfil}]
+        }
+        r = req.post('https://api.anthropic.com/v1/messages', headers=headers, json=payload, timeout=30)
+        result = r.json()
+        if 'content' in result and result['content']:
+            return jsonify({'html': result['content'][0]['text']})
+        return jsonify({'error': 'Sin respuesta del modelo', 'detail': result}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/formulario', methods=['GET'])
 def formulario():
     # Formulario web completo para el paciente
