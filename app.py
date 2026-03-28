@@ -57,38 +57,66 @@ def demo():
 
 @app.route('/demo/recomendar', methods=['POST'])
 def demo_recomendar():
-    """Proxy a Claude para el formulario demo — la API key nunca sale del servidor."""
+    """Proxy multi-modelo para el formulario demo — las keys nunca salen del servidor."""
     try:
-        data = request.get_json(force=True)
+        data   = request.get_json(force=True)
         perfil = data.get('perfil', '')
+        modelo = data.get('modelo', 'claude')
         if not perfil:
             return jsonify({'error': 'Sin datos de perfil'}), 400
 
-        headers = {
-            'Content-Type':        'application/json',
-            'x-api-key':           CLAUDE_KEY,
-            'anthropic-version':   '2023-06-01',
-        }
-        payload = {
-            'model':      'claude-haiku-4-5-20251001',
-            'max_tokens': 800,
-            'system': (
-                'Eres una especialista en estética que evalúa perfiles de pacientes y recomienda tratamientos. '
-                'Responde SIEMPRE en HTML simple usando solo estas etiquetas: <p>, <strong>, <ul>, <li>. '
-                'NO uses markdown, NO uses encabezados grandes, NO uses tablas. '
-                'Sé cálida, profesional y concisa. Máximo 300 palabras. '
-                'Estructura tu respuesta en 3 secciones: '
-                '1. Diagnóstico breve (1-2 oraciones sobre el perfil). '
-                '2. Tratamientos recomendados (lista con nombre y beneficio específico para este caso). '
-                '3. Próximo paso (1 oración invitando a agendar una consulta).'
-            ),
-            'messages': [{'role': 'user', 'content': 'Perfil del paciente:\n' + perfil}]
-        }
-        r = req.post('https://api.anthropic.com/v1/messages', headers=headers, json=payload, timeout=30)
-        result = r.json()
-        if 'content' in result and result['content']:
-            return jsonify({'html': result['content'][0]['text']})
-        return jsonify({'error': 'Sin respuesta del modelo', 'detail': result}), 500
+        sys_prompt = (
+            'Eres una especialista en estética que evalúa perfiles de pacientes y recomienda tratamientos. '
+            'Responde SIEMPRE en HTML simple usando solo estas etiquetas: <p>, <strong>, <ul>, <li>. '
+            'NO uses markdown, NO uses encabezados grandes, NO uses tablas. '
+            'Sé cálida, profesional y concisa. Máximo 300 palabras. '
+            'Estructura tu respuesta en 3 secciones: '
+            '1. Diagnóstico breve (1-2 oraciones sobre el perfil). '
+            '2. Tratamientos recomendados (lista con nombre y beneficio específico para este caso). '
+            '3. Próximo paso (1 oración invitando a agendar una consulta).'
+        )
+        user_msg = 'Perfil del paciente:\n' + perfil
+
+        # ── Claude ──────────────────────────────────────────
+        if modelo == 'claude':
+            r = req.post('https://api.anthropic.com/v1/messages',
+                headers={'Content-Type':'application/json','x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01'},
+                json={'model':'claude-haiku-4-5-20251001','max_tokens':800,
+                      'system':sys_prompt,'messages':[{'role':'user','content':user_msg}]},
+                timeout=30)
+            j = r.json()
+            if 'content' in j and j['content']:
+                return jsonify({'html': j['content'][0]['text']})
+            return jsonify({'error': 'Sin respuesta de Claude', 'detail': j}), 500
+
+        # ── Gemini ──────────────────────────────────────────
+        elif modelo == 'gemini':
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_KEY}'
+            r = req.post(url,
+                headers={'Content-Type':'application/json'},
+                json={'system_instruction':{'parts':[{'text':sys_prompt}]},
+                      'contents':[{'parts':[{'text':user_msg}]}],
+                      'generationConfig':{'maxOutputTokens':800}},
+                timeout=30)
+            j = r.json()
+            if 'candidates' in j and j['candidates']:
+                return jsonify({'html': j['candidates'][0]['content']['parts'][0]['text']})
+            return jsonify({'error': 'Sin respuesta de Gemini', 'detail': j}), 500
+
+        # ── Groq ─────────────────────────────────────────────
+        elif modelo == 'groq':
+            r = req.post('https://api.groq.com/openai/v1/chat/completions',
+                headers={'Content-Type':'application/json','Authorization':f'Bearer {GROQ_KEY}'},
+                json={'model':'llama-3.3-70b-versatile','max_tokens':800,
+                      'messages':[{'role':'system','content':sys_prompt},{'role':'user','content':user_msg}]},
+                timeout=30)
+            j = r.json()
+            if 'choices' in j and j['choices']:
+                return jsonify({'html': j['choices'][0]['message']['content']})
+            return jsonify({'error': 'Sin respuesta de Groq', 'detail': j}), 500
+
+        return jsonify({'error': f'Modelo desconocido: {modelo}'}), 400
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

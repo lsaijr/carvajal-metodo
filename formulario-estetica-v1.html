@@ -338,8 +338,17 @@ textarea::placeholder{color:var(--border)}
       <label class="ri"><input type="radio" name="ref"><div class="rf">✉️ Otro<div class="dt"></div></div></label>
     </div>
   </div>
+  <div class="field" style="margin-top:20px">
+    <label class="flabel">Generar con <span style="color:var(--gold)">*</span></label>
+    <div class="rgrid c1">
+      <label class="ri"><input type="radio" name="ia-model" value="claude"><div class="rf"><span class="em">✦</span>Claude — Anthropic<div class="dt"></div></div></label>
+      <label class="ri"><input type="radio" name="ia-model" value="gemini"><div class="rf"><span class="em">◆</span>Gemini — Google<div class="dt"></div></div></label>
+      <label class="ri"><input type="radio" name="ia-model" value="groq"><div class="rf"><span class="em">▲</span>Llama — Groq<div class="dt"></div></div></label>
+    </div>
+  </div>
   <p class="nota" style="margin-top:16px">Al enviar aceptas que procesemos tus datos para generar tu evaluación personalizada. No compartimos tu información con terceros.</p>
   <div class="err" id="err-5">Por favor ingresa un correo electrónico válido.</div>
+  <div class="err" id="err-5b">Por favor selecciona un modelo de IA.</div>
 </div>
 
 <!-- SUCCESS / RESULTS -->
@@ -425,6 +434,9 @@ function validate(){
     var em=document.getElementById('f-email').value.trim();
     if(!em||!em.includes('@')){document.getElementById('err-5').classList.add('show');return false;}
     document.getElementById('err-5').classList.remove('show');
+    var mdl=document.querySelector('input[name="ia-model"]:checked');
+    if(!mdl){document.getElementById('err-5b').classList.add('show');return false;}
+    document.getElementById('err-5b').classList.remove('show');
   }
   return true;
 }
@@ -544,12 +556,16 @@ async function submitForm(){
   var data = collectData();
   document.getElementById('res-nombre').textContent = 'Para '+data.nombre;
 
+  var modelo = document.querySelector('input[name="ia-model"]:checked').value;
+  var modelNames = {claude:'✦ Claude',gemini:'◆ Gemini',groq:'▲ Llama / Groq'};
+  document.getElementById('loading-msg').textContent = 'Procesando con '+modelNames[modelo]+'...';
+
   var msgs = ['Analizando tu perfil...','Revisando opciones de tratamiento...','Preparando tu evaluación personalizada...'];
   var mi=0;
   var msgInterval = setInterval(function(){
     mi=(mi+1)%msgs.length;
     document.getElementById('loading-msg').textContent=msgs[mi];
-  },2000);
+  },2500);
 
   try {
     var prompt = buildPrompt(data);
@@ -557,14 +573,16 @@ async function submitForm(){
     var response = await fetch('/demo/recomendar', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({perfil: prompt})
+      body: JSON.stringify({perfil: prompt, modelo: modelo})
     });
 
     clearInterval(msgInterval);
     var result = await response.json();
 
     if(result.html){
-      document.getElementById('res-body').innerHTML = result.html;
+      var badge = '<div style="display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:2px;padding:3px 10px;margin-bottom:16px">'+modelNames[modelo]+'</div>';
+      result.html = result.html.replace(/```html?|```/g,'').trim();
+      document.getElementById('res-body').innerHTML = badge + result.html;
       document.getElementById('res-loading').style.display='none';
       document.getElementById('res-content').style.display='block';
     } else {
