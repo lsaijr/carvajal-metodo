@@ -94,7 +94,7 @@ def demo_recomendar():
 
         # ── Gemini ──────────────────────────────────────────
         elif modelo == 'gemini':
-            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_KEY}'
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={GEMINI_KEY}'
             r = req.post(url,
                 headers={'Content-Type':'application/json'},
                 json={'system_instruction':{'parts':[{'text':sys_prompt}]},
@@ -102,9 +102,12 @@ def demo_recomendar():
                       'generationConfig':{'maxOutputTokens':800}},
                 timeout=30)
             j = r.json()
+            print(f'[demo/gemini] status={r.status_code} response={json.dumps(j)[:300]}')
             if 'candidates' in j and j['candidates']:
                 return jsonify({'html': j['candidates'][0]['content']['parts'][0]['text']})
-            return jsonify({'error': 'Sin respuesta de Gemini', 'detail': j}), 500
+            # Devolver el error completo al frontend para debug
+            error_msg = j.get('error', {}).get('message', 'Sin respuesta de Gemini')
+            return jsonify({'error': f'Gemini: {error_msg}', 'detail': j}), 500
 
         # ── Groq ─────────────────────────────────────────────
         elif modelo == 'groq':
