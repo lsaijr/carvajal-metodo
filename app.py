@@ -65,19 +65,29 @@ def demo_recomendar():
         if not perfil:
             return jsonify({'error': 'Sin datos de perfil'}), 400
 
-        sys_prompt = (
+        base_prompt = (
             'Eres una asesora de estética cálida y cercana. Le hablas DIRECTAMENTE al cliente usando su nombre, '
-            'en tono informal y personal, como si fuera una amiga experta que lo conoce y le da un consejo sincero. '
+            'en tono informal y personal. '
             'Usa tú (no usted). Nunca suenes clínica ni corporativa. '
             'Responde SIEMPRE en HTML simple usando solo estas etiquetas: <p>, <strong>, <ul>, <li>. '
-            'NO uses markdown, NO uses encabezados, NO uses tablas. Máximo 300 palabras. '
+            'NO uses markdown, NO uses encabezados, NO uses tablas. '
             'Estructura tu respuesta así: '
-            '1. Abre con el nombre del cliente y una frase cálida que demuestre que leíste su perfil, '
-            'menciona específicamente su preocupación principal o área de interés. '
+            '1. Abre con el nombre del cliente y una frase que lo invite a acercarse o que celebre que dio el primer paso '
+            '— algo como "gracias por acercarte", "nos alegra que nos hayas permitido conocerte", '
+            '"qué bueno que decidiste dar este paso" — luego menciona específicamente su preocupación principal. '
             '2. Explícale brevemente por qué esos tratamientos son ideales PARA SU CASO en lenguaje simple sin tecnicismos. '
             '3. Lista los tratamientos recomendados de forma amigable, con el nombre y en una frase corta qué va a notar o sentir. '
             '4. Cierra con una invitación cercana a agendar, mencionando que en la consulta le explicarán todo con detalle.'
         )
+        if modelo == 'groq':
+            sys_prompt = base_prompt + (
+                ' IMPORTANTE: sé muy detallada y personalizada. '
+                'Menciona datos específicos del perfil del cliente: su edad, nivel de estrés, actividad física, historial de tratamientos. '
+                'Explica cada tratamiento con 2-3 oraciones — qué hace, por qué es ideal para este caso y qué resultado concreto puede esperar. '
+                'Máximo 450 palabras. Que se sienta una evaluación hecha a medida, no genérica.'
+            )
+        else:
+            sys_prompt = base_prompt + ' Máximo 300 palabras.'
         user_msg = 'Perfil del paciente:\n' + perfil
 
         # ── Claude ──────────────────────────────────────────
