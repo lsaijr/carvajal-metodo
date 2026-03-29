@@ -81,6 +81,25 @@ textarea::placeholder{color:var(--border)}
 .suc-icon{width:64px;height:64px;border-radius:50%;background:var(--gold-lt);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:26px}
 .suc-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;text-align:center;margin-bottom:12px}
 .suc-txt{font-size:13px;font-weight:300;color:var(--muted);line-height:1.7;text-align:center}
+/* AI result body styles */
+#res-body p{margin-bottom:14px}
+#res-body p:last-child{margin-bottom:0}
+#res-body strong{font-weight:500;color:var(--dark)}
+#res-body ul{list-style:none;padding:0;margin:12px 0}
+#res-body ul li{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 14px;margin-bottom:8px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:3px;font-size:13px;font-weight:300;line-height:1.5
+}
+#res-body ul li::before{
+  content:'✦';color:var(--gold);font-size:11px;
+  flex-shrink:0;margin-top:2px
+}
+/* Cita btn hover */
+#cita-btn:hover{background:var(--dark)!important}
+/* Horario selected */
+.ci.on{border-color:var(--gold);background:var(--gold-lt)}
 @media(max-width:400px){.card{width:calc(100% - 32px);padding:24px 18px}.nav{width:calc(100% - 32px)}.rgrid{grid-template-columns:1fr}.cgrid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -352,32 +371,86 @@ textarea::placeholder{color:var(--border)}
 
 <!-- SUCCESS / RESULTS -->
 <div class="card" id="card-success" style="display:none">
-  <!-- Loading state -->
-  <div id="res-loading" style="text-align:center;padding:20px 0">
-    <div class="suc-icon" style="font-size:20px" id="loading-icon">✦</div>
-    <div class="suc-title" style="font-size:22px;margin-bottom:12px">Analizando tu perfil...</div>
-    <p class="suc-txt" id="loading-msg">Consultando con nuestra especialista IA</p>
-    <div style="margin-top:20px;display:flex;justify-content:center;gap:6px" id="loading-dots">
+
+  <!-- Loading -->
+  <div id="res-loading" style="text-align:center;padding:24px 0">
+    <div style="width:52px;height:52px;border-radius:50%;background:var(--gold-lt);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:22px">✦</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:10px">Analizando tu perfil...</div>
+    <p style="font-size:12px;color:var(--muted)" id="loading-msg">Preparando tu evaluación personalizada</p>
+    <div style="margin-top:20px;display:flex;justify-content:center;gap:6px">
       <div style="width:7px;height:7px;border-radius:50%;background:var(--gold);animation:pulse 1.2s ease infinite"></div>
       <div style="width:7px;height:7px;border-radius:50%;background:var(--gold);animation:pulse 1.2s ease .2s infinite"></div>
       <div style="width:7px;height:7px;border-radius:50%;background:var(--gold);animation:pulse 1.2s ease .4s infinite"></div>
     </div>
   </div>
-  <!-- Results state -->
+
+  <!-- Results -->
   <div id="res-content" style="display:none">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-      <div style="width:40px;height:40px;border-radius:50%;background:var(--gold-lt);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✦</div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--gold-lt);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">✦</div>
       <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400" id="res-nombre">Tu evaluación</div>
-        <div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase">Recomendación personalizada</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;line-height:1.2" id="res-nombre">Tu evaluación</div>
+        <div style="font-size:10px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-top:3px">Evaluación personalizada</div>
       </div>
     </div>
-    <div id="res-body" style="font-size:13px;font-weight:300;line-height:1.8;color:var(--dark)"></div>
+
+    <!-- Badge modelo -->
+    <div id="res-badge" style="margin-bottom:16px"></div>
+
+    <!-- Texto de la IA -->
+    <div id="res-body" style="font-size:14px;font-weight:300;line-height:1.9;color:var(--dark)"></div>
+
+    <!-- Separador -->
+    <div style="margin:28px 0;height:1px;background:var(--border)"></div>
+
+    <!-- Formulario cita rápida -->
+    <div id="cita-wrap">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:18px">📅</span>
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400">Agenda tu consulta</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Sin costo · Sin compromiso</div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px">Fecha preferida</label>
+          <input type="date" id="cita-fecha" style="width:100%;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;color:var(--dark);background:transparent;border:none;border-bottom:1px solid var(--border);padding:8px 0;outline:none;-webkit-appearance:none">
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px">Horario preferido</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="horarios-grid">
+            <div class="ci" onclick="toggleHorario(this)" data-h="Mañana (8am–12pm)"><div class="cb"></div>🌅 Mañana</div>
+            <div class="ci" onclick="toggleHorario(this)" data-h="Tarde (12pm–5pm)"><div class="cb"></div>☀️ Tarde</div>
+            <div class="ci" onclick="toggleHorario(this)" data-h="Noche (5pm–8pm)"><div class="cb"></div>🌙 Noche</div>
+            <div class="ci" onclick="toggleHorario(this)" data-h="Cualquier horario"><div class="cb"></div>✅ Cualquier hora</div>
+          </div>
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="display:block;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px">Nota adicional <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted)">(opcional)</span></label>
+          <textarea id="cita-nota" placeholder="¿Algo que quieras que sepamos antes de tu cita?" style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;color:var(--dark);background:var(--white);border:1px solid var(--border);border-radius:3px;padding:12px;outline:none;resize:none;min-height:70px;line-height:1.6"></textarea>
+        </div>
+        <div id="cita-err" style="font-size:11px;color:#c0392b;margin-bottom:12px;display:none">Por favor selecciona una fecha y horario.</div>
+        <button onclick="enviarCita()" id="cita-btn" style="width:100%;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;padding:16px;border-radius:3px;cursor:pointer;border:none;background:var(--gold);color:white;transition:background .25s">Solicitar cita ✦</button>
+      </div>
+
+      <!-- Cita enviada -->
+      <div id="cita-ok" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:32px;margin-bottom:12px">🎉</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;margin-bottom:8px">¡Solicitud enviada!</div>
+        <p style="font-size:13px;font-weight:300;color:var(--muted);line-height:1.7">Te contactaremos pronto para confirmar tu cita.<br>Revisa tu correo y WhatsApp.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
       <p style="font-size:11px;color:var(--muted)">Centro Bella · Estética Personalizada</p>
     </div>
   </div>
-  <!-- Error state -->
+
+  <!-- Error -->
   <div id="res-error" style="display:none;text-align:center;padding:10px 0">
     <div style="font-size:28px;margin-bottom:12px">⚠️</div>
     <p style="font-size:13px;color:var(--muted);line-height:1.7">Ocurrió un error al generar tu evaluación.<br>Por favor intenta nuevamente.</p>
@@ -445,7 +518,74 @@ function goNext(){
   if(step===TOTAL){submitForm();return;}
   if(step===2)buildStep3();
   step++;
-  updateUI();
+  // ── Horario toggle (single select) ──────────────────────────
+var horarioSel = '';
+function toggleHorario(el){
+  document.querySelectorAll('#horarios-grid .ci').forEach(function(c){
+    c.classList.remove('on');
+    c.querySelector('.cb').style.background='';
+    c.querySelector('.cb').style.borderColor='';
+  });
+  el.classList.add('on');
+  horarioSel = el.dataset.h;
+}
+
+// ── Enviar cita ──────────────────────────────────────────────
+async function enviarCita(){
+  var fecha = document.getElementById('cita-fecha').value;
+  var nota  = document.getElementById('cita-nota').value.trim();
+  var err   = document.getElementById('cita-err');
+
+  if(!fecha || !horarioSel){
+    err.style.display='block';
+    return;
+  }
+  err.style.display='none';
+
+  var btn = document.getElementById('cita-btn');
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
+
+  var data = collectData();
+  var payload = {
+    nombre:   data.nombre,
+    email:    document.getElementById('f-email').value.trim(),
+    tel:      document.getElementById('f-tel').value.trim(),
+    areas:    data.areas.join(', '),
+    edad:     data.edad,
+    genero:   data.genero,
+    ejercicio:data.ejercicio,
+    estres:   data.estres,
+    urgencia: data.urgencia,
+    presupuesto: data.presupuesto,
+    prioridad:data.prioridad,
+    fecha:    fecha,
+    horario:  horarioSel,
+    nota:     nota
+  };
+
+  try {
+    var r = await fetch('/demo/cita', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    var res = await r.json();
+    if(res.ok){
+      document.getElementById('cita-wrap').innerHTML = document.getElementById('cita-ok').outerHTML;
+      document.getElementById('cita-ok').style.display='block';
+    } else {
+      btn.textContent = 'Error — intenta de nuevo';
+      btn.disabled = false;
+    }
+  } catch(e){
+    btn.textContent = 'Error — intenta de nuevo';
+    btn.disabled = false;
+    console.error(e);
+  }
+}
+
+updateUI();
 }
 
 function goBack(){
@@ -579,9 +719,10 @@ async function submitForm(){
     var result = await response.json();
 
     if(result.html){
-      var badge = '<div style="display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:2px;padding:3px 10px;margin-bottom:16px">'+modelNames[modelo]+'</div>';
+      var badge = '<span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:2px;padding:3px 10px">'+modelNames[modelo]+'</span>';
+      document.getElementById('res-badge').innerHTML = badge;
       result.html = result.html.replace(/```html?|```/g,'').trim();
-      document.getElementById('res-body').innerHTML = badge + result.html;
+      document.getElementById('res-body').innerHTML = result.html;
       document.getElementById('res-loading').style.display='none';
       document.getElementById('res-content').style.display='block';
     } else {

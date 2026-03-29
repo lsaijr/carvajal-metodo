@@ -19,6 +19,7 @@ MAIL_CC         = [m.strip() for m in os.environ.get('MAIL_CC','').split(',') if
 ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com').strip()
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
+DEMO_MAIL   = os.environ.get('DEMO_MAIL', 'isai.josue@gmail.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
 os.makedirs(PLANES_DIR, exist_ok=True)
 
@@ -135,6 +136,68 @@ def demo_recomendar():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/demo/cita', methods=['POST'])
+def demo_cita():
+    """Recibe solicitud de cita del demo y envía correo a DEMO_MAIL."""
+    try:
+        d = request.get_json(force=True)
+
+        # Construir cuerpo del correo en HTML
+        cuerpo = f"""
+<h2 style="font-family:Georgia,serif;color:#1a1a18">Nueva solicitud de cita — Demo Estética</h2>
+<hr style="border:none;border-top:1px solid #dedad4;margin:16px 0">
+
+<h3 style="font-size:14px;color:#b8975a;text-transform:uppercase;letter-spacing:.1em">Datos del paciente</h3>
+<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;width:100%">
+  <tr><td style="padding:6px 0;color:#8a8880;width:140px">Nombre</td><td style="padding:6px 0"><strong>{d.get('nombre','')}</strong></td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Correo</td><td style="padding:6px 0">{d.get('email','')}</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">WhatsApp</td><td style="padding:6px 0">{d.get('tel','') or '—'}</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Edad</td><td style="padding:6px 0">{d.get('edad','')}</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Género</td><td style="padding:6px 0">{d.get('genero','')}</td></tr>
+</table>
+
+<h3 style="font-size:14px;color:#b8975a;text-transform:uppercase;letter-spacing:.1em;margin-top:20px">Perfil estético</h3>
+<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;width:100%">
+  <tr><td style="padding:6px 0;color:#8a8880;width:140px">Áreas de interés</td><td style="padding:6px 0">{d.get('areas','')}</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Actividad física</td><td style="padding:6px 0">{d.get('ejercicio','')}</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Nivel de estrés</td><td style="padding:6px 0">{d.get('estres','')}/10</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Urgencia</td><td style="padding:6px 0">{d.get('urgencia','')}</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Presupuesto</td><td style="padding:6px 0">{d.get('presupuesto','')}</td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Preocupación</td><td style="padding:6px 0">{d.get('prioridad','') or '—'}</td></tr>
+</table>
+
+<h3 style="font-size:14px;color:#b8975a;text-transform:uppercase;letter-spacing:.1em;margin-top:20px">Cita solicitada</h3>
+<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;width:100%">
+  <tr><td style="padding:6px 0;color:#8a8880;width:140px">Fecha</td><td style="padding:6px 0"><strong>{d.get('fecha','')}</strong></td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Horario</td><td style="padding:6px 0"><strong>{d.get('horario','')}</strong></td></tr>
+  <tr><td style="padding:6px 0;color:#8a8880">Nota</td><td style="padding:6px 0">{d.get('nota','') or '—'}</td></tr>
+</table>
+
+<hr style="border:none;border-top:1px solid #dedad4;margin:24px 0">
+<p style="font-family:Arial,sans-serif;font-size:11px;color:#8a8880">Enviado desde el formulario demo · metodo.centrocarvajal.com/demo</p>
+"""
+
+        resend_payload = {
+            'from':    MAIL_FROM,
+            'to':      [DEMO_MAIL],
+            'subject': f'Nueva cita — {d.get("nombre","")} · {d.get("fecha","")} {d.get("horario","")}',
+            'html':    cuerpo
+        }
+
+        r = req.post('https://api.resend.com/emails',
+            headers={'Authorization': f'Bearer {RESEND_KEY}', 'Content-Type': 'application/json'},
+            json=resend_payload, timeout=15)
+
+        print(f'[demo/cita] resend status={r.status_code} body={r.text[:200]}')
+
+        if r.status_code == 200:
+            return jsonify({'ok': True})
+        return jsonify({'ok': False, 'detail': r.text}), 500
+
+    except Exception as e:
+        print(f'[demo/cita] error: {e}')
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 @app.route('/formulario', methods=['GET'])
 def formulario():
