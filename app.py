@@ -53,7 +53,7 @@ def index():
 # ── Demo — formulario estético simplificado ──────────────────
 @app.route('/demo')
 def demo():
-    with open(os.path.join(os.path.dirname(__file__), 'formulario-estetica-v1.html'), encoding='utf-8') as f:
+    with open(os.path.join(os.path.dirname(__file__), 'formulario-estetica-v2.html'), encoding='utf-8') as f:
         return f.read()
 
 @app.route('/demo/recomendar', methods=['POST'])
