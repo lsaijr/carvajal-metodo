@@ -67,28 +67,28 @@ def demo_recomendar():
             return jsonify({'error': 'Sin datos de perfil'}), 400
 
         base_prompt = (
-            'Eres una asesora de estética cálida y cercana. Le hablas DIRECTAMENTE al cliente usando su nombre, '
-            'en tono informal y personal. '
-            'Usa tú (no usted). Nunca suenes clínica ni corporativa. '
+            'Eres una especialista en estética con años de experiencia. Tu forma de comunicarte es cálida, respetuosa y genuinamente personalizada. '
+            'Le hablas al cliente por su nombre y usas "tú". '
+            'TONO: profesional pero humano — como una especialista que realmente leyó su caso y le habla con consideración, no como un robot generando texto genérico ni como una amiga informal. '
+            'EVITA absolutamente: frases genéricas como "¡Hola!", exclamaciones excesivas, emojis en el texto, frases vacías como "es un placer atenderte", lenguaje clínico frío, o recomendaciones que podrían ser para cualquier persona. '
+            'BUSCA: oraciones que demuestren que leíste el perfil específico del cliente — menciona su situación real, sus áreas de interés, su nivel de estrés o actividad física cuando sea relevante. Que cada frase aporte algo concreto. '
             'Responde SIEMPRE en HTML simple usando solo estas etiquetas: <p>, <strong>, <ul>, <li>. '
             'NO uses markdown, NO uses encabezados, NO uses tablas. '
-            'Estructura tu respuesta así: '
-            '1. Abre con el nombre del cliente y una frase que lo invite a acercarse o que celebre que dio el primer paso '
-            '— algo como "gracias por acercarte", "nos alegra que nos hayas permitido conocerte", '
-            '"qué bueno que decidiste dar este paso" — luego menciona específicamente su preocupación principal. '
-            '2. Explícale brevemente por qué esos tratamientos son ideales PARA SU CASO en lenguaje simple sin tecnicismos. '
-            '3. Lista los tratamientos recomendados de forma amigable, con el nombre y en una frase corta qué va a notar o sentir. '
-            '4. Cierra con una invitación cercana a agendar, mencionando que en la consulta le explicarán todo con detalle.'
+            'Estructura: '
+            '1. Abre mencionando el nombre del cliente y una observación específica sobre su perfil que demuestre que lo leíste — algo como reconocer su preocupación principal o su situación particular. '
+            '2. Explica brevemente por qué los tratamientos que vas a recomendar tienen sentido para SU caso específico, en lenguaje claro sin tecnicismos. '
+            '3. Lista los tratamientos recomendados — nombre del tratamiento en negrita y una frase concreta sobre qué resultado puede esperar esta persona en particular. '
+            '4. Cierra con una invitación a agendar su consulta, transmitiendo que en ese espacio podrán profundizar y resolver todas sus dudas.'
         )
         if modelo == 'groq':
             sys_prompt = base_prompt + (
                 ' IMPORTANTE: sé muy detallada y personalizada. '
-                'Menciona datos específicos del perfil del cliente: su edad, nivel de estrés, actividad física, historial de tratamientos. '
-                'Explica cada tratamiento con 2-3 oraciones — qué hace, por qué es ideal para este caso y qué resultado concreto puede esperar. '
-                'Máximo 450 palabras. Que se sienta una evaluación hecha a medida, no genérica.'
+                'Integra datos específicos del perfil: edad, nivel de estrés, actividad física, historial de tratamientos previos. '
+                'Cada tratamiento merece 2-3 oraciones — qué hace, por qué encaja con este perfil y qué resultado concreto y realista puede esperar. '
+                'Máximo 450 palabras. Que al leerlo sienta que fue escrito para ella o él, no para cualquier persona.'
             )
         else:
-            sys_prompt = base_prompt + ' Máximo 300 palabras.'
+            sys_prompt = base_prompt + ' Máximo 300 palabras. Cada frase debe aportar valor concreto — nada de relleno.'
         user_msg = 'Perfil del paciente:\n' + perfil
 
         # ── Claude ──────────────────────────────────────────
@@ -144,44 +144,69 @@ def demo_cita():
         d = request.get_json(force=True)
 
         # Construir cuerpo del correo en HTML
+        nombre   = d.get('nombre','')
         cuerpo = f"""
-<h2 style="font-family:Georgia,serif;color:#1a1a18">Nueva solicitud de cita — Demo Estética</h2>
-<hr style="border:none;border-top:1px solid #dedad4;margin:16px 0">
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a18">
 
-<h3 style="font-size:14px;color:#b8975a;text-transform:uppercase;letter-spacing:.1em">Datos del paciente</h3>
-<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;width:100%">
-  <tr><td style="padding:6px 0;color:#8a8880;width:140px">Nombre</td><td style="padding:6px 0"><strong>{d.get('nombre','')}</strong></td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Correo</td><td style="padding:6px 0">{d.get('email','')}</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">WhatsApp</td><td style="padding:6px 0">{d.get('tel','') or '—'}</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Edad</td><td style="padding:6px 0">{d.get('edad','')}</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Género</td><td style="padding:6px 0">{d.get('genero','')}</td></tr>
-</table>
+<div style="background:#f0f7ff;border-bottom:3px solid #4299e1;padding:24px 28px;border-radius:8px 8px 0 0">
+  <h2 style="margin:0;font-size:20px;color:#2d3748">📋 Nueva solicitud de cita</h2>
+  <p style="margin:6px 0 0;font-size:13px;color:#718096">Formulario demo · metodo.centrocarvajal.com/demo</p>
+</div>
 
-<h3 style="font-size:14px;color:#b8975a;text-transform:uppercase;letter-spacing:.1em;margin-top:20px">Perfil estético</h3>
-<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;width:100%">
-  <tr><td style="padding:6px 0;color:#8a8880;width:140px">Áreas de interés</td><td style="padding:6px 0">{d.get('areas','')}</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Actividad física</td><td style="padding:6px 0">{d.get('ejercicio','')}</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Nivel de estrés</td><td style="padding:6px 0">{d.get('estres','')}/10</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Urgencia</td><td style="padding:6px 0">{d.get('urgencia','')}</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Presupuesto</td><td style="padding:6px 0">{d.get('presupuesto','')}</td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Preocupación</td><td style="padding:6px 0">{d.get('prioridad','') or '—'}</td></tr>
-</table>
+<div style="background:#ffffff;padding:24px 28px;border:1px solid #bee3f8;border-top:none">
 
-<h3 style="font-size:14px;color:#b8975a;text-transform:uppercase;letter-spacing:.1em;margin-top:20px">Cita solicitada</h3>
-<table style="font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;width:100%">
-  <tr><td style="padding:6px 0;color:#8a8880;width:140px">Fecha</td><td style="padding:6px 0"><strong>{d.get('fecha','')}</strong></td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Horario</td><td style="padding:6px 0"><strong>{d.get('horario','')}</strong></td></tr>
-  <tr><td style="padding:6px 0;color:#8a8880">Nota</td><td style="padding:6px 0">{d.get('nota','') or '—'}</td></tr>
-</table>
+  <h3 style="font-size:12px;color:#4299e1;text-transform:uppercase;letter-spacing:.1em;margin:0 0 12px">👤 Datos del paciente</h3>
+  <table style="font-size:14px;border-collapse:collapse;width:100%;margin-bottom:24px">
+    <tr><td style="padding:5px 0;color:#718096;width:160px">Nombre</td><td style="padding:5px 0"><strong>{nombre}</strong></td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Correo</td><td style="padding:5px 0">{d.get('email','')}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">WhatsApp</td><td style="padding:5px 0">{d.get('tel','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Edad</td><td style="padding:5px 0">{d.get('edad','')}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Género</td><td style="padding:5px 0">{d.get('genero','')}</td></tr>
+    {f'<tr><td style="padding:5px 0;color:#718096">Embarazo/lactancia</td><td style="padding:5px 0">{d.get("embarazo","")}</td></tr>' if d.get('genero','') == 'mujer' else ''}
+    <tr><td style="padding:5px 0;color:#718096">Cómo nos conoció</td><td style="padding:5px 0">{d.get('referido','') or '—'}</td></tr>
+  </table>
 
-<hr style="border:none;border-top:1px solid #dedad4;margin:24px 0">
-<p style="font-family:Arial,sans-serif;font-size:11px;color:#8a8880">Enviado desde el formulario demo · metodo.centrocarvajal.com/demo</p>
+  <h3 style="font-size:12px;color:#4299e1;text-transform:uppercase;letter-spacing:.1em;margin:0 0 12px">🎯 Perfil estético</h3>
+  <table style="font-size:14px;border-collapse:collapse;width:100%;margin-bottom:24px">
+    <tr><td style="padding:5px 0;color:#718096;width:160px">Áreas de interés</td><td style="padding:5px 0">{d.get('areas','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Problemas faciales</td><td style="padding:5px 0">{d.get('piel_checks','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Tono de piel</td><td style="padding:5px 0">{d.get('tono','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Zonas corporales</td><td style="padding:5px 0">{d.get('cuerpo_zona','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Objetivos corporales</td><td style="padding:5px 0">{d.get('cuerpo_obj','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Zonas de depilación</td><td style="padding:5px 0">{d.get('vello_zonas','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Situación capilar</td><td style="padding:5px 0">{d.get('capilar','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Tratamientos previos</td><td style="padding:5px 0">{d.get('trat_prev','') or 'Ninguno'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Mayor preocupación</td><td style="padding:5px 0">{d.get('prioridad','') or '—'}</td></tr>
+  </table>
+
+  <h3 style="font-size:12px;color:#4299e1;text-transform:uppercase;letter-spacing:.1em;margin:0 0 12px">💡 Hábitos y preferencias</h3>
+  <table style="font-size:14px;border-collapse:collapse;width:100%;margin-bottom:24px">
+    <tr><td style="padding:5px 0;color:#718096;width:160px">Actividad física</td><td style="padding:5px 0">{d.get('ejercicio','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Nivel de estrés</td><td style="padding:5px 0">{d.get('estres','')}/10</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Urgencia</td><td style="padding:5px 0">{d.get('urgencia','') or '—'}</td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Presupuesto mensual</td><td style="padding:5px 0">{d.get('presupuesto','') or '—'}</td></tr>
+  </table>
+
+  <h3 style="font-size:12px;color:#4299e1;text-transform:uppercase;letter-spacing:.1em;margin:0 0 12px">📅 Cita solicitada</h3>
+  <table style="font-size:14px;border-collapse:collapse;width:100%;margin-bottom:8px">
+    <tr><td style="padding:5px 0;color:#718096;width:160px">Fecha</td><td style="padding:5px 0"><strong>{d.get('fecha','')}</strong></td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Horario</td><td style="padding:5px 0"><strong>{d.get('horario','')}</strong></td></tr>
+    <tr><td style="padding:5px 0;color:#718096">Nota adicional</td><td style="padding:5px 0">{d.get('nota','') or '—'}</td></tr>
+  </table>
+
+</div>
+
+<div style="background:#f0f7ff;padding:14px 28px;border:1px solid #bee3f8;border-top:none;border-radius:0 0 8px 8px;text-align:center">
+  <p style="font-size:11px;color:#718096;margin:0">Evaluación IA · metodo.centrocarvajal.com/demo</p>
+</div>
+
+</div>
 """
 
         resend_payload = {
-            'from':    MAIL_FROM,
+            'from':    f'Evaluación IA <{MAIL_FROM}>',
             'to':      [DEMO_MAIL],
-            'subject': f'Nueva cita — {d.get("nombre","")} · {d.get("fecha","")} {d.get("horario","")}',
+            'subject': f'Nueva solicitud de cita para — {nombre}',
             'html':    cuerpo
         }
 
