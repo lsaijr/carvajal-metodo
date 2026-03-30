@@ -226,8 +226,15 @@ def demo_cita():
 
 @app.route('/formulario', methods=['GET'])
 def formulario():
-    # Formulario web completo para el paciente
-    with open(os.path.join(os.path.dirname(__file__), 'formulario.html'), encoding='utf-8') as f:
+    # Formulario de producción — Claude hardcodeado, sin selector de modelo
+    with open(os.path.join(os.path.dirname(__file__), 'formulario-produccion.html'), encoding='utf-8') as f:
+        return f.read()
+
+
+@app.route('/formulario-demo', methods=['GET'])
+def formulario_demo():
+    # Formulario de pruebas — con selector de modelo (Claude / Gemini / Llama)
+    with open(os.path.join(os.path.dirname(__file__), 'formulario-demo.html'), encoding='utf-8') as f:
         return f.read()
 
 @app.route('/planes_generados/<path:filename>')
