@@ -3,8 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Método Carvajal — Clínica Estética · Panamá</title>
-<meta name="description" content="Centro Carvajal — Líderes en medicina estética y rejuvenecimiento en Panamá. Plan personalizado con inteligencia artificial.">
+
+<!-- ── SEO primario ── -->
+<title>Método de Rejuvenecimiento Carvajal — Clínica Estética · Panamá</title>
+<meta name="description" content="Centro Carvajal es líder en medicina estética y rejuvenecimiento en Panamá. Diagnóstico integral, tecnología de vanguardia y plan personalizado generado con inteligencia artificial.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://metodo.centrocarvajal.com/">
+
+<!-- ── Open Graph (WhatsApp, Facebook, LinkedIn) ── -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://metodo.centrocarvajal.com/">
+<meta property="og:title" content="Método de Rejuvenecimiento Carvajal — Clínica Estética · Panamá">
+<meta property="og:description" content="Diagnóstico integral, tecnología de vanguardia y plan personalizado generado con IA. Líderes en medicina estética en Panamá.">
+<meta property="og:image" content="https://metodo.centrocarvajal.com/og-image.jpg">
+<meta property="og:locale" content="es_PA">
+<meta property="og:site_name" content="Centro Carvajal">
+
+<!-- ── Twitter / X Card ── -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Método de Rejuvenecimiento Carvajal — Clínica Estética · Panamá">
+<meta name="twitter:description" content="Diagnóstico integral, tecnología de vanguardia y plan personalizado generado con IA.">
+<meta name="twitter:image" content="https://metodo.centrocarvajal.com/og-image.jpg">
+
+<!-- ── Schema JSON-LD ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MedicalClinic",
+  "name": "Centro Carvajal — Método de Rejuvenecimiento",
+  "alternateName": "Método de Rejuvenecimiento Carvajal",
+  "description": "Clínica líder en medicina estética en Panamá. Diagnóstico integral con inteligencia artificial, tecnología de vanguardia y seguimiento personalizado.",
+  "url": "https://metodo.centrocarvajal.com",
+  "logo": "https://metodo.centrocarvajal.com/og-image.jpg",
+  "image": "https://metodo.centrocarvajal.com/og-image.jpg",
+  "telephone": "",
+  "email": "",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Ciudad de Panamá",
+    "addressRegion": "Panamá",
+    "addressCountry": "PA"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "8.9936",
+    "longitude": "-79.5197"
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "08:00",
+      "closes": "18:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Saturday"],
+      "opens": "08:00",
+      "closes": "13:00"
+    }
+  ],
+  "medicalSpecialty": [
+    "Aesthetic Medicine",
+    "Dermatology",
+    "Nutrition"
+  ],
+  "sameAs": [
+    "https://centrocarvajal.com"
+  ],
+  "hasMap": "https://maps.google.com/?q=Centro+Carvajal+Panama",
+  "priceRange": "$$",
+  "currenciesAccepted": "USD",
+  "paymentAccepted": "Cash, Credit Card",
+  "areaServed": {
+    "@type": "GeoCircle",
+    "geoMidpoint": {
+      "@type": "GeoCoordinates",
+      "latitude": "8.9936",
+      "longitude": "-79.5197"
+    },
+    "geoRadius": "500000"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -167,8 +248,18 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
 @media(max-width:1024px){
   nav{padding:18px 32px}
   .nav-links{display:none}
-  .hero-inner{grid-template-columns:1fr;gap:48px;padding:0 32px}
-  .hero-right{display:none}
+  .hero-inner{grid-template-columns:1fr;gap:0;padding:0 32px}
+  .hero-right{display:block;margin:0 -32px}
+  .hero-img-frame{border-left:none;border-right:none}
+  .hero-img-frame::before,.hero-img-frame::after{left:0;right:0}
+  .hero-img-grid{grid-template-columns:repeat(4,1fr);gap:2px}
+  .hero-img-grid img{aspect-ratio:3/4}
+  .hero-img-fade{
+    position:absolute;inset:0;
+    background:linear-gradient(to right, rgba(26,20,16,1) 0%, rgba(26,20,16,0) 18%, rgba(26,20,16,0) 82%, rgba(26,20,16,1) 100%);
+    pointer-events:none;z-index:2;
+  }
+  .hero-badge{bottom:-10px;left:12px}
   .metodo-inner{grid-template-columns:1fr;padding:80px 32px}
   .metodo-img{display:none}
   .trat-grid{grid-template-columns:1fr 1fr}
@@ -195,7 +286,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
 </head>
 <body>
 
-<nav id="nav">
+<nav id="nav" aria-label="Navegación principal">
   <a class="nav-logo" href="/">
     <span class="nav-logo-top">Clínica Estética</span>
     <span class="nav-logo-name">CARVAJAL</span>
@@ -210,6 +301,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
   <a class="nav-cta" href="/formulario">Inicia tu plan</a>
 </nav>
 
+<!-- MAIN -->
+<main id="contenido-principal">
+
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bg"></div>
@@ -219,12 +313,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
     <div>
       <div class="hero-eyebrow fu d1">
         <div class="hero-eyebrow-line"></div>
-        <span class="hero-eyebrow-text">Panamá · Medicina Estética</span>
+        <span class="hero-eyebrow-text">Método de Rejuvenecimiento Carvajal</span>
       </div>
-      <h1 class="fu d2">Más que una<br>clínica —<br>un <em>método</em></h1>
+      <h1 class="fu d2">Método de<br>Rejuvenecimiento<br><em>Carvajal</em></h1>
       <p class="hero-sub fu d3">El Método Carvajal es un protocolo integral de rejuvenecimiento que combina diagnóstico clínico profundo, tecnología de vanguardia y seguimiento personalizado para transformar tu piel desde adentro.</p>
       <div class="hero-btns fu d4">
-        <a class="btn-primary" href="/formulario">Iniciar mi diagnóstico</a>
+        <a class="btn-primary" href="/formulario" aria-label="Iniciar diagnóstico en Centro Carvajal">Iniciar mi diagnóstico</a>
         <a class="btn-outline" href="#metodo">Conocer el método</a>
       </div>
       <div class="hero-stats fu d4">
@@ -235,11 +329,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
     </div>
     <div class="hero-right">
       <div class="hero-img-frame">
+        <div class="hero-img-fade"></div>
         <div class="hero-img-grid">
-          <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop" alt="Tratamiento facial">
-          <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=400&fit=crop" alt="Cuidado de piel">
-          <img src="https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=400&h=400&fit=crop" alt="Consulta médica">
-          <img src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=400&h=400&fit=crop" alt="Tecnología estética">
+          <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop" alt="Tratamiento facial de rejuvenecimiento en Centro Carvajal Panamá">
+          <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&h=400&fit=crop" alt="Cuidado de piel y medicina estética Centro Carvajal">
+          <img src="https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=400&h=400&fit=crop" alt="Consulta médica especializada clínica estética Panamá">
+          <img src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=400&h=400&fit=crop" alt="Tecnología de vanguardia para rejuvenecimiento facial">
         </div>
       </div>
       <div class="hero-badge">
@@ -255,19 +350,19 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
   <div class="metodo-inner">
     <div class="metodo-img">
       <div class="metodo-img-line"></div>
-      <img class="metodo-img-main" src="https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=600&h=750&fit=crop" alt="Especialista Carvajal">
-      <img class="metodo-img-accent" src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&h=300&fit=crop" alt="Tratamiento">
+      <img class="metodo-img-main" src="https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=600&h=750&fit=crop" alt="Especialista en medicina estética Centro Carvajal Panamá">
+      <img class="metodo-img-accent" src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&h=300&fit=crop" alt="Tratamiento estético personalizado método Carvajal">
     </div>
     <div>
       <div class="sec-lbl"><div class="sec-lbl-line"></div><span class="sec-lbl-txt">El método</span></div>
       <h2>Un protocolo que<br>cuida cada <em>detalle</em></h2>
       <p class="sec-body">En Centro Carvajal no aplicamos tratamientos genéricos. Cada paciente recibe un plan diseñado a partir de su diagnóstico clínico único, que abarca nutrición, sueño, actividad física, salud capilar y estética médica.</p>
       <div class="pilares">
-        <div class="pilar"><div class="pilar-num">01</div><div><div class="pilar-title">Diagnóstico integral</div><div class="pilar-desc">Evaluación completa de piel, composición corporal, hábitos y antecedentes para diseñar tu plan único.</div></div></div>
-        <div class="pilar"><div class="pilar-num">02</div><div><div class="pilar-title">Nutrición y bienestar</div><div class="pilar-desc">Plan alimentario personalizado que potencia los resultados de cada tratamiento estético.</div></div></div>
-        <div class="pilar"><div class="pilar-num">03</div><div><div class="pilar-title">Tecnología de vanguardia</div><div class="pilar-desc">HIFU, radiofrecuencia, IPL, presoterapia y más — siempre en el orden y protocolo correcto para tu caso.</div></div></div>
-        <div class="pilar"><div class="pilar-num">04</div><div><div class="pilar-title">Plan generado con IA</div><div class="pilar-desc">Inteligencia artificial que analiza tu perfil y genera recomendaciones precisas antes de tu primera consulta.</div></div></div>
-        <div class="pilar"><div class="pilar-num">05</div><div><div class="pilar-title">Seguimiento bimestral</div><div class="pilar-desc">Tu plan evoluciona contigo. Cada bimestre ajustamos los tratamientos según tus avances reales.</div></div></div>
+        <div class="pilar"><div class="pilar-num">01</div><div><h3 class="pilar-title">Diagnóstico integral</h3><div class="pilar-desc">Evaluación completa de piel, composición corporal, hábitos y antecedentes para diseñar tu plan único.</div></div></div>
+        <div class="pilar"><div class="pilar-num">02</div><div><h3 class="pilar-title">Nutrición y bienestar</h3><div class="pilar-desc">Plan alimentario personalizado que potencia los resultados de cada tratamiento estético.</div></div></div>
+        <div class="pilar"><div class="pilar-num">03</div><div><h3 class="pilar-title">Tecnología de vanguardia</h3><div class="pilar-desc">HIFU, radiofrecuencia, IPL, presoterapia y más — siempre en el orden y protocolo correcto para tu caso.</div></div></div>
+        <div class="pilar"><div class="pilar-num">04</div><div><h3 class="pilar-title">Plan generado con IA</h3><div class="pilar-desc">Inteligencia artificial que analiza tu perfil y genera recomendaciones precisas antes de tu primera consulta.</div></div></div>
+        <div class="pilar"><div class="pilar-num">05</div><div><h3 class="pilar-title">Seguimiento bimestral</h3><div class="pilar-desc">Tu plan evoluciona contigo. Cada bimestre ajustamos los tratamientos según tus avances reales.</div></div></div>
       </div>
     </div>
   </div>
@@ -285,32 +380,32 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
     </div>
     <div class="trat-grid">
       <div class="trat-card">
-        <img src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=500&h=667&fit=crop" alt="Rejuvenecimiento facial">
+        <img src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=500&h=667&fit=crop" alt="Rejuvenecimiento facial con HIFU y radiofrecuencia Panamá">
         <div class="trat-overlay"></div>
         <div class="trat-arrow">→</div>
         <div class="trat-content">
           <span class="trat-tag">Área 01</span>
-          <div class="trat-name">Rejuvenecimiento Facial</div>
+          <h3 class="trat-name">Rejuvenecimiento Facial</h3>
           <div class="trat-desc">HIFU, radiofrecuencia con microagujas, peelings médicos, toxina botulínica y rellenos dérmicos.</div>
         </div>
       </div>
       <div class="trat-card">
-        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&h=667&fit=crop" alt="Remodelación corporal">
+        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&h=667&fit=crop" alt="Remodelación corporal y reducción de grasa localizada Panamá">
         <div class="trat-overlay"></div>
         <div class="trat-arrow">→</div>
         <div class="trat-content">
           <span class="trat-tag">Área 02</span>
-          <div class="trat-name">Remodelación Corporal</div>
+          <h3 class="trat-name">Remodelación Corporal</h3>
           <div class="trat-desc">Exilis, lipoláser, presoterapia, X-Wave y electro fit para contorno y grasa localizada.</div>
         </div>
       </div>
       <div class="trat-card">
-        <img src="https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=500&h=667&fit=crop" alt="Nutrición estética">
+        <img src="https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=500&h=667&fit=crop" alt="Nutrición estética y plan alimentario personalizado Carvajal">
         <div class="trat-overlay"></div>
         <div class="trat-arrow">→</div>
         <div class="trat-content">
           <span class="trat-tag">Área 03</span>
-          <div class="trat-name">Nutrición Estética</div>
+          <h3 class="trat-name">Nutrición Estética</h3>
           <div class="trat-desc">Plan alimentario diseñado para potenciar resultados, corregir intolerancias y mejorar la calidad de piel.</div>
         </div>
       </div>
@@ -335,7 +430,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
 <!-- CTA -->
 <div class="cta-band">
   <h2>Comienza hoy — tu diagnóstico<br>personalizado <em>es gratuito</em></h2>
-  <a class="btn-white" href="/formulario">Iniciar mi diagnóstico →</a>
+  <a class="btn-white" href="/formulario" aria-label="Iniciar diagnóstico gratuito en Centro Carvajal">Iniciar mi diagnóstico →</a>
 </div>
 
 <!-- DIFERENCIADORES -->
@@ -377,6 +472,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
   </div>
 </section>
 
+</main><!-- /main -->
+
 <!-- FOOTER -->
 <footer id="contacto">
   <div class="footer-inner">
@@ -415,8 +512,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.4);padding:64px;border-top
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2025 Centro Carvajal · Panamá. Todos los derechos reservados.</span>
-    <span style="color:rgba(255,255,255,.18)">Powered by Método IA</span>
+    <span>© 2026 Centro Carvajal · Panamá. Todos los derechos reservados.</span>
+    
   </div>
 </footer>
 
