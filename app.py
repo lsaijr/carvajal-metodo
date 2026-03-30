@@ -46,8 +46,15 @@ admin_tokens = set()  # tokens de sesión activos
 
 @app.route('/', methods=['GET'])
 def index():
-    # Pantalla de entrada: elige formulario o subir .docx
-    with open(os.path.join(os.path.dirname(__file__), 'index.html'), encoding='utf-8') as f:
+    # Landing page — Método Carvajal
+    with open(os.path.join(os.path.dirname(__file__), 'index-carvajal.html'), encoding='utf-8') as f:
+        return f.read()
+
+
+@app.route('/panel', methods=['GET'])
+def panel():
+    # Panel interno — login + gestión
+    with open(os.path.join(os.path.dirname(__file__), 'panel-carvajal.html'), encoding='utf-8') as f:
         return f.read()
 
 # ── Demo — formulario estético simplificado ──────────────────
@@ -1263,6 +1270,15 @@ def api_login():
         tok = secrets.token_hex(32)
         admin_tokens.add(tok)
         return jsonify({'ok': True, 'token': tok})
+    return jsonify({'ok': False}), 401
+
+
+@app.route('/api/check-token', methods=['GET'])
+def api_check_token():
+    """Verifica si un token de sesión sigue siendo válido."""
+    tok = request.headers.get('X-Token', '').strip()
+    if tok and tok in admin_tokens:
+        return jsonify({'ok': True})
     return jsonify({'ok': False}), 401
 
 

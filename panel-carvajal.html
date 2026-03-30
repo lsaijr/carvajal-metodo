@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel — Centro Carvajal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#cbd163;--lime-dk:#8fa832;--lime-lt:rgba(203,209,99,.1);--dark:#1a1410;--green-dk:#2d3a2e;--text:#2d2d2d;--muted:#7a7060;--white:#ffffff;--border:rgba(203,209,99,.2)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.bg-lines{position:fixed;inset:0;opacity:.03;background-image:repeating-linear-gradient(0deg,var(--lime) 0,var(--lime) 1px,transparent 0,transparent 64px),repeating-linear-gradient(90deg,var(--lime) 0,var(--lime) 1px,transparent 0,transparent 64px);pointer-events:none}
+.bg-glow{position:fixed;top:-20%;right:-10%;width:60%;height:80%;background:radial-gradient(ellipse,rgba(203,209,99,.05) 0%,transparent 65%);pointer-events:none}
+
+/* LOGIN */
+#screen-login{width:100%;max-width:420px;padding:20px}
+.login-brand{text-align:center;margin-bottom:44px}
+.login-brand-top{font-family:'Cormorant Garamond',serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.22em;text-transform:uppercase;display:block;margin-bottom:4px}
+.login-brand-name{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--lime);letter-spacing:.08em;line-height:1}
+.login-brand-tag{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(255,255,255,.22);letter-spacing:.1em}
+.login-card{background:rgba(255,255,255,.03);border:1px solid rgba(203,209,99,.12);padding:40px 36px}
+.login-card::before{content:'';display:block;width:40px;height:2px;background:var(--lime);margin:0 auto 32px}
+.login-subtitle{font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.14em;text-transform:uppercase;text-align:center;margin-bottom:32px}
+.field{margin-bottom:20px}
+.field label{display:block;font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px}
+.field input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--white);padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus{border-color:rgba(203,209,99,.5)}
+.btn-login{width:100%;background:var(--lime-dk);color:var(--white);border:none;padding:14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .25s;margin-top:8px}
+.btn-login:hover{background:var(--lime);color:var(--dark)}
+.login-err{color:#f87272;font-size:12px;text-align:center;margin-top:14px;display:none}
+
+/* PANEL */
+#screen-panel{display:none;width:100%;max-width:700px;padding:20px}
+.panel-header{text-align:center;margin-bottom:48px}
+.panel-brand-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--lime);letter-spacing:.08em;margin-bottom:3px}
+.panel-brand-tag{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:rgba(255,255,255,.25);letter-spacing:.1em}
+.panel-welcome{font-size:12px;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;margin-top:20px}
+.panel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.panel-card{background:rgba(255,255,255,.03);border:1px solid rgba(203,209,99,.12);padding:36px 24px;text-align:center;text-decoration:none;cursor:pointer;transition:all .25s;display:block}
+.panel-card:hover{border-color:rgba(203,209,99,.4);background:rgba(203,209,99,.06);transform:translateY(-3px)}
+.panel-card-icon{font-size:28px;margin-bottom:16px;display:block;opacity:.8}
+.panel-card-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--white);margin-bottom:8px;line-height:1.2}
+.panel-card-desc{font-size:12px;color:rgba(255,255,255,.3);line-height:1.6;font-weight:300}
+.panel-card:hover .panel-card-title{color:var(--lime)}
+.panel-logout{text-align:center;margin-top:36px}
+.btn-logout{background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.3);padding:8px 24px;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-logout:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.6)}
+</style>
+</head>
+<body>
+<div class="bg-lines"></div>
+<div class="bg-glow"></div>
+
+<!-- LOGIN -->
+<div id="screen-login">
+  <div class="login-brand">
+    <span class="login-brand-top">Clínica Estética</span>
+    <div class="login-brand-name">CARVAJAL</div>
+    <div class="login-brand-tag">Portal interno</div>
+  </div>
+  <div class="login-card">
+    <div class="login-subtitle">Acceso restringido</div>
+    <div class="field">
+      <label for="pwd">Contraseña</label>
+      <input type="password" id="pwd" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Ingresar</button>
+    <div class="login-err" id="login-err">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="screen-panel">
+  <div class="panel-header">
+    <div class="panel-brand-name">CARVAJAL</div>
+    <div class="panel-brand-tag">Promoting health and beauty</div>
+    <div class="panel-welcome">Panel de gestión</div>
+  </div>
+  <div class="panel-grid">
+    <a class="panel-card" href="/formulario-demo">
+      <span class="panel-card-icon">✦</span>
+      <div class="panel-card-title">Formulario Demo</div>
+      <div class="panel-card-desc">Llenar cuestionario y generar plan con selección de modelo IA</div>
+    </a>
+    <a class="panel-card" href="/upload">
+      <span class="panel-card-icon">◎</span>
+      <div class="panel-card-title">Subir Word</div>
+      <div class="panel-card-desc">Cargar cuestionario en .docx para generar el plan automáticamente</div>
+    </a>
+    <a class="panel-card" href="/planes">
+      <span class="panel-card-icon">⊡</span>
+      <div class="panel-card-title">Ver Planes</div>
+      <div class="panel-card-desc">Revisar y editar planes generados para todos los pacientes</div>
+    </a>
+  </div>
+  <div class="panel-logout">
+    <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<script>
+const SESSION_KEY = 'cv_admin_token';
+
+async function doLogin() {
+  const pwd = document.getElementById('pwd').value.trim();
+  const err = document.getElementById('login-err');
+  if (!pwd) return;
+
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await r.json();
+    if (data.ok && data.token) {
+      // Guardar token en localStorage para persistencia
+      localStorage.setItem(SESSION_KEY, data.token);
+      err.style.display = 'none';
+      showPanel();
+    } else {
+      err.style.display = 'block';
+      document.getElementById('pwd').value = '';
+      document.getElementById('pwd').focus();
+    }
+  } catch(e) {
+    err.textContent = 'Error de conexión. Intenta de nuevo.';
+    err.style.display = 'block';
+  }
+}
+
+function showPanel() {
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-panel').style.display = 'block';
+}
+
+function doLogout() {
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('screen-panel').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'block';
+  document.getElementById('pwd').value = '';
+}
+
+async function checkSession() {
+  const token = localStorage.getItem(SESSION_KEY);
+  if (!token) return;
+  try {
+    const r = await fetch('/api/check-token', {
+      headers: { 'X-Token': token }
+    });
+    const data = await r.json();
+    if (data.ok) {
+      showPanel();
+    } else {
+      localStorage.removeItem(SESSION_KEY);
+    }
+  } catch(e) {
+    // Si no conecta, no mostramos panel por seguridad
+  }
+}
+
+// Enter en el input
+document.getElementById('pwd').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// Verificar sesión al cargar
+checkSession();
+</script>
+</body>
+</html>
