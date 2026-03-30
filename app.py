@@ -271,7 +271,24 @@ def enviar():
     jobs[job_id] = {'status': 'working', 'msg': 'Iniciando generacion del plan...'}
 
     modelo = request.form.get('modelo', 'claude')  # viene del FormData, no del JSON
-    t = threading.Thread(target=worker, args=(job_id, data, [], fotos, modelo), daemon=True)
+    session_id = request.form.get('session_id', '').strip() or None
+
+    # ── CORREO 1: formulario inmediato — sale antes de lanzar la IA ──
+    # Si la IA falla, el staff ya tiene las respuestas para correr manualmente
+    try:
+        fecha_recibido = datetime.now().strftime('%d/%m/%Y a las %H:%M')
+        enviar_resend(
+            f'📋 Formulario recibido — {data["nombre"]} ({fecha_recibido})',
+            email_formulario_inmediato(data, fotos),
+            MAIL_TO,
+            adjuntos_extra=fotos or [],
+            cc=MAIL_CC or None
+        )
+        print(f'[enviar] Correo 1 (formulario) enviado: {data["nombre"]}')
+    except Exception as e:
+        print(f'[enviar] Error correo 1: {e}')
+
+    t = threading.Thread(target=worker, args=(job_id, data, [], fotos, modelo, session_id), daemon=True)
     t.start()
 
     return jsonify({'jobId': job_id, 'nombre': data['nombre'], 'modelo': modelo})
@@ -336,6 +353,37 @@ def guardar_borrador(job_id):
     if job_id in jobs:
         jobs[job_id]['borrador_actualizado'] = True
     return jsonify({'ok': True, 'url': url or ''})
+
+
+# ── Sesiones — guardado progresivo del formulario ────────────
+
+@app.route('/sesion/guardar', methods=['POST'])
+def sesion_guardar():
+    """Guarda o actualiza los datos parciales del formulario en Cloudinary."""
+    try:
+        d = request.get_json(force=True)
+        session_id = d.get('session_id', '').strip()
+        data_parcial = d.get('data', {})
+        if not session_id:
+            return jsonify({'ok': False, 'error': 'session_id requerido'}), 400
+        # Solo permitir caracteres seguros en el session_id
+        if not re.match(r'^[a-zA-Z0-9_\-]{5,80}$', session_id):
+            return jsonify({'ok': False, 'error': 'session_id inválido'}), 400
+        url = guardar_sesion_cloudinary(session_id, data_parcial)
+        return jsonify({'ok': True, 'url': url or ''})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/sesion/<session_id>', methods=['GET'])
+def sesion_recuperar(session_id):
+    """Recupera los datos guardados de una sesión."""
+    if not re.match(r'^[a-zA-Z0-9_\-]{5,80}$', session_id):
+        return jsonify({'ok': False, 'error': 'session_id inválido'}), 400
+    data = recuperar_sesion_cloudinary(session_id)
+    if data is None:
+        return jsonify({'ok': False, 'error': 'Sesión no encontrada o expirada'}), 404
+    return jsonify({'ok': True, 'data': data})
 
 
 
@@ -409,6 +457,85 @@ def descargar_borrador_cloudinary(job_id):
 def render_borrador(plan_json, data, job_id):
     """Genera el HTML del borrador — ahora usa la misma plantilla que render_plan."""
     return render_plan(plan_json, data, job_id=job_id)
+
+
+# ════════════════════════════════════════════════════════════
+# SESIONES — persistencia de formulario en Cloudinary
+# ════════════════════════════════════════════════════════════
+
+SESION_TTL_HORAS = 24  # sesiones expiran a las 24 horas
+
+def _session_public_id(session_id):
+    return f'carvajal/sesiones/{session_id}'
+
+def guardar_sesion_cloudinary(session_id, data_parcial):
+    """Guarda o actualiza los datos parciales del formulario como JSON en Cloudinary."""
+    if not CLOUDINARY_CLOUD_NAME:
+        return None
+    try:
+        import tempfile, json as _json
+        payload = {
+            'session_id': session_id,
+            'guardado_en': datetime.utcnow().isoformat() + 'Z',
+            'data': data_parcial
+        }
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+            _json.dump(payload, tmp, ensure_ascii=False)
+            tmp_path = tmp.name
+        resultado = cloudinary.uploader.upload(
+            tmp_path,
+            folder='carvajal/sesiones',
+            public_id=session_id,
+            resource_type='raw',
+            overwrite=True,
+        )
+        os.unlink(tmp_path)
+        print(f'[sesion] Guardada: {session_id}')
+        return resultado.get('secure_url', '')
+    except Exception as e:
+        print(f'[sesion] Error guardando: {e}')
+        return None
+
+
+def recuperar_sesion_cloudinary(session_id):
+    """Descarga y devuelve los datos de sesión guardados. Retorna None si no existe o expiró."""
+    if not CLOUDINARY_CLOUD_NAME:
+        return None
+    try:
+        import json as _json
+        url = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/raw/upload/carvajal/sesiones/{session_id}.json'
+        r = req.get(url, timeout=10)
+        if r.status_code != 200:
+            return None
+        payload = r.json()
+        # Verificar expiración (24 horas)
+        guardado = payload.get('guardado_en', '')
+        if guardado:
+            from datetime import timezone
+            ts = datetime.fromisoformat(guardado.replace('Z', '+00:00'))
+            delta = datetime.now(timezone.utc) - ts
+            if delta.total_seconds() > SESION_TTL_HORAS * 3600:
+                print(f'[sesion] Expirada: {session_id} ({round(delta.total_seconds()/3600, 1)}h)')
+                return None
+        return payload.get('data')
+    except Exception as e:
+        print(f'[sesion] Error recuperando: {e}')
+        return None
+
+
+def eliminar_sesion_cloudinary(session_id):
+    """Elimina la sesión de Cloudinary una vez que el plan fue generado exitosamente."""
+    if not CLOUDINARY_CLOUD_NAME:
+        return
+    try:
+        cloudinary.uploader.destroy(
+            f'carvajal/sesiones/{session_id}',
+            resource_type='raw',
+            invalidate=True
+        )
+        print(f'[sesion] Eliminada: {session_id}')
+    except Exception as e:
+        print(f'[sesion] Error eliminando: {e}')
 
 
 def _render_borrador_legacy(plan_json, data, job_id):
@@ -1563,9 +1690,15 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     return docx_path
 
 
-def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
+def worker(job_id, data, faltantes, fotos=None, modelo='claude', session_id=None):
     try:
         jobs[job_id] = {'status': 'working', 'msg': 'Generando plan con IA (puede tomar 1-2 min)...'}
+
+        # Guardar datos completos del formulario ANTES de llamar a la IA
+        # Si el worker falla, los datos quedan recuperables
+        if session_id:
+            guardar_sesion_cloudinary(session_id, data)
+            print(f'[worker] Sesión respaldada: {session_id}')
 
         plan_json = generar_plan_ia(data, job_id, modelo=modelo)
         if 'error' in plan_json:
@@ -1624,22 +1757,23 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
         except Exception as e:
             print(f'[worker] Error docx cuestionario: {e}')
 
-        # Armar lista de adjuntos: fotos + docx
-        adjuntos = list(fotos or [])
+        # ── CORREO 2: plan generado — borrador editable + .docx con análisis ──
+        # Las fotos ya se enviaron en el correo 1 (formulario inmediato)
+        adjuntos_plan = []
         if docx_cuestionario and os.path.exists(docx_cuestionario):
-            adjuntos.append(docx_cuestionario)
+            adjuntos_plan.append(docx_cuestionario)
 
-        # Correo al staff con borrador + adjuntos + CC
         enviar_resend(
-            f'Nuevo Plan IA - {nombre} ({fecha_hoy})',
-            email_formulario(data, faltantes, borrador_url),
+            f'\u2705 Plan IA generado \u2014 {nombre} ({fecha_hoy})',
+            email_plan_completo(data, borrador_url, html_url, faltantes),
             MAIL_TO,
-            adjuntos_extra=adjuntos,
+            adjuntos_extra=adjuntos_plan,
             cc=MAIL_CC or None
         )
+        print(f'[worker] Correo 2 (plan) enviado: {nombre}')
 
         # Limpiar temporales
-        for f_path in adjuntos:
+        for f_path in adjuntos_plan:
             try: os.unlink(f_path)
             except: pass
 
@@ -1651,6 +1785,10 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude'):
             'borrador_url': borrador_url,
             'faltantes'   : faltantes,
         }
+
+        # Eliminar sesión guardada — plan generado exitosamente
+        if session_id:
+            eliminar_sesion_cloudinary(session_id)
 
     except Exception as e:
         import traceback
@@ -2244,6 +2382,12 @@ REGLAS: Respetar intolerancias. Tips con nombre, profesion, horario real.'''
         time.sleep(2)
     elif modelo in ('gemini', 'groq'):
         time.sleep(5)
+
+    SYS3 = '''Eres el generador de contenido para planes del METODO CARVAJAL.
+Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
+Genera SOLO estas 3 claves: pilar4, pilar5, compromiso.
+{"pilar4":{"titulo":"Optimizacion del Sueno","objetivo":"objetivo personalizado 2-3 lineas","frase_motivacional":"frase corta","frase_posicion":"inicio","protocolo":["paso1","paso2","paso3","paso4","paso5"],"reglas":["regla higiene sueno 1","regla2","regla3"],"tips":[{"texto":"tip especifico con nombre"}]},"pilar5":{"titulo":"Tratamientos Esteticos","objetivo":"objetivo personalizado","frase_motivacional":"frase","frase_posicion":"medio","bimestres":[{"periodo":"Bimestre 1","titulo":"titulo enfoque","tratamientos":[{"nombre":"Nombre tratamiento","sesiones":"N sesiones","inversion":"$XXX","beneficio":"beneficio concreto"}],"total":000},{"periodo":"Bimestre 2","titulo":"titulo","tratamientos":[{"nombre":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 3","titulo":"titulo","tratamientos":[{"nombre":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000}],"notas_criticas":["nota importante si aplica"],"rutina_am":[{"paso":1,"producto":"producto AM","descripcion":"como y cuando"}],"rutina_pm":[{"paso":1,"producto":"producto PM","descripcion":"como y cuando"}],"tips":[{"texto":"tip"}]},"compromiso":{"parrafo":"parrafo motivacional de cierre 3-4 lineas","resultados":[{"texto":"resultado esperable 1"},{"texto":"resultado esperable 2"},{"texto":"resultado esperable 3"}],"proximos_pasos":["paso concreto 1","paso concreto 2","paso concreto 3"]}}
+REGLAS: Usar UNICAMENTE tratamientos del catalogo provisto. Verificar contraindicaciones. Calcular totales reales. Tips con nombre, profesion, horario real.''' + '\nCATALOGO DE TRATAMIENTOS:\n' + CATALOGO
 
     actualizar(f'Sección 3/3 — Sueño, tratamientos y plan de compromiso... ({nombre_modelo})', 75)
     r3, err = _llamar(3, 3, SYS3, datos, max_tok=tok3)
@@ -3026,6 +3170,131 @@ def email_formulario(d, faltantes, borrador_url=''):
 
 def email_plan(nombre, html_url, fecha):
     return f'<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="background:#f0e8de;padding:20px;font-family:sans-serif"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #ddd"><div style="background:#1a1410;padding:20px 24px"><div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Plan Generado</div><div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div><div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:2px">{fecha}</div></div><div style="padding:24px"><p style="font-size:13px;color:#3d2e20;margin-bottom:16px">El plan personalizado de <strong>{nombre}</strong> ha sido generado exitosamente.</p><div style="text-align:center;margin:20px 0"><a href="{html_url}" style="background:#b8935a;color:#fff;padding:14px 32px;border-radius:4px;text-decoration:none;font-size:14px;font-weight:500">Ver Plan Completo</a></div><p style="font-size:11px;color:#999;text-align:center">O copia este link: {html_url}</p></div><div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div></div></body></html>'
+
+
+
+def email_formulario_inmediato(d, fotos=None):
+    """Correo 1 — sale inmediatamente al recibir el formulario.
+    Contiene todos los datos del paciente en tabla completa.
+    Sin plan, sin borrador — es el respaldo ante cualquier fallo de la IA."""
+    nombre = d.get('nombre', '')
+    fecha  = datetime.now().strftime('%d/%m/%Y a las %H:%M')
+
+    def row(k, v):
+        if not v: return ''
+        return (f'<tr>'
+                f'<td style="color:#b8935a;font-weight:600;padding:7px 16px;font-size:11px;'
+                f'text-transform:uppercase;letter-spacing:1px;width:150px;vertical-align:top">{k}</td>'
+                f'<td style="padding:7px 16px;font-size:13px;color:#2d2020">{v}</td>'
+                f'</tr>')
+
+    rows = ''.join([
+        row('Nombre',       nombre),
+        row('Cedula',       d.get('cedula','')),
+        row('Email',        d.get('email','')),
+        row('Telefono',     d.get('tel','')),
+        row('Edad',         d.get('edad','')),
+        row('Genero',       d.get('genero','')),
+        row('Ocupacion',    d.get('ocupacion','')),
+        row('Peso',         str(d.get('peso','')) + ' kg' if d.get('peso') else ''),
+        row('Talla',        str(d.get('talla','')) + ' cm' if d.get('talla') else ''),
+        row('Cintura',      str(d.get('cintura','')) + ' cm' if d.get('cintura') else ''),
+        row('Cadera',       str(d.get('cadera','')) + ' cm' if d.get('cadera') else ''),
+        row('Prioridad',    d.get('prioridad','')),
+        row('Expectativas', d.get('expectativas','')),
+        row('Satisfaccion', str(d.get('satisfaccion','')) + '/10' if d.get('satisfaccion') else ''),
+        row('Cirugias',     d.get('cirugias','')),
+        row('Medicamentos', d.get('medicamentos','')),
+        row('Areas faciales',   d.get('areasFaciales','')),
+        row('Areas corporales', d.get('areasCorporales','')),
+        row('Act. fisica',  d.get('actFisica','')),
+        row('Sueno',        d.get('sueno','')),
+        row('Estres',       str(d.get('estres','')) + '/10' if d.get('estres') else ''),
+        row('Urgencia',     d.get('urgencia','')),
+        row('Historial estetico', ', '.join(d.get('historialEstetico', [])) if isinstance(d.get('historialEstetico'), list) else d.get('historialEstetico','')),
+    ])
+
+    n_fotos = len([f for f in (fotos or []) if f])
+    fotos_nota = (
+        f'<div style="background:#f0f7e6;border:1px solid #c5d9a0;border-radius:4px;'
+        f'padding:10px 16px;font-size:12px;color:#4a6020">'
+        f'Fotos adjuntas: {n_fotos}</div>'
+    ) if n_fotos else ''
+
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+        '<body style="background:#f0e8de;padding:20px;font-family:sans-serif">'
+        '<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #ddd">'
+        '<div style="background:#1a1410;padding:20px 24px">'
+        '<div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal - Formulario Recibido</div>'
+        f'<div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div>'
+        f'<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:2px">{fecha}</div>'
+        '</div>'
+        '<div style="background:#fffbf0;border-bottom:2px solid #e8d89a;padding:10px 16px;font-size:12px;color:#6a5a20">'
+        'Datos del formulario. El plan IA esta siendo generado. '
+        'Si falla, sube el .docx a la pantalla de generacion manual.'
+        '</div>'
+        f'{fotos_nota}'
+        f'<table style="width:100%;border-collapse:collapse">{rows}</table>'
+        '<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">'
+        'Centro Carvajal - centrocarvajal.com</div>'
+        '</div></body></html>'
+    )
+
+
+def email_plan_completo(d, borrador_url, html_url, faltantes=None):
+    """Correo 2 — sale cuando el plan IA termino exitosamente.
+    Contiene enlace al borrador editable y al plan final.
+    El .docx con cuestionario + analisis clinico va adjunto."""
+    nombre = d.get('nombre', '')
+    fecha  = datetime.now().strftime('%d/%m/%Y a las %H:%M')
+
+    borrador_btn = (
+        f'<div style="text-align:center;margin:24px">'
+        f'<a href="{borrador_url}" style="background:#8fa832;color:#fff;padding:13px 28px;'
+        f'border-radius:4px;text-decoration:none;font-size:14px;font-weight:500;display:inline-block">'
+        f'Revisar y editar borrador del plan</a>'
+        f'<p style="font-size:11px;color:#999;margin-top:8px">Edita directamente en el navegador y genera el PDF final.</p>'
+        f'</div>'
+    ) if borrador_url else ''
+
+    plan_btn = (
+        f'<div style="text-align:center;margin:0 24px 24px">'
+        f'<a href="{html_url}" style="background:#b8935a;color:#fff;padding:12px 28px;'
+        f'border-radius:4px;text-decoration:none;font-size:13px;font-weight:500;display:inline-block">'
+        f'Ver plan final</a>'
+        f'</div>'
+    ) if html_url else ''
+
+    faltantes_html = ''
+    if faltantes:
+        items = ''.join(f'<li style="font-size:12px;color:#6a5a20;padding:2px 0">{f}</li>' for f in faltantes)
+        faltantes_html = (
+            f'<div style="background:#fffbf0;border:1px solid #e8d89a;border-radius:4px;'
+            f'padding:14px 18px;margin:16px 24px">'
+            f'<div style="font-size:11px;font-weight:700;color:#8a7030;margin-bottom:8px;'
+            f'text-transform:uppercase;letter-spacing:1px">Campos sin datos</div>'
+            f'<ul style="padding-left:16px;margin:0">{items}</ul></div>'
+        )
+
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+        '<body style="background:#f0e8de;padding:20px;font-family:sans-serif">'
+        '<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #ddd">'
+        '<div style="background:#1a1410;padding:20px 24px">'
+        '<div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal - Plan IA Generado</div>'
+        f'<div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div>'
+        f'<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:2px">{fecha}</div>'
+        '</div>'
+        '<div style="padding:20px 24px 8px;font-size:13px;color:#3d2e20;line-height:1.7">'
+        f'El plan personalizado de <strong>{nombre}</strong> fue generado exitosamente. '
+        'El .docx adjunto incluye el cuestionario completo y el analisis clinico.'
+        '</div>'
+        f'{borrador_btn}{plan_btn}{faltantes_html}'
+        '<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">'
+        'Centro Carvajal - centrocarvajal.com</div>'
+        '</div></body></html>'
+    )
 
 
 if __name__ == '__main__':
