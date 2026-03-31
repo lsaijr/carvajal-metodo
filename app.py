@@ -267,6 +267,8 @@ def enviar():
     except Exception:
         return jsonify({'error': 'JSON invalido en los datos del formulario'}), 400
 
+    # Sanitizar entradas antes de mapear — previene inyecciones y caracteres de control
+    form = _sanitizar_form(form)
     data = _mapear_formulario(form)
 
     if not data.get('nombre'):
@@ -285,27 +287,56 @@ def enviar():
     jobs[job_id] = {'status': 'working', 'msg': 'Iniciando generacion del plan...'}
 
     modelo = request.form.get('modelo', 'claude')  # viene del FormData, no del JSON
-    session_id = request.form.get('session_id', '').strip() or None
 
-    # ── CORREO 1: formulario inmediato — sale antes de lanzar la IA ──
-    # Si la IA falla, el staff ya tiene las respuestas para correr manualmente
+    # session_id: usar el que manda el frontend (guardado progresivo) o generar uno nuevo
+    session_id = request.form.get('session_id', '').strip() or None
+    if not session_id:
+        session_id = f'carvajal_{uuid.uuid4().hex[:16]}'
+
+    # ── Guardar sesión completa AHORA — antes de cualquier otra cosa ──
+    # Si la IA falla, Railway se reinicia, o cualquier otra cosa, los datos quedan en Cloudinary
+    try:
+        guardar_sesion_cloudinary(session_id, data)
+        print(f'[enviar] Sesión guardada: {session_id}')
+    except Exception as e:
+        print(f'[enviar] Error guardando sesión: {e}')
+
+    # ── Generar .docx del cuestionario para adjuntar al Correo 1 ──
+    # Así el staff siempre tiene el respaldo completo independientemente de la IA
+    docx_respaldo = None
+    try:
+        docx_respaldo = generar_docx_cuestionario(data)
+        print(f'[enviar] .docx respaldo generado: {docx_respaldo}')
+    except Exception as e:
+        print(f'[enviar] Error generando .docx respaldo: {e}')
+
+    # ── CORREO 1: formulario inmediato + .docx adjunto ──
+    # Sale antes de lanzar la IA. Si la IA falla, el staff tiene todo aquí.
+    adjuntos_correo1 = list(fotos or [])
+    if docx_respaldo and os.path.exists(docx_respaldo):
+        adjuntos_correo1.append(docx_respaldo)
     try:
         fecha_recibido = datetime.now().strftime('%d/%m/%Y a las %H:%M')
         enviar_resend(
             f'📋 Formulario recibido — {data["nombre"]} ({fecha_recibido})',
             email_formulario_inmediato(data, fotos),
             MAIL_TO,
-            adjuntos_extra=fotos or [],
+            adjuntos_extra=adjuntos_correo1,
             cc=MAIL_CC or None
         )
         print(f'[enviar] Correo 1 (formulario) enviado: {data["nombre"]}')
     except Exception as e:
         print(f'[enviar] Error correo 1: {e}')
 
+    # Limpiar .docx respaldo después de enviarlo
+    if docx_respaldo:
+        try: os.unlink(docx_respaldo)
+        except: pass
+
     t = threading.Thread(target=worker, args=(job_id, data, [], fotos, modelo, session_id), daemon=True)
     t.start()
 
-    return jsonify({'jobId': job_id, 'nombre': data['nombre'], 'modelo': modelo})
+    return jsonify({'jobId': job_id, 'nombre': data['nombre'], 'modelo': modelo, 'session_id': session_id})
 
 
 # ── Endpoint carga .docx (/upload) ────────────────────────────
@@ -477,7 +508,7 @@ def render_borrador(plan_json, data, job_id):
 # SESIONES — persistencia de formulario en Cloudinary
 # ════════════════════════════════════════════════════════════
 
-SESION_TTL_HORAS = 24  # sesiones expiran a las 24 horas
+SESION_TTL_HORAS = 72  # sesiones expiran a las 72 horas (cubre fines de semana)
 
 def _session_public_id(session_id):
     return f'carvajal/sesiones/{session_id}'
@@ -1717,13 +1748,9 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude', session_id=None
     try:
         jobs[job_id] = {'status': 'working', 'msg': 'Generando plan con IA (puede tomar 1-2 min)...'}
 
-        # Guardar datos completos del formulario ANTES de llamar a la IA
-        # Si el worker falla, los datos quedan recuperables
-        if session_id:
-            guardar_sesion_cloudinary(session_id, data)
-            print(f'[worker] Sesión respaldada: {session_id}')
-
-        plan_json = generar_plan_ia(data, job_id, modelo=modelo)
+        # session_id ya fue guardado en /enviar antes de lanzar el worker.
+        # generar_plan_ia lo usará para actualizar el progreso entre pasos.
+        plan_json = generar_plan_ia(data, job_id, modelo=modelo, session_id=session_id)
         if 'error' in plan_json:
             jobs[job_id] = {'status': 'error', 'msg': plan_json['error']}
             return
@@ -1809,9 +1836,8 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude', session_id=None
             'faltantes'   : faltantes,
         }
 
-        # Eliminar sesión guardada — plan generado exitosamente
-        if session_id:
-            eliminar_sesion_cloudinary(session_id)
+        # No se elimina la sesión — expira automáticamente a las 72h (SESION_TTL_HORAS)
+        # Esto permite recuperar datos si algo falla en los días siguientes
 
     except Exception as e:
         import traceback
@@ -1851,6 +1877,45 @@ def leer_docx(path):
 # ════════════════════════════════════════════════════════════
 # MAPEAR FORMULARIO WEB → data dict
 # ════════════════════════════════════════════════════════════
+
+def _sanitizar_texto(texto, max_len=None):
+    """Limpia texto libre de caracteres peligrosos para prevenir inyecciones.
+    - Elimina caracteres de control (excepto salto de línea y tab)
+    - Recorta a max_len si se especifica
+    - Devuelve str limpio"""
+    if not isinstance(texto, str):
+        texto = str(texto) if texto is not None else ''
+    # Eliminar caracteres de control peligrosos (excepto \n, \t, \r)
+    import unicodedata
+    texto = ''.join(
+        c for c in texto
+        if unicodedata.category(c) != 'Cc' or c in ('\n', '\t', '\r')
+    )
+    # Limitar longitud si se especifica
+    if max_len and len(texto) > max_len:
+        texto = texto[:max_len]
+    return texto.strip()
+
+
+def _sanitizar_form(f):
+    """Recorre el dict del formulario y sanitiza todos los valores de texto."""
+    if not isinstance(f, dict):
+        return f
+    resultado = {}
+    for key, val in f.items():
+        if isinstance(val, str):
+            resultado[key] = _sanitizar_texto(val)
+        elif isinstance(val, list):
+            resultado[key] = [
+                _sanitizar_texto(v) if isinstance(v, str) else v
+                for v in val
+            ]
+        elif isinstance(val, dict):
+            resultado[key] = _sanitizar_form(val)
+        else:
+            resultado[key] = val
+    return resultado
+
 
 def _mapear_formulario(f):
     """Convierte el JSON de index.html al mismo dict que usan generar_plan_ia() y render_plan()."""
@@ -2164,51 +2229,67 @@ Nivel de estres (1-10): {d.get('nivelEstres','No especificado')}"""
 
 
 def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
-    print(f"[{num}/{total}] Iniciando...")
-    t0 = time.time()
-    resp = req.post(
-        'https://api.anthropic.com/v1/messages',
-        headers={
-            'Content-Type': 'application/json',
-            'x-api-key': CLAUDE_KEY,
-            'anthropic-version': '2023-06-01',
-        },
-        json={
-            'model': 'claude-sonnet-4-6',
-            'max_tokens': max_tok,
-            'system': system_prompt,
-            'messages': [{'role': 'user', 'content': user_msg}],
-        },
-        timeout=300
-    )
-    elapsed = round(time.time() - t0, 1)
+    MAX_REINTENTOS = 3
+    ESPERAS = [10, 25, 45]  # backoff escalonado en segundos para error 529
 
-    if resp.status_code != 200:
-        print(f"[{num}/{total}] ERROR {resp.status_code}: {resp.text[:400]}")
-        return None, f'Error API Claude ({resp.status_code}): {resp.text[:300]}'
+    for intento in range(MAX_REINTENTOS + 1):
+        if intento > 0:
+            espera = ESPERAS[intento - 1]
+            print(f"[{num}/{total}] Reintento {intento}/{MAX_REINTENTOS} — esperando {espera}s...")
+            time.sleep(espera)
 
-    rj = resp.json()
-    txt = rj['content'][0]['text']
-    stop_reason = rj.get('stop_reason', '')
-    usage = rj.get('usage', {})
-    tok_in  = usage.get('input_tokens', '?')
-    tok_out = usage.get('output_tokens', '?')
-    print(f"[{num}/{total}] OK — {elapsed}s | input: {tok_in} tokens | output: {tok_out} tokens | stop: {stop_reason}")
+        print(f"[{num}/{total}] Iniciando{'...' if intento == 0 else f' (intento {intento + 1})'}")
+        t0 = time.time()
+        resp = req.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'Content-Type': 'application/json',
+                'x-api-key': CLAUDE_KEY,
+                'anthropic-version': '2023-06-01',
+            },
+            json={
+                'model': 'claude-sonnet-4-6',
+                'max_tokens': max_tok,
+                'system': system_prompt,
+                'messages': [{'role': 'user', 'content': user_msg}],
+            },
+            timeout=300
+        )
+        elapsed = round(time.time() - t0, 1)
 
-    if stop_reason == 'max_tokens':
-        return None, f'Llamada {num} truncada por limite de tokens.'
+        # 529 = overloaded → reintentar con backoff
+        if resp.status_code == 529 and intento < MAX_REINTENTOS:
+            print(f"[{num}/{total}] 529 Overloaded — reintentando...")
+            continue
 
-    txt = re.sub(r'^```json\s*', '', txt.strip())
-    txt = re.sub(r'^```\s*', '', txt)
-    txt = re.sub(r'```\s*$', '', txt).strip()
+        if resp.status_code != 200:
+            print(f"[{num}/{total}] ERROR {resp.status_code}: {resp.text[:400]}")
+            return None, f'Error API Claude ({resp.status_code}): {resp.text[:300]}'
 
-    try:
-        result = json.loads(txt)
-        print(f"[{num}/{total}] JSON OK — claves: {list(result.keys())}")
-        return result, None
-    except Exception as e:
-        print(f"[{num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
-        return None, f'JSON invalido en llamada {num}: {str(e)[:150]}'
+        rj = resp.json()
+        txt = rj['content'][0]['text']
+        stop_reason = rj.get('stop_reason', '')
+        usage = rj.get('usage', {})
+        tok_in  = usage.get('input_tokens', '?')
+        tok_out = usage.get('output_tokens', '?')
+        print(f"[{num}/{total}] OK — {elapsed}s | input: {tok_in} tokens | output: {tok_out} tokens | stop: {stop_reason}")
+
+        if stop_reason == 'max_tokens':
+            return None, f'Llamada {num} truncada por limite de tokens.'
+
+        txt = re.sub(r'^```json\s*', '', txt.strip())
+        txt = re.sub(r'^```\s*', '', txt)
+        txt = re.sub(r'```\s*$', '', txt).strip()
+
+        try:
+            result = json.loads(txt)
+            print(f"[{num}/{total}] JSON OK — claves: {list(result.keys())}")
+            return result, None
+        except Exception as e:
+            print(f"[{num}/{total}] JSON invalido: {e} | inicio: {txt[:300]}")
+            return None, f'JSON invalido en llamada {num}: {str(e)[:150]}'
+
+    return None, f'Llamada {num} falló tras {MAX_REINTENTOS} reintentos (overloaded)'
 
 
 
@@ -2310,7 +2391,7 @@ def _llamar_groq(num, total, system_prompt, user_msg, max_tok=8000):
 
 
 
-def generar_plan_ia(d, job_id=None, modelo='claude'):
+def generar_plan_ia(d, job_id=None, modelo='claude', session_id=None):
     datos = _datos_paciente(d)
     t_total = time.time()
 
@@ -2319,6 +2400,16 @@ def generar_plan_ia(d, job_id=None, modelo='claude'):
             jobs[job_id]['msg'] = msg
             if pct is not None:
                 jobs[job_id]['pct'] = pct
+
+    def guardar_progreso(parcial):
+        """Guarda el JSON parcial acumulado en Cloudinary si hay session_id."""
+        if session_id and CLOUDINARY_CLOUD_NAME:
+            try:
+                guardar_sesion_cloudinary(session_id, {**d, '__plan_parcial__': parcial})
+                print(f'[generar_plan_ia] Progreso guardado: {list(parcial.keys())}')
+            except Exception as e:
+                print(f'[generar_plan_ia] Error guardando progreso: {e}')
+
 
     SYS1 = '''Eres el generador de contenido para planes del METODO CARVAJAL.
 Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
@@ -2391,6 +2482,7 @@ REGLAS: Respetar intolerancias. Tips con nombre, profesion, horario real.'''
     actualizar(f'Sección 1/3 — Portada, diagnóstico y rutina diaria... ({nombre_modelo})', 15)
     r1, err = _llamar(1, 3, SYS1, datos, max_tok=tok1)
     if err: return {'error': err}
+    guardar_progreso(r1)  # ← sesión guardada tras paso 1
 
     if modelo == 'claude':
         time.sleep(2)  # pausa entre secciones para evitar overloaded (529)
@@ -2400,6 +2492,7 @@ REGLAS: Respetar intolerancias. Tips con nombre, profesion, horario real.'''
     actualizar(f'Sección 2/3 — Nutrición, ejercicio y bienestar mental... ({nombre_modelo})', 45)
     r2, err = _llamar(2, 3, SYS2, datos, max_tok=tok2)
     if err: return {'error': err}
+    guardar_progreso({**r1, **r2})  # ← sesión actualizada tras paso 2
 
     if modelo == 'claude':
         time.sleep(2)
@@ -3198,72 +3291,177 @@ def email_plan(nombre, html_url, fecha):
 
 def email_formulario_inmediato(d, fotos=None):
     """Correo 1 — sale inmediatamente al recibir el formulario.
-    Contiene todos los datos del paciente en tabla completa.
-    Sin plan, sin borrador — es el respaldo ante cualquier fallo de la IA."""
+    Contiene TODOS los campos útiles del paciente con claves correctas.
+    El .docx va adjunto. Es el respaldo completo ante cualquier fallo de la IA."""
     nombre = d.get('nombre', '')
     fecha  = datetime.now().strftime('%d/%m/%Y a las %H:%M')
 
     def row(k, v):
+        if not v or str(v) in ('', '[]', 'None', '0', 'No registrado'): return ''
+        if isinstance(v, list): v = ', '.join(str(i) for i in v if i)
+        if isinstance(v, dict):
+            parts = [f'{dk}: {dv}' for dk, dv in v.items() if dv and dv not in ('No','')]
+            v = ' | '.join(parts) if parts else ''
         if not v: return ''
         return (f'<tr>'
-                f'<td style="color:#b8935a;font-weight:600;padding:7px 16px;font-size:11px;'
-                f'text-transform:uppercase;letter-spacing:1px;width:150px;vertical-align:top">{k}</td>'
-                f'<td style="padding:7px 16px;font-size:13px;color:#2d2020">{v}</td>'
+                f'<td style="color:#b8935a;font-weight:600;padding:6px 14px;font-size:11px;'
+                f'text-transform:uppercase;letter-spacing:1px;width:180px;vertical-align:top;'
+                f'border-bottom:1px solid #f0e8de">{k}</td>'
+                f'<td style="padding:6px 14px;font-size:13px;color:#2d2020;'
+                f'border-bottom:1px solid #f0e8de">{v}</td>'
                 f'</tr>')
 
+    def seccion(titulo):
+        return (f'<tr><td colspan="2" style="background:#1a1410;color:#b8935a;font-size:10px;'
+                f'font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 14px">'
+                f'{titulo}</td></tr>')
+
+    contra = d.get('contraindications', {})
+    contra_si = [k for k, v in contra.items() if v == 'Si'] if isinstance(contra, dict) else []
+
+    # Alergias individuales
+    alergias_ind = []
+    for campo, label in [
+        ('alergia_lidocaina','Lidocaína'),('alergia_penicilina','Penicilina'),
+        ('alergia_yodo','Yodo'),('alergia_aines','AINEs'),('alergia_latex','Látex'),
+        ('alergia_aloe','Aloe'),('alergia_fragancias','Fragancias'),
+    ]:
+        if d.get(campo,'') == 'Sí': alergias_ind.append(label)
+
+    # Historial estético con detalle
+    hist = d.get('historialEstetico', [])
+    hist_det = d.get('historialDetalle', {})
+    hist_str = ''
+    if hist:
+        partes = []
+        for t in (hist if isinstance(hist, list) else [hist]):
+            det = hist_det.get(t, {}) if isinstance(hist_det, dict) else {}
+            s = t
+            if det.get('fecha'): s += f' (última: {det["fecha"]})'
+            if det.get('zona'):  s += f' — zona: {det["zona"]}'
+            partes.append(s)
+        hist_str = ' | '.join(partes)
+
     rows = ''.join([
-        row('Nombre',       nombre),
-        row('Cedula',       d.get('cedula','')),
-        row('Email',        d.get('email','')),
-        row('Telefono',     d.get('tel','')),
-        row('Edad',         d.get('edad','')),
-        row('Genero',       d.get('genero','')),
-        row('Ocupacion',    d.get('ocupacion','')),
-        row('Peso',         str(d.get('peso','')) + ' kg' if d.get('peso') else ''),
-        row('Talla',        str(d.get('talla','')) + ' cm' if d.get('talla') else ''),
-        row('Cintura',      str(d.get('cintura','')) + ' cm' if d.get('cintura') else ''),
-        row('Cadera',       str(d.get('cadera','')) + ' cm' if d.get('cadera') else ''),
-        row('Prioridad',    d.get('prioridad','')),
-        row('Expectativas', d.get('expectativas','')),
-        row('Satisfaccion', str(d.get('satisfaccion','')) + '/10' if d.get('satisfaccion') else ''),
-        row('Cirugias',     d.get('cirugias','')),
-        row('Medicamentos', d.get('medicamentos','')),
-        row('Areas faciales',   d.get('areasFaciales','')),
-        row('Areas corporales', d.get('areasCorporales','')),
-        row('Act. fisica',  d.get('actFisica','')),
-        row('Sueno',        d.get('sueno','')),
-        row('Estres',       str(d.get('estres','')) + '/10' if d.get('estres') else ''),
-        row('Urgencia',     d.get('urgencia','')),
-        row('Historial estetico', ', '.join(d.get('historialEstetico', [])) if isinstance(d.get('historialEstetico'), list) else d.get('historialEstetico','')),
+        seccion('Datos personales'),
+        row('Nombre',            nombre),
+        row('Cédula',            d.get('cedula','')),
+        row('Fecha nacimiento',  d.get('fechaNacimiento','')),
+        row('Email',             d.get('email','')),
+        row('Teléfono',          d.get('celular','')),
+        row('Dirección',         d.get('direccion','')),
+        row('Edad',              d.get('edad','')),
+        row('Sexo',              d.get('sexo','')),
+        row('Ocupación',         d.get('ocupacion','')),
+        row('Act. laboral',      d.get('actLaboral','')),
+        row('Horario laboral',   d.get('horarioLaboral','')),
+        row('Hijos',             d.get('numHijos','')),
+        row('Cómo nos conoció',  d.get('comoConociste','')),
+        row('Contacto emergencia', d.get('contactoEmergencia','')),
+        row('Relación',          d.get('contactoRelacion','')),
+        row('Tel. emergencia',   d.get('contactoTel','')),
+
+        seccion('Medidas'),
+        row('Estatura',          str(d.get('estatura','')) + ' cm' if d.get('estatura') else ''),
+        row('Peso',              str(d.get('peso','')) + ' kg' if d.get('peso') else ''),
+        row('IMC',               d.get('imc','')),
+
+        seccion('Salud general'),
+        row('Condición sistémica', d.get('condicionSistemica','')),
+        row('Condiciones',         d.get('condiciones','')),
+        row('Medicamentos',        d.get('medicamentos','')),
+        row('Cirugías',            d.get('cirugias','')),
+        row('Fuma',                d.get('fuma','')),
+        row('Alcohol',             d.get('alcohol','')),
+        row('Evacuación',          d.get('evacuacion','')),
+        row('Antec. familiares',   d.get('antecedentesFam','')),
+        row('Detalle antec.',      d.get('antecedentesFamDet','')),
+
+        seccion('Contraindicaciones y alergias'),
+        row('Contraindicaciones',  ', '.join(contra_si) if contra_si else ''),
+        row('Embarazo',            d.get('embarazo','')),
+        row('Lactancia',           d.get('lactancia','')),
+        row('Anticonceptivos',     d.get('anticonceptivos','')),
+        row('SOP',                 d.get('sop','')),
+        row('Menopausia',          d.get('menopausia','')),
+        row('Perimenopausia',      d.get('perimenopausia','')),
+        row('Alergias',            d.get('alergias','')),
+        row('Alergias específicas',', '.join(alergias_ind) if alergias_ind else ''),
+        row('Detalle síntomas',    d.get('alergiasDetalle','')),
+
+        seccion('Piel y estética'),
+        row('Tipo de piel',        d.get('pielTipo','')),
+        row('Problemas faciales',  d.get('pielProblemas','')),
+        row('Áreas faciales',      d.get('areasFaciales','')),
+        row('Áreas corporales',    d.get('areasCorporales','')),
+        row('Rutina mañana',       d.get('rutinaManana','')),
+        row('Rutina noche',        d.get('rutinaNoche','')),
+        row('Productos frecuentes',d.get('productosFrecuentes','')),
+        row('Protector solar',     d.get('usaProtectorSolar','')),
+        row('Marca SPF',           d.get('protectorMarca','')),
+        row('Factor SPF',          d.get('spf','')),
+        row('Hora aplicación SPF', d.get('protectorHora','')),
+        row('Reaplicación solar',  d.get('reaplicaSolar','')),
+        row('Láser activo',        d.get('laserActivo','')),
+        row('Detalle láser',       d.get('laserActualDet','')),
+        row('Complicaciones prev.',d.get('complicacionesDet','')),
+        row('Historial estético',  hist_str or d.get('historialEstetico','')),
+
+        seccion('Alimentación'),
+        row('Intolerancias',       d.get('intolerancias','')),
+        row('Síntomas lácteos',    d.get('sintLacteos','')),
+        row('Síntomas gluten',     d.get('sintGluten','')),
+        row('Síntomas procesados', d.get('sintProcesados','')),
+        row('Síntomas digestivos', d.get('sintomasDigestivos','')),
+        row('Proteínas',           d.get('proteinas','')),
+        row('Carbohidratos',       d.get('carbohidratos','')),
+        row('Verduras',            d.get('verduras','')),
+        row('Frutas',              d.get('frutas','')),
+        row('Alimentos a evitar',  d.get('alimentosEvitar','')),
+        row('Grasas a evitar',     d.get('grasasEvitar','')),
+        row('Por qué evita grasas',d.get('grasasEvitarPorque','')),
+        row('Postres',             d.get('postres','')),
+        row('Bebidas',             d.get('bebidas','')),
+        row('Notas alimentación',  d.get('notasAlimentacion','')),
+
+        seccion('Hábitos y objetivos'),
+        row('Act. física',         d.get('actFisica','')),
+        row('Sueño',               d.get('sueno','')),
+        row('Hora se despierta',   d.get('horaDespierta','')),
+        row('Hora se duerme',      d.get('horaDuerme','')),
+        row('Cansancio diurno',    d.get('cansancioDia','')),
+        row('Nivel de estrés',     d.get('nivelEstres','')),
+        row('Prioridad',           d.get('prioridad','')),
+        row('Expectativas',        d.get('expectativas','')),
+        row('Satisfacción actual', str(d.get('satisfaccion','')) + '/10' if d.get('satisfaccion') else ''),
     ])
 
     n_fotos = len([f for f in (fotos or []) if f])
     fotos_nota = (
         f'<div style="background:#f0f7e6;border:1px solid #c5d9a0;border-radius:4px;'
-        f'padding:10px 16px;font-size:12px;color:#4a6020">'
-        f'Fotos adjuntas: {n_fotos}</div>'
-    ) if n_fotos else ''
+        f'padding:10px 16px;font-size:12px;color:#4a6020;margin:0">'
+        f'{"📎 Fotos adjuntas: " + str(n_fotos) + " · " if n_fotos else ""}'
+        f'El .docx con el cuestionario completo va adjunto a este correo.</div>'
+    )
 
     return (
         '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
         '<body style="background:#f0e8de;padding:20px;font-family:sans-serif">'
-        '<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #ddd">'
+        '<div style="max-width:660px;margin:0 auto;background:#fff;border:1px solid #ddd">'
         '<div style="background:#1a1410;padding:20px 24px">'
-        '<div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal - Formulario Recibido</div>'
+        '<div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Formulario Recibido</div>'
         f'<div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div>'
         f'<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:2px">{fecha}</div>'
         '</div>'
         '<div style="background:#fffbf0;border-bottom:2px solid #e8d89a;padding:10px 16px;font-size:12px;color:#6a5a20">'
-        'Datos del formulario. El plan IA esta siendo generado. '
-        'Si falla, sube el .docx a la pantalla de generacion manual.'
+        '⚠ Respaldo completo del formulario. Si la IA falla, usa el .docx adjunto para generar el plan manualmente.'
         '</div>'
         f'{fotos_nota}'
         f'<table style="width:100%;border-collapse:collapse">{rows}</table>'
         '<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">'
-        'Centro Carvajal - centrocarvajal.com</div>'
+        'Centro Carvajal · centrocarvajal.com</div>'
         '</div></body></html>'
     )
-
 
 def email_plan_completo(d, borrador_url, html_url, faltantes=None):
     """Correo 2 — sale cuando el plan IA termino exitosamente.

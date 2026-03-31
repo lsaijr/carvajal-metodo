@@ -61,6 +61,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 input:focus,select:focus,textarea:focus{border-bottom-color:var(--gold)}
 textarea{resize:vertical;min-height:72px;border:1px solid var(--border);padding:10px 12px;border-radius:2px;font-size:14px}
 textarea:focus{border-color:var(--gold)}
+.char-counter{display:block;text-align:right;font-size:11px;color:var(--muted);margin-top:3px;font-family:'DM Sans',sans-serif;letter-spacing:.03em;transition:color .2s}
+.char-counter.warning{color:#e8a020}
+.char-counter.danger{color:#c0392b;font-weight:600}
 
 .radio-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
 .radio-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px 16px;border:1px solid var(--border);border-radius:2px;font-size:13px;font-weight:300;transition:all .2s;user-select:none}
@@ -186,10 +189,9 @@ textarea:focus{border-color:var(--gold)}
   <div class="step-subtitle">Información básica para identificarte y contactarte.</div>
   <div class="divider"></div>
   <div class="form-grid">
-    <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-nombre" type="text" placeholder="Tu nombre y apellidos"></div>
-    <div class="field"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" type="text" placeholder="Ej. 8-123-456"></div>
-    <div class="field full"><label class="field-label">Dirección de residencia</label><input id="f-direccion" type="text" placeholder="Ej. Calle 50, Miraflores, Panamá"></div>
-    <div class="field"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" type="text" placeholder="Ej. 8-123-456"></div>
+    <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-nombre" type="text" placeholder="Tu nombre y apellidos" maxlength="100"></div>
+    <div class="field"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" maxlength="20" type="text" placeholder="Ej. 8-123-456"></div>
+    <div class="field full"><label class="field-label">Dirección de residencia</label><input id="f-direccion" maxlength="150" type="text" placeholder="Ej. Calle 50, Miraflores, Panamá"></div>
     
     <div class="field"><label class="field-label">Edad <span class="req">*</span></label><input id="f-edad" type="number" placeholder="Ej. 32" min="1" max="120"></div>
     <div class="field"><label class="field-label">Sexo <span class="req">*</span></label>
@@ -201,7 +203,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="field"><label class="field-label">Fecha de nacimiento</label><input id="f-fechanac" type="date"></div>
     <div class="field"><label class="field-label">Celular <span class="req">*</span></label><input id="f-celular" type="tel" placeholder="+506 0000 0000"></div>
     <div class="field"><label class="field-label">Correo electrónico <span class="req">*</span></label><input id="f-email" type="email" placeholder="tu@correo.com"></div>
-    <div class="field"><label class="field-label">Ocupación</label><input id="f-ocupacion" type="text" placeholder="Ej. Docente, Enfermera, Músico..."></div>
+    <div class="field"><label class="field-label">Ocupación</label><input id="f-ocupacion" type="text" placeholder="Ej. Docente, Enfermera, Músico..." maxlength="150"></div>
     <div class="field"><label class="field-label">¿Trabaja actualmente? <span class="req">*</span></label>
       <div class="radio-group">
         <label class="radio-item"><input type="radio" name="trabaja"><div class="radio-dot"></div>Sí</label>
@@ -217,7 +219,7 @@ textarea:focus{border-color:var(--gold)}
         <label class="radio-item" id="horario-otro-label"><input type="radio" name="horario_laboral" value="Otro"><div class="radio-dot"></div>Otro</label>
       </div>
       <div class="horario-otro" id="horario-otro-input">
-        <input id="f-horario-otro" type="text" placeholder="Describe tu horario habitual...">
+        <input id="f-horario-otro" type="text" placeholder="Describe tu horario habitual..." maxlength="150">
       </div>
     </div>
     <div class="field full"><label class="field-label">Nivel de actividad laboral</label>
@@ -246,7 +248,7 @@ textarea:focus{border-color:var(--gold)}
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Otro</label>
       </div>
     </div>
-    <div class="field full"><label class="field-label">Familiares en casa (relación)</label><textarea id="f-familiares" placeholder="Ej. esposo, 2 hijos menores..."></textarea></div>
+    <div class="field full"><label class="field-label">Familiares en casa (relación)</label><textarea id="f-familiares" placeholder="Ej. esposo, 2 hijos menores..." maxlength="200" oninput="updateCounter('f-familiares', 200)"></textarea><span class="char-counter" id="cnt-f-familiares">200</span></div>
     <div class="field"><label class="field-label">¿Cuenta con ayuda en casa? <span class="req">*</span></label>
       <div class="radio-group">
         <label class="radio-item"><input type="radio" name="ayuda_casa"><div class="radio-dot"></div>Sí</label>
@@ -281,15 +283,15 @@ textarea:focus{border-color:var(--gold)}
   <div class="subsection" style="margin-top:8px">
     <div class="subsection-title">Contacto de Emergencia</div>
     <div class="form-grid">
-      <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-cont-nombre" type="text" placeholder="Nombre y apellidos"></div>
-      <div class="field"><label class="field-label">Relación <span class="req">*</span></label><input id="f-cont-relacion" type="text" placeholder="Ej. Madre, Esposo..."></div>
+      <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-cont-nombre" maxlength="100" type="text" placeholder="Nombre y apellidos"></div>
+      <div class="field"><label class="field-label">Relación <span class="req">*</span></label><input id="f-cont-relacion" maxlength="50" type="text" placeholder="Ej. Madre, Esposo..."></div>
       <div class="field"><label class="field-label">Teléfono <span class="req">*</span></label><input id="f-cont-tel" type="tel" placeholder="+506 0000 0000"></div>
     </div>
   </div>
 </div>
 
 <!-- STEP 3: Condición Actual -->
-<div class="step-panel" id="step-3">
+<div class="step-panel" id="step-2">
   <div class="step-title">Condición Actual</div>
   <div class="step-subtitle">Estado de salud general, medidas y hábitos relevantes.</div>
   <div class="divider"></div>
@@ -302,7 +304,7 @@ textarea:focus{border-color:var(--gold)}
         <label class="radio-item"><input type="radio" name="enfermedad"><div class="radio-dot"></div>No</label>
       </div>
     </div>
-    <div class="field full"><label class="field-label">Si es Sí, describa</label><textarea id="f-enfermedad-det" placeholder="Tipo de enfermedad, tiempo, tratamiento actual..."></textarea></div>
+    <div class="field full"><label class="field-label">Si es Sí, describa</label><textarea id="f-enfermedad-det" placeholder="Tipo de enfermedad, tiempo, tratamiento actual..." maxlength="300" oninput="updateCounter('f-enfermedad-det', 300)"></textarea><span class="char-counter" id="cnt-f-enfermedad-det">300</span></div>
   </div>
 
   <div class="subsection" style="margin-top:24px">
@@ -323,12 +325,12 @@ textarea:focus{border-color:var(--gold)}
     <div class="yn-row"><span class="yn-label">Consume alcohol <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="form-grid" style="margin:10px 0 16px"><div class="field full"><label class="field-label">Si consume alcohol, frecuencia</label><div class="radio-group"><label class="radio-item"><input type="radio" name="alcohol_frec"><div class="radio-dot"></div>Diario</label><label class="radio-item"><input type="radio" name="alcohol_frec"><div class="radio-dot"></div>Semanal</label><label class="radio-item"><input type="radio" name="alcohol_frec"><div class="radio-dot"></div>Ocasional</label></div></div></div>
     <div class="yn-row"><span class="yn-label">¿Toma medicamentos, vitaminas o suplementos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="form-grid" style="margin:10px 0 0"><div class="field full"><label class="field-label">Si es Sí, especifique</label><textarea id="f-medicamentos" placeholder="Nombre del medicamento, dosis, frecuencia..."></textarea></div></div>
+    <div class="form-grid" style="margin:10px 0 0"><div class="field full"><label class="field-label">Si es Sí, especifique</label><textarea id="f-medicamentos" placeholder="Nombre del medicamento, dosis, frecuencia..." maxlength="300" oninput="updateCounter('f-medicamentos', 300)"></textarea><span class="char-counter" id="cnt-f-medicamentos">300</span></div></div>
   </div>
 
   <div class="subsection">
     <div class="subsection-title">Otras condiciones médicas</div>
-    <div class="form-grid"><div class="field full"><textarea id="f-otras-condiciones" placeholder="Otras condiciones no mencionadas anteriormente..."></textarea></div></div>
+    <div class="form-grid"><div class="field full"><textarea id="f-otras-condiciones" placeholder="Otras condiciones no mencionadas anteriormente..." maxlength="300" oninput="updateCounter('f-otras-condiciones', 300)"></textarea><span class="char-counter" id="cnt-f-otras-condiciones">300</span></div></div>
   </div>
 
   <div class="subsection">
@@ -374,7 +376,7 @@ textarea:focus{border-color:var(--gold)}
 </div>
 
 <!-- STEP 4: Intolerancias Alimentarias -->
-<div class="step-panel" id="step-4">
+<div class="step-panel" id="step-3">
   <div class="step-title">Intolerancias Alimentarias</div>
   <div class="step-subtitle">Responde Sí o No a cada síntoma para detectar posibles intolerancias.</div>
   <div class="divider"></div>
@@ -397,23 +399,23 @@ textarea:focus{border-color:var(--gold)}
 
     <div class="yn-row"><span class="yn-label">¿Síntomas al consumir lácteos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSintAlim(this,'yes','sint-lacteos')">Sí</button><button class="yn-btn" onclick="toggleSintAlim(this,'no','sint-lacteos')">No</button></div></div>
     <div id="sint-lacteos" style="display:none;padding:6px 0 10px 16px;border-bottom:1px solid var(--border)">
-      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-lacteos-det" placeholder="Ej. hinchazón, gases, diarrea, náuseas..."></div>
+      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-lacteos-det" maxlength="150" placeholder="Ej. hinchazón, gases, diarrea, náuseas..."></div>
     </div>
 
     <div class="yn-row"><span class="yn-label">¿Síntomas al consumir gluten (pan, pasta, galletas)? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSintAlim(this,'yes','sint-gluten')">Sí</button><button class="yn-btn" onclick="toggleSintAlim(this,'no','sint-gluten')">No</button></div></div>
     <div id="sint-gluten" style="display:none;padding:6px 0 10px 16px;border-bottom:1px solid var(--border)">
-      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-gluten-det" placeholder="Ej. hinchazón, fatiga, dolor abdominal..."></div>
+      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-gluten-det" maxlength="150" placeholder="Ej. hinchazón, fatiga, dolor abdominal..."></div>
     </div>
 
     <div class="yn-row"><span class="yn-label">¿Síntomas con alimentos procesados o con aditivos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSintAlim(this,'yes','sint-procesados')">Sí</button><button class="yn-btn" onclick="toggleSintAlim(this,'no','sint-procesados')">No</button></div></div>
     <div id="sint-procesados" style="display:none;padding:6px 0 10px 16px;border-bottom:1px solid var(--border)">
-      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-procesados-det" placeholder="Ej. inflamación, dolor de cabeza, fatiga..."></div>
+      <div class="field" style="margin:0"><label class="field-label">¿Qué síntomas presenta?</label><input type="text" id="sint-procesados-det" maxlength="150" placeholder="Ej. inflamación, dolor de cabeza, fatiga..."></div>
     </div>
   </div>
 </div>
 
 <!-- STEP 5: Preferencias Alimentarias -->
-<div class="step-panel" id="step-5">
+<div class="step-panel" id="step-4">
   <div class="step-title">Preferencias Alimentarias</div>
   <div class="step-subtitle">Indícanos tus gustos y hábitos de alimentación.</div>
   <div class="divider"></div>
@@ -431,7 +433,7 @@ textarea:focus{border-color:var(--gold)}
       <label class="check-item"><input type="checkbox" value="Legumbres"><div class="check-box"></div>Legumbres</label>
       <label class="check-item"><input type="checkbox" value="Tofu/Tempeh"><div class="check-box"></div>Tofu / Tempeh</label>
     </div>
-    <div class="field" style="margin-top:14px"><label class="field-label">Proteínas que NO le gustan o desea evitar</label><input id="f-proteinas-evitar" type="text" placeholder="Ej. cerdo, mariscos..."></div>
+    <div class="field" style="margin-top:14px"><label class="field-label">Proteínas que NO le gustan o desea evitar</label><input id="f-proteinas-evitar" maxlength="150" type="text" placeholder="Ej. cerdo, mariscos..."></div>
   </div>
 
   <div class="subsection">
@@ -447,21 +449,21 @@ textarea:focus{border-color:var(--gold)}
       <label class="check-item"><input type="checkbox" value="Papa"><div class="check-box"></div>Papa</label>
       <label class="check-item"><input type="checkbox" value="Batata/Camote"><div class="check-box"></div>Batata / Camote</label>
     </div>
-    <div class="field" style="margin-top:14px"><label class="field-label">Carbohidratos que NO le gustan o desea evitar</label><input id="f-carbos-evitar" type="text" placeholder="Ej. pan blanco, arroz..."></div>
+    <div class="field" style="margin-top:14px"><label class="field-label">Carbohidratos que NO le gustan o desea evitar</label><input id="f-carbos-evitar" maxlength="150" type="text" placeholder="Ej. pan blanco, arroz..."></div>
   </div>
 
   <div class="subsection">
     <div class="subsection-title">Verduras y Hortalizas</div>
     <div class="form-grid">
-      <div class="field"><label class="field-label">Verduras que más consume</label><textarea id="f-verduras" placeholder="Ej. espinaca, zanahoria, brócoli..."></textarea></div>
-      <div class="field"><label class="field-label">Verduras que no consume o no tolera</label><textarea id="f-verduras-evitar" placeholder="Ej. coliflor, cebolla..."></textarea></div>
+      <div class="field"><label class="field-label">Verduras que más consume</label><textarea id="f-verduras" placeholder="Ej. espinaca, zanahoria, brócoli..." maxlength="200" oninput="updateCounter('f-verduras', 200)"></textarea><span class="char-counter" id="cnt-f-verduras">200</span></div>
+      <div class="field"><label class="field-label">Verduras que no consume o no tolera</label><textarea id="f-verduras-evitar" placeholder="Ej. coliflor, cebolla..." maxlength="200" oninput="updateCounter('f-verduras-evitar', 200)"></textarea><span class="char-counter" id="cnt-f-verduras-evitar">200</span></div>
     </div>
   </div>
 
   <div class="subsection">
     <div class="subsection-title">Frutas</div>
     <div class="form-grid">
-      <div class="field full"><label class="field-label">Frutas que consume habitualmente</label><textarea id="f-frutas" placeholder="Ej. banano, mango, piña..."></textarea></div>
+      <div class="field full"><label class="field-label">Frutas que consume habitualmente</label><textarea id="f-frutas" placeholder="Ej. banano, mango, piña..." maxlength="200" oninput="updateCounter('f-frutas', 200)"></textarea><span class="char-counter" id="cnt-f-frutas">200</span></div>
     </div>
   </div>
 
@@ -487,14 +489,14 @@ textarea:focus{border-color:var(--gold)}
     </div>
     <div class="field" style="margin-top:12px">
       <label class="field-label">¿Por qué deseas evitarlas?</label>
-      <input id="f-grasas-evitar-porque" type="text" placeholder="Ej. digestión, salud cardiovascular, recomendación médica...">
+      <input id="f-grasas-evitar-porque" maxlength="150" type="text" placeholder="Ej. digestión, salud cardiovascular, recomendación médica...">
     </div>
   </div>
 
   <div class="subsection">
     <div class="subsection-title">Postres y dulces</div>
     <div class="form-grid">
-      <div class="field full"><label class="field-label">Postres preferidos o dulces que suele consumir</label><input id="f-postres" type="text" placeholder="Ej. chocolate, helado..."></div>
+      <div class="field full"><label class="field-label">Postres preferidos o dulces que suele consumir</label><input id="f-postres" type="text" placeholder="Ej. chocolate, helado..." maxlength="150"></div>
       <div class="field full"><label class="field-label">Frecuencia de consumo <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>Diario</label><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>2–3 veces/semana</label><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>1 vez/semana</label><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>Ocasionalmente</label></div></div>
     </div>
   </div>
@@ -505,13 +507,13 @@ textarea:focus{border-color:var(--gold)}
       <div class="field"><label class="field-label">¿Cuántas comidas al día? <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>1</label><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>2</label><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>3</label><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>4+</label></div></div>
     </div>
     <div class="yn-row"><span class="yn-label">¿Consume bebidas azucaradas? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="form-grid" style="margin-top:10px"><div class="field full"><label class="field-label">Si es Sí, ¿cuáles?</label><input id="f-bebidas-cuales" type="text" placeholder="Ej. refrescos, jugos industriales..."></div></div>
-    <div class="field" style="margin-top:16px"><label class="field-label">Observaciones adicionales sobre hábitos u objetivos</label><textarea id="f-nota-alim" placeholder="Información adicional relevante..."></textarea></div>
+    <div class="form-grid" style="margin-top:10px"><div class="field full"><label class="field-label">Si es Sí, ¿cuáles?</label><input id="f-bebidas-cuales" maxlength="150" type="text" placeholder="Ej. refrescos, jugos industriales..."></div></div>
+    <div class="field" style="margin-top:16px"><label class="field-label">Observaciones adicionales sobre hábitos u objetivos</label><textarea id="f-nota-alim" placeholder="Información adicional relevante..." maxlength="300" oninput="updateCounter('f-nota-alim', 300)"></textarea><span class="char-counter" id="cnt-f-nota-alim">300</span></div>
   </div>
 </div>
 
 <!-- STEP 6: Alergias y Sensibilidades -->
-<div class="step-panel" id="step-6">
+<div class="step-panel" id="step-5">
   <div class="step-title">Alergias y Sensibilidades</div>
   <div class="step-subtitle">Indica si presentas alergia o sensibilidad a alguno de los siguientes.</div>
   <div class="divider"></div>
@@ -525,7 +527,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_medicamentos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_medicamentos" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_medicamentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_lidocaina">
@@ -538,7 +540,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_lidocaina" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_lidocaina" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_lidocaina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_penicilina">
@@ -551,7 +553,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_penicilina" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_penicilina" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_penicilina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_yodo">
@@ -564,7 +566,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_yodo" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_yodo" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_yodo" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_aines">
@@ -577,7 +579,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_aines" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_aines" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_aines" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_alimentos">
@@ -590,7 +592,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_alimentos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_alimentos" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_alimentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_mariscos">
@@ -603,7 +605,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_mariscos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_mariscos" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_mariscos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_latex">
@@ -616,7 +618,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_latex" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_latex" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_latex" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_aloe">
@@ -629,7 +631,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_aloe" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_aloe" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_aloe" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_fragancias">
@@ -642,7 +644,7 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_fragancias" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_fragancias" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_fragancias" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
   <div class="yn-row" id="arow-alg_otro">
@@ -655,13 +657,13 @@ textarea:focus{border-color:var(--gold)}
   <div id="adet-alg_otro" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
     <div class="field" style="margin:0">
       <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_otro" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      <input type="text" id="asint-alg_otro" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
 </div>
 
 <!-- STEP 7: Historial Quirúrgico y Piel -->
-<div class="step-panel" id="step-7">
+<div class="step-panel" id="step-6">
   <div class="step-title">Historial Quirúrgico y Condición de la Piel</div>
   <div class="step-subtitle">Antecedentes de cirugías y estado general de tu piel.</div>
   <div class="divider"></div>
@@ -669,7 +671,7 @@ textarea:focus{border-color:var(--gold)}
   <div class="subsection">
     <div class="subsection-title">Historial Quirúrgico</div>
     <div class="yn-row"><span class="yn-label">¿Se ha realizado alguna cirugía? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="field" style="margin-top:14px"><label class="field-label">Si es Sí, describa cuál(es)</label><textarea id="f-cirugias-det" placeholder="Tipo de cirugía, año, complicaciones..."></textarea></div>
+    <div class="field" style="margin-top:14px"><label class="field-label">Si es Sí, describa cuál(es)</label><textarea id="f-cirugias-det" placeholder="Tipo de cirugía, año, complicaciones..." maxlength="400" oninput="updateCounter('f-cirugias-det', 400)"></textarea><span class="char-counter" id="cnt-f-cirugias-det">400</span></div>
   </div>
 
   <div class="subsection">
@@ -706,12 +708,12 @@ textarea:focus{border-color:var(--gold)}
     <div class="field" style="margin-top:12px"><label class="field-label">Sensibilidades</label>
       <div class="check-grid"><label class="check-item"><input type="checkbox"><div class="check-box"></div>Ardor</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Picor</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Alergia a cosméticos</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Rosácea diagnosticada</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Dermatitis</label></div>
     </div>
-    <div class="field" style="margin-top:14px"><label class="field-label">Otros problemas no mencionados</label><textarea id="f-otros-piel" placeholder="Describa cualquier otro problema de piel..."></textarea></div>
+    <div class="field" style="margin-top:14px"><label class="field-label">Otros problemas no mencionados</label><textarea id="f-otros-piel" placeholder="Describa cualquier otro problema de piel..." maxlength="300" oninput="updateCounter('f-otros-piel', 300)"></textarea><span class="char-counter" id="cnt-f-otros-piel">300</span></div>
   </div>
 </div>
 
 <!-- STEP 7b: Fotografías -->
-<div class="step-panel" id="step-7b">
+<div class="step-panel" id="step-7">
   <div class="step-title">Fotografías de Referencia</div>
   <div class="step-subtitle">Sube hasta 4 fotos de las áreas que deseas tratar. Esto ayuda al especialista a preparar tu evaluación.</div>
   <div class="divider"></div>
@@ -774,8 +776,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-botox" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-botox" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-botox" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-botox" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-botox" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-rellenos">
@@ -787,8 +789,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-rellenos" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-rellenos" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-rellenos" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-rellenos" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-rellenos" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-hilos">
@@ -800,8 +802,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-hilos" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-hilos" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-hilos" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-hilos" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-hilos" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-peeling">
@@ -813,8 +815,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-peeling" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-peeling" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-peeling" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-peeling" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-peeling" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-laser">
@@ -826,8 +828,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-laser" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-laser" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-laser" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-laser" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-laser" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-microblading">
@@ -839,8 +841,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-microblading" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-microblading" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-microblading" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-microblading" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-microblading" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-mesoterapia">
@@ -852,8 +854,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-mesoterapia" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-mesoterapia" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-mesoterapia" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-mesoterapia" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-mesoterapia" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-radiofrecuencia">
@@ -865,8 +867,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-radiofrecuencia" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-radiofrecuencia" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-radiofrecuencia" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-radiofrecuencia" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-radiofrecuencia" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-criolipolisis">
@@ -878,8 +880,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-criolipolisis" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-criolipolisis" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-criolipolisis" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-criolipolisis" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-criolipolisis" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
       <div class="yn-row" id="trat-row-otro_estetico">
@@ -891,18 +893,18 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div id="trat-det-otro_estetico" style="display:none;padding:8px 0 12px 16px;border-bottom:1px solid var(--border)">
         <div class="form-grid" style="margin:0">
-          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-otro_estetico" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
-          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-otro_estetico" placeholder="Ej. frente, abdomen, labios..."></div>
+          <div class="field"><label class="field-label">Última sesión</label><input type="text" id="trat-fecha-otro_estetico" maxlength="60" placeholder="Ej. hace 6 meses, marzo 2025..."></div>
+          <div class="field"><label class="field-label">Zona tratada</label><input type="text" id="trat-zona-otro_estetico" maxlength="80" placeholder="Ej. frente, abdomen, labios..."></div>
         </div>
       </div>
     </div>
     <div class="yn-row" style="margin-top:4px"><span class="yn-label">¿Actualmente está en tratamiento con láser? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div id="laser-det-wrap" style="display:none;padding:6px 0 12px 0">
-      <div class="field"><label class="field-label">Por favor dar más detalles</label><input type="text" id="f-laser-det" placeholder="Tipo de láser, clínica, frecuencia..."></div>
+      <div class="field"><label class="field-label">Por favor dar más detalles</label><input type="text" id="f-laser-det" placeholder="Tipo de láser, clínica, frecuencia..." maxlength="200"></div>
     </div>
     <div class="yn-row"><span class="yn-label">¿Ha tenido complicaciones con algún tratamiento estético previo? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div id="complic-det-wrap" style="display:none;padding:6px 0 12px 0">
-      <div class="field"><label class="field-label">Por favor dar más detalles</label><input type="text" id="f-complic-det" placeholder="Tipo de reacción, tratamiento recibido..."></div>
+      <div class="field"><label class="field-label">Por favor dar más detalles</label><input type="text" id="f-complic-det" placeholder="Tipo de reacción, tratamiento recibido..." maxlength="200"></div>
     </div>
   </div>
 
@@ -932,8 +934,8 @@ textarea:focus{border-color:var(--gold)}
       </div>
     </div>
     <div class="form-grid" style="margin-top:16px">
-      <div class="field full"><label class="field-label">¿Cuál es su PRIORIDAD principal? <span class="req">*</span></label><input id="f-prioridad" type="text" placeholder="Ej. eliminar manchas del rostro..."></div>
-      <div class="field full"><label class="field-label">¿Qué expectativas tiene del tratamiento? <span class="req">*</span></label><textarea id="f-expectativas" placeholder="Describe qué resultado esperas..."></textarea></div>
+      <div class="field full"><label class="field-label">¿Cuál es su PRIORIDAD principal? <span class="req">*</span></label><textarea id="f-prioridad" placeholder="Ej. eliminar manchas del rostro..." maxlength="500" rows="3" oninput="updateCounter('f-prioridad', 500)"></textarea><span class="char-counter" id="cnt-f-prioridad">500</span></div>
+      <div class="field full"><label class="field-label">¿Qué expectativas tiene del tratamiento? <span class="req">*</span></label><textarea id="f-expectativas" placeholder="Describe qué resultado esperas..." maxlength="500" oninput="updateCounter('f-expectativas', 500)"></textarea><span class="char-counter" id="cnt-f-expectativas">500</span></div>
       <div class="field full">
         <label class="field-label">Satisfacción actual con el área a tratar <span class="req">*</span> <span style="font-size:10px;color:var(--muted)">(1 = Muy insatisfecho · 10 = Muy satisfecho)</span></label>
         <div class="scale-group" id="scale-satisfaccion">
@@ -968,9 +970,9 @@ textarea:focus{border-color:var(--gold)}
     <div class="yn-row"><span class="yn-label">¿Usa protector solar diariamente? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSolar(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleSolar(this,'no')">No</button></div></div>
     <div id="solar-det-wrap" style="display:none;margin-top:12px">
       <div class="form-grid">
-        <div class="field"><label class="field-label">Marca o tipo</label><input id="f-protector-marca" type="text" placeholder="Ej. Heliocare, La Roche-Posay, Isdin..."></div>
-        <div class="field"><label class="field-label">Factor de protección (FPS)</label><input id="f-spf" type="text" placeholder="Ej. SPF 50, SPF 50+..."></div>
-        <div class="field"><label class="field-label">Hora de aplicación</label><input id="f-protector-hora" type="text" placeholder="Ej. 7am, antes de salir..."></div>
+        <div class="field"><label class="field-label">Marca o tipo</label><input id="f-protector-marca" maxlength="100" type="text" placeholder="Ej. Heliocare, La Roche-Posay, Isdin..."></div>
+        <div class="field"><label class="field-label">Factor de protección (FPS)</label><input id="f-spf" maxlength="20" type="text" placeholder="Ej. SPF 50, SPF 50+..."></div>
+        <div class="field"><label class="field-label">Hora de aplicación</label><input id="f-protector-hora" maxlength="50" type="text" placeholder="Ej. 7am, antes de salir..."></div>
         <div class="field"><label class="field-label">¿Reaplica durante el día? <span class="req">*</span></label>
           <div class="radio-group">
             <label class="radio-item"><input type="radio" name="reaplica_solar"><div class="radio-dot"></div>Sí</label>
@@ -982,8 +984,8 @@ textarea:focus{border-color:var(--gold)}
     <div class="yn-row"><span class="yn-label">¿Realiza rutina diaria de cuidado facial o corporal? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleRutina(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleRutina(this,'no')">No</button></div></div>
     <div id="rutina-det-wrap" style="display:none;margin-top:12px">
       <div class="form-grid">
-        <div class="field full"><label class="field-label">Rutina de la mañana (productos y orden)</label><textarea id="f-rutina-manana" placeholder="Ej. limpiador, sérum vitamina C, hidratante, SPF..."></textarea></div>
-        <div class="field full"><label class="field-label">Rutina de la noche (productos y orden)</label><textarea id="f-rutina-noche" placeholder="Ej. limpiador, retinol, crema reparadora..."></textarea></div>
+        <div class="field full"><label class="field-label">Rutina de la mañana (productos y orden)</label><textarea id="f-rutina-manana" placeholder="Ej. limpiador, sérum vitamina C, hidratante, SPF..." maxlength="300" oninput="updateCounter('f-rutina-manana', 300)"></textarea><span class="char-counter" id="cnt-f-rutina-manana">300</span></div>
+        <div class="field full"><label class="field-label">Rutina de la noche (productos y orden)</label><textarea id="f-rutina-noche" placeholder="Ej. limpiador, retinol, crema reparadora..." maxlength="300" oninput="updateCounter('f-rutina-noche', 300)"></textarea><span class="char-counter" id="cnt-f-rutina-noche">300</span></div>
       </div>
       <div class="field" style="margin-top:12px"><label class="field-label">Rutina actual incluye <span class="req">*</span></label>
         <div class="check-grid">
@@ -994,7 +996,7 @@ textarea:focus{border-color:var(--gold)}
         </div>
       </div>
       <div class="form-grid" style="margin-top:14px">
-        <div class="field full"><label class="field-label">Productos cosméticos de uso frecuente</label><textarea id="f-productos" placeholder="Maquillaje, cremas, sueros, tónicos que usa habitualmente..."></textarea></div>
+        <div class="field full"><label class="field-label">Productos cosméticos de uso frecuente</label><textarea id="f-productos" placeholder="Maquillaje, cremas, sueros, tónicos que usa habitualmente..." maxlength="300" oninput="updateCounter('f-productos', 300)"></textarea><span class="char-counter" id="cnt-f-productos">300</span></div>
       </div>
     </div>
   </div>
@@ -1029,7 +1031,7 @@ textarea:focus{border-color:var(--gold)}
       </div>
       <div class="field full" id="antecedentes-det-wrap" style="display:none">
         <label class="field-label">¿Cuáles? (diabetes, cáncer, enfermedades cardíacas, etc.)</label>
-        <textarea id="f-antecedentes-det" placeholder="Ej. Padre con diabetes tipo 2, madre con hipotiroidismo..."></textarea>
+        <textarea id="f-antecedentes-det" placeholder="Ej. Padre con diabetes tipo 2, madre con hipotiroidismo..." maxlength="300" oninput="updateCounter('f-antecedentes-det', 300)"></textarea><span class="char-counter" id="cnt-f-antecedentes-det">300</span>
       </div>
     </div>
   </div>
@@ -1094,9 +1096,46 @@ textarea:focus{border-color:var(--gold)}
 <script>
 let current = 1;
 const total = 11;
-const stepIds = ['step-1','step-3','step-4','step-5','step-6','step-7','step-7b','step-8','step-9','step-10','step-11'];
+const stepIds = ['step-1','step-2','step-3','step-4','step-5','step-6','step-7','step-8','step-9','step-10','step-11'];
+
+// ── Sesión — guardado progresivo en Cloudinary ──────────────
+// Se genera una vez al cargar, se reutiliza en cada paso
+const SESSION_ID = 'carvajal_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+let _lastDataHash = null;
+
+function _hashData(obj) {
+  // Hash simple para detectar cambios — compara JSON stringificado
+  return JSON.stringify(obj);
+}
+
+function guardarSesion() {
+  // Solo guarda si hay cambios respecto al último guardado
+  const data = collectData();
+  const hash = _hashData(data);
+  if (hash === _lastDataHash) return; // sin cambios, no guardar
+  _lastDataHash = hash;
+  fetch('/sesion/guardar', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ session_id: SESSION_ID, data: data })
+  }).then(r => r.json()).then(r => {
+    if (r.ok) console.log('[sesion] Guardada:', SESSION_ID);
+  }).catch(e => console.warn('[sesion] Error guardando:', e));
+}
 
 function realStepId(n){ return stepIds[n-1] || 'step-'+n; }
+
+// ── Contador regresivo de caracteres ────────────────────────
+function updateCounter(fieldId, maxLen) {
+  const el = document.getElementById(fieldId);
+  const cnt = document.getElementById('cnt-' + fieldId);
+  if (!el || !cnt) return;
+  const remaining = maxLen - el.value.length;
+  cnt.textContent = remaining;
+  cnt.className = 'char-counter';
+  if (remaining <= maxLen * 0.15) cnt.classList.add('danger');
+  else if (remaining <= maxLen * 0.30) cnt.classList.add('warning');
+}
 
 function buildLabels(){
   const container = document.getElementById('steps-circles');
@@ -1131,6 +1170,7 @@ function goToStep(n){
 
 function changeStep(dir){
   if(dir===1&&current===total){submitForm();return;}
+  if(dir===1&&current>=1){guardarSesion();} // guardar al avanzar, no al retroceder
   goToStep(current+dir);
 }
 
@@ -1247,9 +1287,9 @@ function getCheckedValues(containerId){
 
 // ── collectData — mapea exactamente lo que app.py necesita ──
 function collectData(){
-  const s3=document.getElementById('step-3');
-  const s4=document.getElementById('step-4');
-  const s6=document.getElementById('step-6');
+  const s3=document.getElementById('step-2');
+  const s4=document.getElementById('step-3');
+  const s6=document.getElementById('step-5');
   const s9=document.getElementById('step-9');
   const s10=document.getElementById('step-10');
 
@@ -1278,7 +1318,7 @@ function collectData(){
   // Alimentos evitar (unir los tres)
   const alimentosEvitar=[proteinasEvitar,carbosEvitar,verdurasEvitar].filter(Boolean).join(', ');
 
-  // Intolerancias lacteos/gluten/procesados desde step-4
+  // Intolerancias lacteos/gluten/procesados desde step-3
   const intolLacteos=getYNValue(s4,'lácteos');
   const intolGluten=getYNValue(s4,'gluten');
   const intolProcesados=getYNValue(s4,'procesados');
@@ -1287,7 +1327,7 @@ function collectData(){
   if(intolGluten==='Sí')intolerancias.push('Gluten');
   if(intolProcesados==='Sí')intolerancias.push('Procesados');
 
-  // Síntomas digestivos desde step-4
+  // Síntomas digestivos desde step-3
   const sintomasMap={
     'hinchazon_abdominal':'hinchazón abdominal',
     'gases':'gases o flatulencias',
@@ -1301,7 +1341,7 @@ function collectData(){
     if(getYNValue(s4,label)==='Sí')sintomasDigestivos.push(key);
   });
 
-  // Alergias desde step-6 con síntomas
+  // Alergias desde step-5 con síntomas
   const alergiasActivas=[];
   const alergiasDetalle={};
   const alergiaKeys=[
@@ -1334,11 +1374,11 @@ function collectData(){
     'SOP':             getYNValue(s3,'ovario poliquístico'),
     'Menopausia':      getYNValue(s3,'menopausia'),
     'Tabaquismo':      getYNValue(s3,'fuma'),
-    'Alergia lidocaina':  getYNValue(document.getElementById('step-6'),'lidocaína'),
-    'Alergia penicilina': getYNValue(document.getElementById('step-6'),'penicilina'),
-    'Alergia yodo':       getYNValue(document.getElementById('step-6'),'yodopovidona'),
-    'Alergia AINEs':      getYNValue(document.getElementById('step-6'),'antiinflamatorios'),
-    'Alergia latex':      getYNValue(document.getElementById('step-6'),'látex'),
+    'Alergia lidocaina':  getYNValue(document.getElementById('step-5'),'lidocaína'),
+    'Alergia penicilina': getYNValue(document.getElementById('step-5'),'penicilina'),
+    'Alergia yodo':       getYNValue(document.getElementById('step-5'),'yodopovidona'),
+    'Alergia AINEs':      getYNValue(document.getElementById('step-5'),'antiinflamatorios'),
+    'Alergia latex':      getYNValue(document.getElementById('step-5'),'látex'),
   };
 
   // Historial estético con fecha y zona
@@ -1370,8 +1410,8 @@ function collectData(){
   const rutinaManana=document.getElementById('f-rutina-manana').value||'';
   const rutinaNoche=document.getElementById('f-rutina-noche').value||'';
 
-  // Piel problemas (checkboxes step-7)
-  const problemasPiel=getCheckedValues('step-7');
+  // Piel problemas (checkboxes step-6)
+  const problemasPiel=getCheckedValues('step-6');
   // Áreas faciales y corporales step-9
   const areasFacialesEl=s9?s9.querySelector('.subsection:nth-of-type(2) .check-grid'):null;
   const areasCorporalesEl=s9?s9.querySelectorAll('.check-grid')[1]:null;
@@ -1379,7 +1419,7 @@ function collectData(){
   const areasCorporales=areasCorporalesEl?[...areasCorporalesEl.querySelectorAll('.check-item.checked')].map(i=>i.textContent.trim()):[];
 
   // Bebidas azucaradas
-  const bebidasYN=getYNValue(document.getElementById('step-5'),'bebidas azucaradas');
+  const bebidasYN=getYNValue(document.getElementById('step-4'),'bebidas azucaradas');
   const bebidasCuales=document.getElementById('f-bebidas-cuales').value||'';
   const bebidas=bebidasYN==='Sí'?(bebidasCuales||'Sí'):'No';
 
@@ -1432,7 +1472,7 @@ function collectData(){
     condiciones:   document.getElementById('f-otras-condiciones').value||'',
     medicamentos:  document.getElementById('f-medicamentos').value||'',
     cirugias: (()=>{
-      const cir=getYNValue(document.getElementById('step-7'),'cirugía');
+      const cir=getYNValue(document.getElementById('step-6'),'cirugía');
       return cir==='Sí'?(document.getElementById('f-cirugias-det').value||'Sí'):'Ninguna';
     })(),
     alergias:        alergiasActivas.length?alergiasActivas.join(', '):'Ninguna',
@@ -1441,7 +1481,7 @@ function collectData(){
 
     // Hábitos
     fuma:    (()=>{ const f=getYNValue(s3,'fuma'); const frec=document.querySelector('input[name="fuma_frec"]:checked'); return f==='Sí'?('Sí'+(frec?' - '+frec.closest('.radio-item').textContent.trim():'')):'No'; })(),
-    alcohol: getYNValue(document.getElementById('step-5'),'alcohol'),
+    alcohol: getYNValue(document.getElementById('step-4'),'alcohol'),
 
     // Sueño
     sueno:          sueno.trim(),
@@ -1500,13 +1540,13 @@ function collectData(){
     perimenopausia:     getYNValue(s3,'perimenopausia'),
 
     // Alergias detalladas
-    alergia_lidocaina:  getYNValue(document.getElementById('step-6'),'lidocaína'),
-    alergia_penicilina: getYNValue(document.getElementById('step-6'),'penicilina'),
-    alergia_yodo:       getYNValue(document.getElementById('step-6'),'yodopovidona'),
-    alergia_aines:      getYNValue(document.getElementById('step-6'),'antiinflamatorios'),
-    alergia_latex:      getYNValue(document.getElementById('step-6'),'látex'),
-    alergia_aloe:       getYNValue(document.getElementById('step-6'),'aloe'),
-    alergia_fragancias: getYNValue(document.getElementById('step-6'),'fragancias'),
+    alergia_lidocaina:  getYNValue(document.getElementById('step-5'),'lidocaína'),
+    alergia_penicilina: getYNValue(document.getElementById('step-5'),'penicilina'),
+    alergia_yodo:       getYNValue(document.getElementById('step-5'),'yodopovidona'),
+    alergia_aines:      getYNValue(document.getElementById('step-5'),'antiinflamatorios'),
+    alergia_latex:      getYNValue(document.getElementById('step-5'),'látex'),
+    alergia_aloe:       getYNValue(document.getElementById('step-5'),'aloe'),
+    alergia_fragancias: getYNValue(document.getElementById('step-5'),'fragancias'),
 
     // Hábitos digestivos
     evacuacion:         (document.querySelector('input[name="evacuacion"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
@@ -1526,7 +1566,7 @@ function collectData(){
     complicacionesDet:  document.getElementById('f-complic-det')?document.getElementById('f-complic-det').value||'':'',
 
     // Grasas a evitar
-    grasasEvitar:       getCheckedValues('step-5').filter(v=>['Alimentos fritos','Manteca / Margarina','Aceites vegetales procesados','Grasas trans'].includes(v)),
+    grasasEvitar:       getCheckedValues('step-4').filter(v=>['Alimentos fritos','Manteca / Margarina','Aceites vegetales procesados','Grasas trans'].includes(v)),
     grasasEvitarPorque: document.getElementById('f-grasas-evitar-porque')?document.getElementById('f-grasas-evitar-porque').value||'':'',
 
     // Antecedentes familiares
@@ -1557,6 +1597,7 @@ function submitForm(){
   photoFiles.forEach((file,i)=>{ if(file)fd.append('foto_'+(i+1),file,file.name); });
 
   fd.append('modelo', window._modeloSel);
+  fd.append('session_id', SESSION_ID); // enviar session_id para vincular con datos guardados
   fetch('/enviar',{method:'POST',body:fd})
     .then(r=>r.json())
     .then(data=>{
