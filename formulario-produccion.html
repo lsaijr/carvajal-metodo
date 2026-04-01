@@ -1055,14 +1055,12 @@ textarea:focus{border-color:var(--gold)}
 <!-- LOADING -->
 <div id="screen-loading">
   <div class="loading-spinner"></div>
-  <div class="loading-title">Procesando tu información</div>
-  <div class="loading-desc">Estamos generando tu plan personalizado con inteligencia artificial. Esto puede tardar entre 5 y 10 minutos según la cantidad y tipo de información — por favor no cierres esta ventana.</div>
+  <div class="loading-title">Enviando tu información...</div>
+  <div class="loading-desc">Solo tomará un momento.</div>
   <div class="loading-steps">
     <div class="ls-item active" id="ls-1"><div class="ls-dot"></div>Enviando tu formulario al equipo</div>
-    <div class="ls-item" id="ls-2"><div class="ls-dot"></div>Analizando tus objetivos con IA</div>
-    <div class="ls-item" id="ls-3"><div class="ls-dot"></div>Generando tu plan personalizado</div>
-    <div class="ls-item" id="ls-4"><div class="ls-dot"></div>Enviando plan al especialista</div>
-    <div id="ls-timer" style="font-size:11px;color:#9aaa8a;margin-top:12px;text-align:center">⏱ 0s transcurridos...</div>
+    <div class="ls-item" id="ls-2"><div class="ls-dot"></div>Guardando tus datos de forma segura</div>
+    <div class="ls-item" id="ls-3"><div class="ls-dot"></div>Confirmando recepción</div>
   </div>
 </div>
 
@@ -1071,8 +1069,8 @@ textarea:focus{border-color:var(--gold)}
   <div class="success-icon">
     <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M6 15L12 21L24 9" stroke="#8fa832" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>
-  <h2>¡Gracias por confiar en nosotros!</h2>
-  <p>Tu cuestionario fue recibido exitosamente. Nuestro equipo revisará tu información y el plan personalizado generado para ti. En breve nos pondremos en contacto para coordinar tu primera consulta.</p>
+  <h2 id="success-title">¡Gracias por confiar en nosotros!</h2>
+  <p id="success-msg">Hemos recibido tus datos correctamente y te estaremos contactando pronto para agendar tu próxima cita.</p>
   <div style="background:rgba(143,168,50,.08);border:1px solid rgba(143,168,50,.25);border-radius:2px;padding:14px 18px;font-size:13px;color:var(--muted);text-align:left;max-width:380px;margin:0 auto 24px;line-height:1.7">
     <strong style="color:var(--text);display:block;margin-bottom:6px">¿Tienes preguntas?</strong>
     📞 Tel: 263-8134 &amp; 209-4284<br>
@@ -1601,60 +1599,28 @@ function submitForm(){
   fetch('/enviar',{method:'POST',body:fd})
     .then(r=>r.json())
     .then(data=>{
-      if(data.jobId){
-        pollStatus(data.jobId);
-      } else {
-        showThanks();
-      }
+      // Mostrar pantalla cálida inmediatamente — el plan se genera en el backend
+      // El paciente puede cerrar la ventana, no necesita esperar
+      const nombre = (collectData().nombre || '').split(' ')[0];
+      showThanks(nombre);
     })
-    .catch(()=>showThanks());
+    .catch(()=>showThanks(''));
 }
 
-function pollStatus(jobId){
-  let secs=0;
-  const ticker=setInterval(()=>{
-    secs++;
-    const m=Math.floor(secs/60);
-    const s=secs%60;
-    const t=m>0?m+'min '+String(s).padStart(2,'0')+'s':s+'s';
-    const el=document.getElementById('ls-timer');
-    if(el) el.textContent='⏱ '+t+' transcurridos...';
-  },1000);
+// pollStatus removido — el plan se genera en el backend sin esperar al paciente
 
-  const poll=setInterval(async()=>{
-    try{
-      const r=await fetch('/status?job='+jobId);
-      const data=await r.json();
-      if(data.status==='working'){
-        if(data.msg){
-          const ls2=document.getElementById('ls-2');
-          const ls3=document.getElementById('ls-3');
-          if(data.msg.includes('1/3')){
-            ls2.className='ls-item done';
-            ls3.className='ls-item active';
-            ls3.querySelector('div.ls-dot').nextSibling.textContent=' '+data.msg;
-          } else if(data.msg.includes('2/3')){
-            ls3.className='ls-item active';
-            ls3.querySelector('div.ls-dot').nextSibling.textContent=' '+data.msg;
-          } else if(data.msg.includes('3/3')){
-            ls3.className='ls-item active';
-            ls3.querySelector('div.ls-dot').nextSibling.textContent=' '+data.msg;
-          }
-        }
-        return;
-      }
-      if(data.status==='done'||data.status==='error'){
-        clearInterval(poll);
-        clearInterval(ticker);
-        showThanks();
-      }
-    }catch(e){clearInterval(poll);clearInterval(ticker);showThanks();}
-  },4000);
-}
-
-function showThanks(){
+function showThanks(nombre){
   document.getElementById('screen-loading').style.display='none';
-  document.getElementById('success').style.display='block';
+  const el = document.getElementById('success');
+  el.style.display='block';
+  // Mensaje personalizado con el primer nombre
+  if(nombre){
+    document.getElementById('success-title').textContent = nombre + ', ¡gracias por tu tiempo!';
+    document.getElementById('success-msg').textContent =
+      'Hemos recibido toda tu información de forma correcta. ' +
+      'Estamos preparando tu plan personalizado y te estaremos contactando ' +
+      'muy pronto para agendar tu próxima cita. ¡Nos vemos pronto!';
+  }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 

@@ -1,6 +1,7 @@
-import os, json, uuid, threading, calendar, secrets, hashlib
+import os, json, uuid, threading, calendar, secrets, hashlib, time as _time
 import cloudinary
 import cloudinary.uploader
+import bcrypt
 WEASYPRINT_OK = False
 WeasyprintHTML = None
 from datetime import date, datetime
@@ -16,12 +17,33 @@ GEMINI_KEY  = os.environ.get('GEMINI_KEY', '')
 GROQ_KEY    = os.environ.get('GROQ_KEY', '')
 RESEND_KEY  = os.environ.get('RESEND_KEY', '')
 MAIL_CC         = [m.strip() for m in os.environ.get('MAIL_CC','').split(',') if m.strip()]
-ADMIN_PASSWORD  = os.environ.get('ADMIN_PASSWORD', 'carvajal2026')
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com').strip()
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 DEMO_MAIL   = os.environ.get('DEMO_MAIL', 'isai.josue@gmail.com')
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
 os.makedirs(PLANES_DIR, exist_ok=True)
+
+# ── Inicializar usuarios al primer request ────────────────────
+_usuarios_inicializados = False
+
+@app.before_request
+def _init_on_first_request():
+    global _usuarios_inicializados
+    if not _usuarios_inicializados:
+        _usuarios_inicializados = True
+        try:
+            _inicializar_usuarios()
+        except Exception as e:
+            print(f'[startup] Error inicializando usuarios: {e}')
+
+# ── Auth — sesiones en memoria con expiración 8h ─────────────────────────
+# {token: {'email': str, 'expires': timestamp}}
+auth_sessions = {}
+SESSION_DURATION = 8 * 3600  # 8 horas en segundos
+
+# ── Reset tokens temporales — {token: {'email': str, 'expires': timestamp}}
+reset_tokens = {}
+RESET_DURATION = 3600  # 1 hora
 
 # ── Cloudinary ────────────────────────────────────────────────
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
@@ -38,7 +60,6 @@ if CLOUDINARY_CLOUD_NAME:
 
 # ── Jobs en memoria ───────────────────────────────────────────
 jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
-admin_tokens = set()  # tokens de sesión activos
 
 # ════════════════════════════════════════════════════════════
 # RUTAS
@@ -53,9 +74,20 @@ def index():
 
 @app.route('/panel', methods=['GET'])
 def panel():
-    # Panel interno — login + gestión
+    from flask import redirect
+    # Si ya tiene sesión válida y viene con ?next=, redirigir directo
+    tok = request.cookies.get('cv_session', '')
+    sesion = _verificar_sesion(tok)
+    next_url = request.args.get('next', '').strip()
+    if sesion and next_url and next_url.startswith('/'):
+        return redirect(next_url)
+    # Pasar el ?next al HTML para que el JS lo capture post-login
     with open(os.path.join(os.path.dirname(__file__), 'panel-carvajal.html'), encoding='utf-8') as f:
-        return f.read()
+        html = f.read()
+    if next_url:
+        # Inyectar el next_url en el JS para capturarlo tras login exitoso
+        html = html.replace('</head>', f'<script>window._cv_next="{next_url}";</script></head>', 1)
+    return html
 
 # ── Demo — formulario estético simplificado ──────────────────
 @app.route('/demo')
@@ -938,9 +970,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
     </svg>
     <h2>Centro Carvajal</h2>
     <p>Panel de administración · Planes generados</p>
-    <div class="login-error" id="login-error">Contraseña incorrecta. Inténtalo de nuevo.</div>
+    <div class="login-error" id="login-error">Credenciales incorrectas. Inténtalo de nuevo.</div>
+    <input type="email" class="login-field" id="login-email" placeholder="Correo electrónico" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
     <input type="password" class="login-field" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <button class="login-btn" onclick="mostrarRecuperar()" style="background:transparent;color:#8fa832;border:1px solid #8fa832;margin-top:8px">Olvidé mi contraseña</button>
+    <div id="recuperar-wrap" style="display:none;margin-top:16px">
+      <input type="email" class="login-field" id="recuperar-email" placeholder="Tu correo para recuperar acceso">
+      <button class="login-btn" onclick="enviarRecuperacion()" style="background:#2d3a2e">Enviar link de recuperación</button>
+      <div id="recuperar-msg" style="font-size:12px;color:#8fa832;margin-top:8px;display:none">✓ Si el correo existe, recibirás el link en unos minutos.</div>
+    </div>
   </div>
 </div>
 
@@ -957,6 +996,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
       </div>
     </div>
     <div class="topbar-right">
+      <span id="user-email-display" style="font-size:11px;color:rgba(255,255,255,.4);margin-right:4px"></span>
       <div class="topbar-count" id="total-count">— planes</div>
 
     </div>
@@ -1052,10 +1092,106 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
 </div>
 <script>
 
-// ── Sin autenticación — acceso libre ────────────────────────
-let token = 'open';
+// ── Auth — sesión por cookie httpOnly ───────────────────────
+let currentUser = null;
 
-function doLogout() {}  // no-op
+async function initAuth() {
+  try {
+    const r = await fetch('/api/check-token');
+    if (r.ok) {
+      const d = await r.json();
+      currentUser = d;
+      // Verificar si hay redirect pendiente inyectado por el servidor
+      const next = window._cv_next || new URLSearchParams(window.location.search).get('next');
+      if (next && next.startsWith('/')) {
+        window.location.href = next;
+        return;
+      }
+      mostrarApp();
+    } else {
+      mostrarLogin();
+    }
+  } catch(e) {
+    mostrarLogin();
+  }
+}
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return v ? v.pop() : '';
+}
+
+function deleteCookie(name) {
+  document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+}
+
+function mostrarLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function mostrarApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  if (currentUser) {
+    const el = document.getElementById('user-email-display');
+    if (el) el.textContent = currentUser.email;
+    // Mostrar botón crear usuario solo al admin
+    const btnCrear = document.getElementById('btn-crear-usuario');
+    if (btnCrear && currentUser.rol === 'admin') btnCrear.style.display = 'inline-flex';
+  }
+  cargarPlanes();
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.style.display='block'; errEl.textContent='Ingresa tu correo y contraseña.'; return; }
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password: pass})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      currentUser = {email, rol: d.rol};
+      const next = window._cv_next || new URLSearchParams(window.location.search).get('next');
+      if (next && next.startsWith('/')) { window.location.href = next; return; }
+      mostrarApp();
+    } else {
+      errEl.style.display = 'block';
+      errEl.textContent = d.error || 'Credenciales incorrectas.';
+    }
+  } catch(e) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+  }
+}
+
+async function doLogout() {
+  await fetch('/api/logout', {method:'POST'});
+  currentUser = null;
+  mostrarLogin();
+}
+
+function mostrarRecuperar() {
+  const w = document.getElementById('recuperar-wrap');
+  w.style.display = w.style.display === 'none' ? 'block' : 'none';
+}
+
+async function enviarRecuperacion() {
+  const email = document.getElementById('recuperar-email').value.trim();
+  if (!email) return;
+  await fetch('/api/recuperar-password', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({email})
+  });
+  document.getElementById('recuperar-msg').style.display = 'block';
+}
 
 // ── Datos ────────────────────────────────────────────────────
 let todosLosPlanes = [];
@@ -1065,9 +1201,7 @@ async function cargarPlanes() {
   btn.classList.add('spinning');
 
   try {
-    const r    = await fetch('/api/planes', {
-      headers: {'X-Token': token}
-    });
+    const r    = await fetch('/api/planes');
     const data = await r.json();
     todosLosPlanes = data.planes || [];
     actualizarStats();
@@ -1285,41 +1419,316 @@ function generarCalendario() {
   win.document.close();
 }
 
-// Cargar planes al iniciar
-cargarPlanes();
+// Iniciar auth al cargar — verifica sesión y redirige si no está logueado
+initAuth();
 </script>
 </body>
 </html>""" 
 
 
+# ════════════════════════════════════════════════════════════
+# AUTH — usuarios, sesiones, recuperación de contraseña
+# ════════════════════════════════════════════════════════════
+
+USUARIOS_CLOUDINARY_ID = 'carvajal/config/usuarios'
+
+def _cargar_usuarios():
+    """Carga usuarios desde Cloudinary. Devuelve dict {email: {hash, rol}}."""
+    if not CLOUDINARY_CLOUD_NAME:
+        return {}
+    try:
+        url = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/raw/upload/{USUARIOS_CLOUDINARY_ID}.json'
+        r = req.get(url, timeout=10)
+        if r.status_code == 200:
+            return r.json()
+    except Exception as e:
+        print(f'[auth] Error cargando usuarios: {e}')
+    return {}
+
+
+def _guardar_usuarios(usuarios):
+    """Guarda dict de usuarios en Cloudinary."""
+    if not CLOUDINARY_CLOUD_NAME:
+        return
+    try:
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+            json.dump(usuarios, tmp, ensure_ascii=False)
+            tmp_path = tmp.name
+        cloudinary.uploader.upload(
+            tmp_path,
+            folder='carvajal/config',
+            public_id='usuarios',
+            resource_type='raw',
+            overwrite=True,
+        )
+        os.unlink(tmp_path)
+        print('[auth] Usuarios guardados en Cloudinary')
+    except Exception as e:
+        print(f'[auth] Error guardando usuarios: {e}')
+
+
+def _inicializar_usuarios():
+    """Crea los usuarios iniciales si no existen."""
+    usuarios = _cargar_usuarios()
+    changed = False
+    defaults = [
+        ('centrocarvajal1@gmail.com', 'Carvajal2026!', 'staff'),
+        ('isai.josue@gmail.com',      'Carvajal2026!', 'admin'),
+    ]
+    for email, pwd, rol in defaults:
+        if email not in usuarios:
+            hashed = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
+            usuarios[email] = {'hash': hashed, 'rol': rol}
+            changed = True
+            print(f'[auth] Usuario creado: {email} ({rol})')
+    if changed:
+        _guardar_usuarios(usuarios)
+    return usuarios
+
+
+def _limpiar_sesiones():
+    """Elimina sesiones expiradas del dict en memoria."""
+    now = _time.time()
+    expiradas = [t for t, s in auth_sessions.items() if s['expires'] < now]
+    for t in expiradas:
+        del auth_sessions[t]
+
+
+def _verificar_sesion(token):
+    """Verifica si un token de sesión es válido y no expiró."""
+    _limpiar_sesiones()
+    sesion = auth_sessions.get(token)
+    if not sesion:
+        return None
+    if sesion['expires'] < _time.time():
+        del auth_sessions[token]
+        return None
+    return sesion
+
+
+def _check_token():
+    """Helper para endpoints protegidos — verifica cookie de sesión o header X-Token."""
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '').strip()
+    return _verificar_sesion(tok) is not None
+
+
+def _get_sesion_from_cookie():
+    """Lee token de cookie de sesión."""
+    from flask import request as req_ctx
+    token = req_ctx.cookies.get('cv_session', '')
+    return _verificar_sesion(token)
+
+
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.get_json(silent=True) or {}
-    pwd    = data.get('password', '').strip()
-    stored = ADMIN_PASSWORD.strip()
-    if pwd == stored:
-        tok = secrets.token_hex(32)
-        admin_tokens.add(tok)
-        return jsonify({'ok': True, 'token': tok})
-    return jsonify({'ok': False}), 401
+    email = data.get('email', '').strip().lower()
+    pwd   = data.get('password', '').strip()
+    if not email or not pwd:
+        return jsonify({'ok': False, 'error': 'Email y contraseña requeridos'}), 400
+    usuarios = _cargar_usuarios()
+    if not usuarios:
+        usuarios = _inicializar_usuarios()
+    user = usuarios.get(email)
+    if not user:
+        return jsonify({'ok': False, 'error': 'Credenciales incorrectas'}), 401
+    try:
+        if not bcrypt.checkpw(pwd.encode(), user['hash'].encode()):
+            return jsonify({'ok': False, 'error': 'Credenciales incorrectas'}), 401
+    except Exception:
+        return jsonify({'ok': False, 'error': 'Error de autenticación'}), 500
+    tok = secrets.token_hex(32)
+    auth_sessions[tok] = {
+        'email':   email,
+        'rol':     user.get('rol', 'staff'),
+        'expires': _time.time() + SESSION_DURATION,
+    }
+    from flask import make_response
+    resp = make_response(jsonify({'ok': True, 'rol': user.get('rol', 'staff')}))
+    resp.set_cookie('cv_session', tok, max_age=SESSION_DURATION, httponly=True, samesite='Lax')
+    print(f'[auth] Login: {email}')
+    return resp
+
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    from flask import make_response
+    tok = request.cookies.get('cv_session', '')
+    if tok and tok in auth_sessions:
+        del auth_sessions[tok]
+    resp = make_response(jsonify({'ok': True}))
+    resp.delete_cookie('cv_session')
+    return resp
 
 
 @app.route('/api/check-token', methods=['GET'])
 def api_check_token():
-    """Verifica si un token de sesión sigue siendo válido."""
-    tok = request.headers.get('X-Token', '').strip()
-    if tok and tok in admin_tokens:
-        return jsonify({'ok': True})
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '')
+    sesion = _verificar_sesion(tok)
+    if sesion:
+        return jsonify({'ok': True, 'email': sesion['email'], 'rol': sesion['rol']})
     return jsonify({'ok': False}), 401
 
 
-def _check_token():
-    tok = request.headers.get('X-Token', '')
-    return tok in admin_tokens
+@app.route('/api/cambiar-password', methods=['POST'])
+def api_cambiar_password():
+    tok = request.cookies.get('cv_session', '')
+    sesion = _verificar_sesion(tok)
+    if not sesion:
+        return jsonify({'ok': False, 'error': 'No autenticado'}), 401
+    data = request.get_json(silent=True) or {}
+    pwd_actual = data.get('actual', '').strip()
+    pwd_nueva  = data.get('nueva', '').strip()
+    if len(pwd_nueva) < 8:
+        return jsonify({'ok': False, 'error': 'La contraseña debe tener al menos 8 caracteres'}), 400
+    usuarios = _cargar_usuarios()
+    user = usuarios.get(sesion['email'])
+    if not user or not bcrypt.checkpw(pwd_actual.encode(), user['hash'].encode()):
+        return jsonify({'ok': False, 'error': 'Contraseña actual incorrecta'}), 401
+    usuarios[sesion['email']]['hash'] = bcrypt.hashpw(pwd_nueva.encode(), bcrypt.gensalt()).decode()
+    _guardar_usuarios(usuarios)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/recuperar-password', methods=['POST'])
+def api_recuperar_password():
+    data = request.get_json(silent=True) or {}
+    email = data.get('email', '').strip().lower()
+    usuarios = _cargar_usuarios()
+    if email not in usuarios:
+        # No revelar si el email existe o no
+        return jsonify({'ok': True})
+    tok = secrets.token_urlsafe(32)
+    reset_tokens[tok] = {'email': email, 'expires': _time.time() + RESET_DURATION}
+    base_url = os.environ.get('BASE_URL', 'https://metodo.centrocarvajal.com')
+    link = f'{base_url}/reset-password?token={tok}'
+    cuerpo = (
+        f'<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+        f'<body style="background:#f0e8de;padding:20px;font-family:sans-serif">'
+        f'<div style="max-width:500px;margin:0 auto;background:#fff;border:1px solid #ddd">'
+        f'<div style="background:#1a1410;padding:20px 24px">'
+        f'<div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Recuperación de acceso</div>'
+        f'</div>'
+        f'<div style="padding:24px">'
+        f'<p style="font-size:14px;color:#2d2020;margin-bottom:20px">Recibimos una solicitud para restablecer tu contraseña.</p>'
+        f'<div style="text-align:center;margin:24px 0">'
+        f'<a href="{link}" style="background:#1a1410;color:#b8935a;padding:13px 28px;border-radius:4px;text-decoration:none;font-size:14px;font-weight:500">Restablecer contraseña</a>'
+        f'</div>'
+        f'<p style="font-size:12px;color:#999;text-align:center">Este link expira en 1 hora. Si no solicitaste esto, ignora este correo.</p>'
+        f'</div>'
+        f'<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div>'
+        f'</div></body></html>'
+    )
+    try:
+        enviar_resend(f'Recuperación de contraseña — Centro Carvajal', cuerpo, email)
+    except Exception as e:
+        print(f'[auth] Error enviando reset email: {e}')
+    return jsonify({'ok': True})
+
+
+@app.route('/api/reset-password', methods=['POST'])
+def api_reset_password():
+    data = request.get_json(silent=True) or {}
+    tok  = data.get('token', '').strip()
+    pwd  = data.get('password', '').strip()
+    if len(pwd) < 8:
+        return jsonify({'ok': False, 'error': 'La contraseña debe tener al menos 8 caracteres'}), 400
+    info = reset_tokens.get(tok)
+    if not info or info['expires'] < _time.time():
+        return jsonify({'ok': False, 'error': 'Link inválido o expirado'}), 400
+    usuarios = _cargar_usuarios()
+    email = info['email']
+    if email not in usuarios:
+        return jsonify({'ok': False, 'error': 'Usuario no encontrado'}), 404
+    usuarios[email]['hash'] = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
+    _guardar_usuarios(usuarios)
+    del reset_tokens[tok]
+    print(f'[auth] Password reseteado: {email}')
+    return jsonify({'ok': True})
+
+
+@app.route('/reset-password', methods=['GET'])
+def reset_password_page():
+    """Página para restablecer contraseña desde el link del correo."""
+    tok = request.args.get('token', '')
+    info = reset_tokens.get(tok)
+    valid = bool(info and info['expires'] >= _time.time())
+    return f'''<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Restablecer contraseña · Centro Carvajal</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'Segoe UI',sans-serif;background:#f4f5ef;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}}
+.box{{background:#fff;border-radius:12px;padding:44px 40px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.1);text-align:center}}
+h2{{font-size:22px;color:#1a1410;margin-bottom:8px}}
+p{{font-size:13px;color:#6b7280;margin-bottom:28px}}
+input{{width:100%;padding:13px 16px;border:1px solid #d4dcc0;border-radius:8px;font-size:14px;margin-bottom:14px;font-family:inherit;outline:none}}
+input:focus{{border-color:#8fa832}}
+button{{width:100%;padding:14px;background:#1a1410;color:#b8935a;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}}
+.msg{{margin-top:14px;font-size:13px;padding:10px;border-radius:6px;display:none}}
+.msg.ok{{background:#f0f7e6;color:#3a6020;border:1px solid #c5d9a0}}
+.msg.err{{background:#fef2f2;color:#c0392b;border:1px solid #fecaca}}
+</style></head><body>
+<div class="box">
+{"<h2>Link inválido</h2><p>Este link de recuperación expiró o ya fue usado. Solicita uno nuevo desde el panel.</p>" if not valid else f'''
+<h2>Nueva contraseña</h2>
+<p>Ingresa tu nueva contraseña para continuar.</p>
+<input type="password" id="p1" placeholder="Nueva contraseña (mín. 8 caracteres)">
+<input type="password" id="p2" placeholder="Confirmar contraseña">
+<button onclick="doReset()">Restablecer contraseña</button>
+<div class="msg" id="msg"></div>
+<script>
+function doReset(){{
+  const p1=document.getElementById("p1").value;
+  const p2=document.getElementById("p2").value;
+  const msg=document.getElementById("msg");
+  if(p1.length<8){{msg.className="msg err";msg.style.display="block";msg.textContent="Mínimo 8 caracteres";return}}
+  if(p1!==p2){{msg.className="msg err";msg.style.display="block";msg.textContent="Las contraseñas no coinciden";return}}
+  fetch("/api/reset-password",{{method:"POST",headers:{{"Content-Type":"application/json"}},body:JSON.stringify({{token:"{tok}",password:p1}})}})
+  .then(r=>r.json()).then(d=>{{
+    if(d.ok){{msg.className="msg ok";msg.style.display="block";msg.textContent="Contraseña actualizada. Ya puedes cerrar esta ventana.";}}
+    else{{msg.className="msg err";msg.style.display="block";msg.textContent=d.error||"Error al restablecer";}}
+  }});
+}}
+</script>
+'''}
+</div></body></html>'''
+
+
+@app.route('/api/crear-usuario', methods=['POST'])
+def api_crear_usuario():
+    """Solo el admin puede crear usuarios."""
+    tok = request.cookies.get('cv_session', '')
+    sesion = _verificar_sesion(tok)
+    if not sesion or sesion.get('rol') != 'admin':
+        return jsonify({'ok': False, 'error': 'Solo el administrador puede crear usuarios'}), 403
+    data = request.get_json(silent=True) or {}
+    email = data.get('email', '').strip().lower()
+    pwd   = data.get('password', '').strip()
+    rol   = data.get('rol', 'staff')
+    if not email or not pwd:
+        return jsonify({'ok': False, 'error': 'Email y contraseña requeridos'}), 400
+    if len(pwd) < 8:
+        return jsonify({'ok': False, 'error': 'Contraseña mínimo 8 caracteres'}), 400
+    if rol not in ('admin', 'staff'):
+        rol = 'staff'
+    usuarios = _cargar_usuarios()
+    if email in usuarios:
+        return jsonify({'ok': False, 'error': 'El usuario ya existe'}), 409
+    usuarios[email] = {
+        'hash': bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode(),
+        'rol': rol,
+    }
+    _guardar_usuarios(usuarios)
+    print(f'[auth] Usuario creado por admin: {email} ({rol})')
+    return jsonify({'ok': True})
 
 
 @app.route('/api/planes', methods=['GET'])
 def api_listar_planes():
+    if not _check_token():
+        return jsonify({'error': 'No autenticado'}), 401
     planes = []
     try:
         import cloudinary.api
@@ -1844,6 +2253,12 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude', session_id=None
         print(f'[worker] EXCEPCION: {e}')
         print(traceback.format_exc())
         jobs[job_id] = {'status': 'error', 'msg': str(e)}
+        # Enviar correo de error con botón para regenerar desde el panel
+        try:
+            nombre = data.get('nombre', 'el paciente')
+            _enviar_correo_error_plan(nombre, session_id, str(e))
+        except Exception as e2:
+            print(f'[worker] Error enviando correo de fallo: {e2}')
 
 
 # ════════════════════════════════════════════════════════════
@@ -3518,5 +3933,308 @@ def email_plan_completo(d, borrador_url, html_url, faltantes=None):
     )
 
 
+
+
+# ════════════════════════════════════════════════════════════
+# CORREO DE ERROR + RUTA DE REGENERACIÓN
+# ════════════════════════════════════════════════════════════
+
+def _enviar_correo_error_plan(nombre, session_id, error_msg=''):
+    """Correo al staff cuando el worker falla — incluye botón para regenerar."""
+    base_url = os.environ.get('BASE_URL', 'https://metodo.centrocarvajal.com')
+    link = f'{base_url}/panel/regenerar/{session_id}'
+    fecha = datetime.now().strftime('%d/%m/%Y a las %H:%M')
+    cuerpo = (
+        f'<!DOCTYPE html><html><head><meta charset="UTF-8"></head>'
+        f'<body style="background:#f0e8de;padding:20px;font-family:sans-serif">'
+        f'<div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #ddd">'
+        f'<div style="background:#1a1410;padding:20px 24px">'
+        f'<div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Error generando plan</div>'
+        f'<div style="color:#fff;font-size:18px;margin-top:4px">{nombre}</div>'
+        f'<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:2px">{fecha}</div>'
+        f'</div>'
+        f'<div style="padding:24px">'
+        f'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:14px 18px;margin-bottom:20px">'
+        f'<strong style="color:#c0392b;font-size:13px">Hubo un error al generar el plan de {nombre}.</strong><br>'
+        f'<span style="font-size:12px;color:#666">El formulario fue recibido y guardado correctamente. '
+        f'Puedes regenerar el plan con un solo clic.</span>'
+        f'</div>'
+        f'<div style="text-align:center;margin:24px 0">'
+        f'<a href="{link}" style="background:#8fa832;color:#fff;padding:14px 32px;'
+        f'border-radius:4px;text-decoration:none;font-size:15px;font-weight:500;display:inline-block">'
+        f'🔄 Regenerar plan de {nombre}</a>'
+        f'</div>'
+        f'<p style="font-size:11px;color:#999;text-align:center">O copia este link: {link}</p>'
+        f'<details style="margin-top:20px">'
+        f'<summary style="font-size:11px;color:#999;cursor:pointer">Ver detalle del error</summary>'
+        f'<pre style="font-size:10px;color:#666;background:#f9f9f9;padding:10px;border-radius:4px;margin-top:8px;overflow:auto">{error_msg[:500]}</pre>'
+        f'</details>'
+        f'</div>'
+        f'<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">'
+        f'Centro Carvajal · centrocarvajal.com</div>'
+        f'</div></body></html>'
+    )
+    enviar_resend(
+        f'⚠ Error generando plan — {nombre} ({fecha})',
+        cuerpo,
+        MAIL_TO,
+        cc=MAIL_CC or None
+    )
+    print(f'[worker] Correo de error enviado: {nombre}')
+
+
+@app.route('/panel/regenerar/<session_id>', methods=['GET'])
+def panel_regenerar(session_id):
+    """Página de regeneración — requiere login, redirige con next si no está autenticado."""
+    from flask import make_response, redirect, url_for
+    tok = request.cookies.get('cv_session', '')
+    sesion = _verificar_sesion(tok)
+    if not sesion:
+        # Guardar destino en cookie temporal y redirigir a login
+        resp = make_response(redirect(f'/panel?next=/panel/regenerar/{session_id}'))
+        resp.set_cookie('cv_next', f'/panel/regenerar/{session_id}', max_age=300, httponly=True)
+        return resp
+    # Verificar que la sesión existe en Cloudinary
+    datos_sesion = recuperar_sesion_cloudinary(session_id)
+    nombre = datos_sesion.get('nombre', 'Paciente') if datos_sesion else 'Paciente'
+    tiene_datos = datos_sesion is not None
+    return REGENERAR_HTML.replace('{{SESSION_ID}}', session_id)                         .replace('{{NOMBRE}}', nombre)                         .replace('{{TIENE_DATOS}}', 'true' if tiene_datos else 'false')                         .replace('{{EMAIL}}', sesion['email'])
+
+
+@app.route('/api/regenerar/<session_id>', methods=['POST'])
+def api_regenerar(session_id):
+    """Lanza la regeneración del plan desde el panel."""
+    tok = request.cookies.get('cv_session', '')
+    sesion = _verificar_sesion(tok)
+    if not sesion:
+        return jsonify({'ok': False, 'error': 'No autenticado'}), 401
+    datos_sesion = recuperar_sesion_cloudinary(session_id)
+    if not datos_sesion:
+        return jsonify({'ok': False, 'error': 'Sesión no encontrada o expirada'}), 404
+    # Limpiar clave interna del plan parcial si existe
+    datos_sesion.pop('__plan_parcial__', None)
+    job_id = uuid.uuid4().hex[:16]
+    jobs[job_id] = {'status': 'working', 'msg': 'Iniciando regeneración del plan...'}
+    modelo = request.get_json(silent=True, force=True).get('modelo', 'claude') if request.data else 'claude'
+    t = threading.Thread(
+        target=worker,
+        args=(job_id, datos_sesion, [], [], modelo, session_id),
+        daemon=True
+    )
+    t.start()
+    print(f'[regenerar] Job {job_id} lanzado para sesión {session_id} por {sesion["email"]}')
+    return jsonify({'ok': True, 'jobId': job_id, 'nombre': datos_sesion.get('nombre', '')})
+
+
+REGENERAR_HTML = """<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Regenerar Plan · Centro Carvajal</title>
+<style>
+:root{--dark:#1a1410;--olive:#8fa832;--gold:#b8935a;--cream:#f4f5ef;--muted:#6b7280;--red:#dc2626}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:12px;padding:40px;max-width:520px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.08);text-align:center}
+.logo{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+h1{font-size:22px;color:var(--dark);margin-bottom:6px}
+.nombre{font-size:26px;font-weight:600;color:var(--olive);margin-bottom:8px}
+.desc{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.6}
+.btn{display:inline-block;padding:14px 32px;background:var(--olive);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .2s;width:100%}
+.btn:hover{background:#7a9428}
+.btn:disabled{background:#9ca3af;cursor:not-allowed}
+.btn-sec{background:transparent;border:1px solid #d4dcc0;color:var(--muted);margin-top:10px}
+.btn-sec:hover{border-color:var(--olive);color:var(--olive);background:transparent}
+
+/* Loading */
+#screen-loading{display:none;margin-top:24px}
+.ls-steps{display:flex;flex-direction:column;gap:10px;text-align:left;margin-top:20px}
+.ls-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);padding:8px 12px;border-radius:6px;background:#f9f9f9}
+.ls-item.active{color:var(--dark);background:rgba(143,168,50,.08);font-weight:500}
+.ls-item.done{color:var(--olive)}
+.ls-dot{width:8px;height:8px;border-radius:50%;background:#d4dcc0;flex-shrink:0}
+.ls-item.active .ls-dot{background:var(--olive);animation:pulse 1s infinite}
+.ls-item.done .ls-dot{background:var(--olive)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.timer{font-size:11px;color:var(--muted);margin-top:12px;text-align:center}
+
+/* Success */
+#screen-success{display:none;margin-top:8px}
+.success-icon{width:60px;height:60px;border-radius:50%;background:rgba(143,168,50,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+#screen-success h2{font-size:22px;color:var(--dark);margin-bottom:8px}
+#screen-success p{font-size:13px;color:var(--muted);margin-bottom:24px}
+.action-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.action-btn{padding:11px 22px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:inherit}
+.btn-ver{background:var(--olive);color:#fff}
+.btn-editar{background:transparent;border:1px solid var(--olive);color:var(--olive)}
+
+/* Error */
+#screen-error{display:none;margin-top:8px}
+.error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin-bottom:20px}
+.error-box p{font-size:13px;color:var(--red)}
+
+.no-datos{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:16px;margin-bottom:24px}
+.no-datos p{font-size:13px;color:#9a3412}
+.user-tag{font-size:11px;color:var(--muted);margin-top:16px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Centro Carvajal</div>
+
+  <!-- Estado inicial -->
+  <div id="screen-init">
+    <div class="nombre">{{NOMBRE}}</div>
+    <h1>Regenerar plan personalizado</h1>
+    <p class="desc" style="margin-top:8px">
+      Los datos del formulario están guardados de forma segura.<br>
+      Al dar clic el plan se generará automáticamente.
+    </p>
+
+    <div id="no-datos-msg" class="no-datos" style="display:none">
+      <p>⚠ No se encontraron datos guardados para esta sesión. Puede que hayan expirado (72h). El paciente deberá llenar el formulario nuevamente.</p>
+    </div>
+
+    <button class="btn" id="btn-generar" onclick="iniciarGeneracion()" {{TIENE_DATOS == 'false' ? 'disabled' : ''}}>
+      🔄 Generar plan ahora
+    </button>
+    <button class="btn btn-sec" onclick="window.location='/panel'">Volver al panel</button>
+    <p class="user-tag">Sesión: {{EMAIL}}</p>
+  </div>
+
+  <!-- Loading -->
+  <div id="screen-loading">
+    <h1 style="margin-bottom:6px">Generando plan...</h1>
+    <p class="desc">Esto tarda entre 2 y 4 minutos. Puedes dejar esta ventana abierta.</p>
+    <div class="ls-steps">
+      <div class="ls-item active" id="ls-1"><div class="ls-dot"></div> Iniciando generación del plan</div>
+      <div class="ls-item" id="ls-2"><div class="ls-dot"></div> Sección 1/3 — Portada, diagnóstico y rutina</div>
+      <div class="ls-item" id="ls-3"><div class="ls-dot"></div> Sección 2/3 — Nutrición, ejercicio y bienestar</div>
+      <div class="ls-item" id="ls-4"><div class="ls-dot"></div> Sección 3/3 — Sueño, tratamientos y compromiso</div>
+      <div class="ls-item" id="ls-5"><div class="ls-dot"></div> Enviando correo con plan completo</div>
+    </div>
+    <div class="timer" id="ls-timer">⏱ 0s transcurridos...</div>
+  </div>
+
+  <!-- Éxito -->
+  <div id="screen-success">
+    <div class="success-icon">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M6 15L12 21L24 9" stroke="#8fa832" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h2>Plan generado correctamente</h2>
+    <p id="success-desc">El plan de {{NOMBRE}} fue generado. El correo con el borrador y el plan completo ya llegó a la bandeja del equipo.</p>
+    <div class="action-btns">
+      <a id="btn-ver-plan" href="#" class="action-btn btn-ver" target="_blank">Ver plan</a>
+      <a id="btn-editar-plan" href="#" class="action-btn btn-editar" target="_blank">Editar borrador</a>
+    </div>
+    <button class="btn btn-sec" onclick="window.location='/panel'" style="margin-top:20px;max-width:200px">Volver al panel</button>
+  </div>
+
+  <!-- Error -->
+  <div id="screen-error">
+    <div class="error-box">
+      <p id="error-msg">Ocurrió un error al generar el plan.</p>
+    </div>
+    <button class="btn" onclick="iniciarGeneracion()">Reintentar</button>
+    <button class="btn btn-sec" onclick="window.location='/panel'">Volver al panel</button>
+  </div>
+</div>
+
+<script>
+const SESSION_ID = '{{SESSION_ID}}';
+const TIENE_DATOS = {{TIENE_DATOS}};
+let jobId = null;
+let pollInterval = null;
+let tickerInterval = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!TIENE_DATOS) {
+    document.getElementById('no-datos-msg').style.display = 'block';
+    document.getElementById('btn-generar').disabled = true;
+  }
+});
+
+function show(id) {
+  ['screen-init','screen-loading','screen-success','screen-error'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function iniciarGeneracion() {
+  show('screen-loading');
+  // Timer
+  let secs = 0;
+  tickerInterval = setInterval(() => {
+    secs++;
+    const m = Math.floor(secs/60), s = secs%60;
+    document.getElementById('ls-timer').textContent =
+      '⏱ ' + (m > 0 ? m + 'min ' + String(s).padStart(2,'0') + 's' : s + 's') + ' transcurridos...';
+  }, 1000);
+
+  fetch('/api/regenerar/' + SESSION_ID, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({modelo: 'claude'})
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.ok) { mostrarError(d.error || 'Error al iniciar'); return; }
+    jobId = d.jobId;
+    pollPlan();
+  })
+  .catch(e => mostrarError('Error de conexión: ' + e.message));
+}
+
+function pollPlan() {
+  pollInterval = setInterval(async () => {
+    try {
+      const r = await fetch('/status?job=' + jobId);
+      const d = await r.json();
+      actualizarPasos(d.msg || '');
+      if (d.status === 'done') {
+        clearInterval(pollInterval); clearInterval(tickerInterval);
+        mostrarExito(d);
+      } else if (d.status === 'error') {
+        clearInterval(pollInterval); clearInterval(tickerInterval);
+        mostrarError(d.msg || 'Error desconocido');
+      }
+    } catch(e) { /* seguir intentando */ }
+  }, 4000);
+}
+
+function actualizarPasos(msg) {
+  const ls = s => document.getElementById(s);
+  if (msg.includes('1/3')) {
+    ls('ls-1').className='ls-item done'; ls('ls-2').className='ls-item active';
+  } else if (msg.includes('2/3')) {
+    ls('ls-2').className='ls-item done'; ls('ls-3').className='ls-item active';
+  } else if (msg.includes('3/3')) {
+    ls('ls-3').className='ls-item done'; ls('ls-4').className='ls-item active';
+  } else if (msg.includes('correo') || msg.includes('Enviando')) {
+    ls('ls-4').className='ls-item done'; ls('ls-5').className='ls-item active';
+  }
+}
+
+function mostrarExito(d) {
+  show('screen-success');
+  if (d.html_url) document.getElementById('btn-ver-plan').href = d.html_url;
+  if (d.borrador_url) document.getElementById('btn-editar-plan').href = d.borrador_url;
+}
+
+function mostrarError(msg) {
+  show('screen-error');
+  document.getElementById('error-msg').textContent = msg;
+}
+</script>
+</body>
+</html>"""
+
+
 if __name__ == '__main__':
+    # Inicializar usuarios al arrancar si no existen
+    try:
+        _inicializar_usuarios()
+    except Exception as e:
+        print(f'[startup] Error inicializando usuarios: {e}')
     app.run(debug=True, port=5000)
