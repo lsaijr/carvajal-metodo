@@ -7,6 +7,10 @@ services:
     envVars:
       - key: CLAUDE_KEY
         sync: false
+      - key: GEMINI_KEY
+        sync: false
+      - key: GROQ_KEY
+        sync: false
       - key: RESEND_KEY
         sync: false
       - key: CLOUDINARY_CLOUD_NAME
@@ -19,5 +23,7 @@ services:
         value: isai.josue@gmail.com
       - key: MAIL_FROM
         value: envios@centrocarvajal.com
+      - key: MAIL_CC
+        sync: false
       - key: BASE_URL
         value: https://metodo.centrocarvajal.com

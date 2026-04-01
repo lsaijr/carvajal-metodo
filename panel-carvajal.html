@@ -61,11 +61,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);m
   <div class="login-card">
     <div class="login-subtitle">Acceso restringido</div>
     <div class="field">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" placeholder="tu@correo.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('pwd').focus()">
+    </div>
+    <div class="field">
       <label for="pwd">Contraseña</label>
-      <input type="password" id="pwd" placeholder="••••••••" autocomplete="current-password">
+      <input type="password" id="pwd" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="btn-login" onclick="doLogin()">Ingresar</button>
-    <div class="login-err" id="login-err">Contraseña incorrecta</div>
+    <button class="btn-login" onclick="mostrarRecuperar()" style="background:transparent;border:1px solid rgba(203,209,99,.3);color:rgba(255,255,255,.5);margin-top:8px;font-size:10px">Olvidé mi contraseña</button>
+    <div class="login-err" id="login-err">Credenciales incorrectas</div>
+    <div id="recuperar-wrap" style="display:none;margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:20px">
+      <div class="field">
+        <label>Correo para recuperar acceso</label>
+        <input type="email" id="recuperar-email" placeholder="tu@correo.com">
+      </div>
+      <button class="btn-login" onclick="enviarRecuperacion()" style="background:#2d3a2e">Enviar link de recuperación</button>
+      <div id="recuperar-ok" style="display:none;color:rgba(203,209,99,.8);font-size:12px;text-align:center;margin-top:12px">✓ Si el correo existe, recibirás el link pronto.</div>
+    </div>
   </div>
 </div>
 
@@ -94,78 +107,101 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);m
     </a>
   </div>
   <div class="panel-logout">
+    <div id="panel-user-email" style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:12px;letter-spacing:.06em"></div>
     <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
   </div>
 </div>
 
 <script>
-const SESSION_KEY = 'cv_admin_token';
+// ── Auth — sesión por cookie httpOnly, sin localStorage ─────────────────
+let currentUser = null;
 
-async function doLogin() {
-  const pwd = document.getElementById('pwd').value.trim();
-  const err = document.getElementById('login-err');
-  if (!pwd) return;
-
+async function initAuth() {
   try {
-    const r = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pwd })
-    });
-    const data = await r.json();
-    if (data.ok && data.token) {
-      // Guardar token en localStorage para persistencia
-      localStorage.setItem(SESSION_KEY, data.token);
-      err.style.display = 'none';
+    const r = await fetch('/api/check-token');
+    if (r.ok) {
+      const d = await r.json();
+      currentUser = d;
+      // Verificar si hay redirect pendiente inyectado por el servidor
+      const next = window._cv_next || new URLSearchParams(window.location.search).get('next');
+      if (next && next.startsWith('/')) { window.location.href = next; return; }
       showPanel();
     } else {
-      err.style.display = 'block';
-      document.getElementById('pwd').value = '';
-      document.getElementById('pwd').focus();
+      showLogin();
     }
-  } catch(e) {
-    err.textContent = 'Error de conexión. Intenta de nuevo.';
-    err.style.display = 'block';
-  }
+  } catch(e) { showLogin(); }
+}
+
+function showLogin() {
+  document.getElementById('screen-login').style.display = 'block';
+  document.getElementById('screen-panel').style.display = 'none';
 }
 
 function showPanel() {
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('screen-panel').style.display = 'block';
-}
-
-function doLogout() {
-  localStorage.removeItem(SESSION_KEY);
-  document.getElementById('screen-panel').style.display = 'none';
-  document.getElementById('screen-login').style.display = 'block';
-  document.getElementById('pwd').value = '';
-}
-
-async function checkSession() {
-  const token = localStorage.getItem(SESSION_KEY);
-  if (!token) return;
-  try {
-    const r = await fetch('/api/check-token', {
-      headers: { 'X-Token': token }
-    });
-    const data = await r.json();
-    if (data.ok) {
-      showPanel();
-    } else {
-      localStorage.removeItem(SESSION_KEY);
-    }
-  } catch(e) {
-    // Si no conecta, no mostramos panel por seguridad
+  if (currentUser) {
+    const el = document.getElementById('panel-user-email');
+    if (el) el.textContent = currentUser.email;
   }
 }
 
-// Enter en el input
-document.getElementById('pwd').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const pwd   = document.getElementById('pwd').value;
+  const err   = document.getElementById('login-err');
+  err.style.display = 'none';
+  if (!email || !pwd) {
+    err.style.display = 'block'; err.textContent = 'Ingresa tu correo y contraseña.'; return;
+  }
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: pwd})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      currentUser = {email, rol: d.rol};
+      const next = window._cv_next || new URLSearchParams(window.location.search).get('next');
+      if (next && next.startsWith('/')) { window.location.href = next; return; }
+      showPanel();
+    } else {
+      err.style.display = 'block';
+      err.textContent = d.error || 'Credenciales incorrectas';
+      document.getElementById('pwd').value = '';
+      document.getElementById('pwd').focus();
+    }
+  } catch(e) {
+    err.style.display = 'block'; err.textContent = 'Error de conexión. Intenta de nuevo.';
+  }
+}
+
+async function doLogout() {
+  await fetch('/api/logout', {method:'POST'});
+  currentUser = null;
+  showLogin();
+  document.getElementById('pwd').value = '';
+  document.getElementById('email').value = '';
+}
+
+function mostrarRecuperar() {
+  const w = document.getElementById('recuperar-wrap');
+  w.style.display = w.style.display === 'none' ? 'block' : 'none';
+}
+
+async function enviarRecuperacion() {
+  const email = document.getElementById('recuperar-email').value.trim();
+  if (!email) return;
+  await fetch('/api/recuperar-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email})
+  });
+  document.getElementById('recuperar-ok').style.display = 'block';
+}
 
 // Verificar sesión al cargar
-checkSession();
+initAuth();
 </script>
 </body>
 </html>
