@@ -1918,74 +1918,84 @@ Sé conciso pero completo. Usa terminología médica adecuada."""
 
 
 def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
-    """Genera .docx estructurado con los datos del formulario."""
+    """Genera .docx con análisis clínico + tabla plana de campos del formulario."""
     from docx import Document
     from docx.shared import Pt, RGBColor, Cm
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.enum.table import WD_TABLE_ALIGNMENT
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
+    import re as _re
 
     doc = Document()
     for section in doc.sections:
-        section.top_margin = Cm(2); section.bottom_margin = Cm(2)
-        section.left_margin = Cm(2.5); section.right_margin = Cm(2.5)
+        section.top_margin    = Cm(2);   section.bottom_margin = Cm(2)
+        section.left_margin   = Cm(2.5); section.right_margin  = Cm(2.5)
 
-    VERDE  = RGBColor(0x2d,0x3a,0x2e)
-    OLIVE  = RGBColor(0x8f,0xa8,0x32)
-    GOLD   = RGBColor(0xb8,0x93,0x5a)
-    BLANCO = RGBColor(0xff,0xff,0xff)
-    GRIS   = RGBColor(0x6b,0x72,0x80)
+    VERDE  = RGBColor(0x2d, 0x3a, 0x2e)
+    OLIVE  = RGBColor(0x8f, 0xa8, 0x32)
+    GOLD   = RGBColor(0xb8, 0x93, 0x5a)
+    BLANCO = RGBColor(0xff, 0xff, 0xff)
+    GRIS   = RGBColor(0x6b, 0x72, 0x80)
 
     def set_cell_bg(cell, color_hex):
         tc = cell._tc; tcPr = tc.get_or_add_tcPr()
         shd = OxmlElement('w:shd')
-        shd.set(qn('w:val'),'clear'); shd.set(qn('w:color'),'auto')
+        shd.set(qn('w:val'), 'clear'); shd.set(qn('w:color'), 'auto')
         shd.set(qn('w:fill'), color_hex); tcPr.append(shd)
 
-    def heading(text, level=1):
-        p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        run = p.add_run(text); run.bold = True
-        run.font.size = Pt(13 if level==1 else 11)
-        run.font.color.rgb = OLIVE if level==1 else VERDE
-        p.paragraph_format.space_before = Pt(12)
-        p.paragraph_format.space_after = Pt(4)
+    # ── Limpiador completo de markdown ──────────────────────────
+    def limpiar_markdown(texto):
+        lineas_limpias = []
+        for linea in texto.split('\n'):
+            l = linea.strip()
+            # Saltar líneas separadoras de tabla: |---|---| o :---:|:---:
+            if _re.match(r'^\|[\s\-\|:]+\|?\s*$', l):
+                continue
+            # Saltar líneas que son solo guiones/iguales (separadores)
+            if _re.match(r'^[-=]{3,}\s*$', l):
+                continue
+            # Filas de tabla markdown: |col1|col2| → extraer contenido
+            if '|' in l:
+                celdas = [c.strip() for c in l.split('|') if c.strip()]
+                if celdas:
+                    l = '  '.join(celdas)
+                else:
+                    continue
+            # Quitar encabezados # ## ### (al inicio o en cualquier posición)
+            l = _re.sub(r'#{1,6}\s*', '', l)
+            # Quitar **negrita** y __negrita__
+            l = _re.sub(r'\*\*(.+?)\*\*', r'\1', l)
+            l = _re.sub(r'__(.+?)__',     r'\1', l)
+            # Quitar *cursiva* y _cursiva_
+            l = _re.sub(r'\*(.+?)\*', r'\1', l)
+            l = _re.sub(r'_(.+?)_',   r'\1', l)
+            # Quitar asteriscos y guiones bajos sueltos restantes
+            l = l.replace('**', '').replace('__', '').replace('*', '')
+            # Quitar viñetas markdown al inicio (-, •, >)
+            l = _re.sub(r'^[-•>]\s+', '', l.strip())
+            # Limpiar espacios múltiples
+            l = _re.sub(r'  +', ' ', l).strip()
+            if l:
+                lineas_limpias.append(l)
+        return '\n'.join(lineas_limpias)
 
-    def row_tabla(tabla, label, value):
-        cells = tabla.add_row().cells
-        cells[0].text = label
-        cells[0].paragraphs[0].runs[0].bold = True
-        cells[0].paragraphs[0].runs[0].font.size = Pt(9)
-        set_cell_bg(cells[0], '2d3a2e')
-        cells[0].paragraphs[0].runs[0].font.color.rgb = BLANCO
-        val_str = value if isinstance(value,str) else (', '.join(value) if isinstance(value,list) else str(value or '—'))
-        cells[1].text = val_str or '—'
-        cells[1].paragraphs[0].runs[0].font.size = Pt(10)
-
-    def tabla2():
-        t = doc.add_table(rows=0, cols=2); t.style = 'Table Grid'
-        t.alignment = WD_TABLE_ALIGNMENT.LEFT
-        return t
-
-    # Encabezado
+    # ── Encabezado ───────────────────────────────────────────────
     p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run('CENTRO CARVAJAL'); r.bold=True; r.font.size=Pt(16); r.font.color.rgb=VERDE
+    r = p.add_run('CENTRO CARVAJAL')
+    r.bold = True; r.font.size = Pt(16); r.font.color.rgb = VERDE
     p2 = doc.add_paragraph(); p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r2 = p2.add_run('Cuestionario del Paciente — Método de Rejuvenecimiento Carvajal')
-    r2.font.size=Pt(10); r2.font.color.rgb=GOLD
+    r2.font.size = Pt(10); r2.font.color.rgb = GOLD
     doc.add_paragraph()
 
-    # ── Análisis clínico para el médico ──
+    # ── Análisis clínico (sección IA) ────────────────────────────
     if analisis_medico:
-        # Título de sección
         p_title = doc.add_paragraph()
         r_title = p_title.add_run('ANÁLISIS CLÍNICO — USO INTERNO DEL EQUIPO MÉDICO')
-        r_title.bold = True
-        r_title.font.size = Pt(11)
-        r_title.font.color.rgb = BLANCO
+        r_title.bold = True; r_title.font.size = Pt(11); r_title.font.color.rgb = BLANCO
         p_title.paragraph_format.space_before = Pt(0)
         p_title.paragraph_format.space_after  = Pt(0)
-        # Fondo verde oscuro para el título
         pPr = p_title._p.get_or_add_pPr()
         shd = OxmlElement('w:shd')
         shd.set(qn('w:val'), 'clear'); shd.set(qn('w:color'), 'auto')
@@ -1993,161 +2003,392 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
         p_title.paragraph_format.left_indent  = Cm(0.4)
         p_title.paragraph_format.right_indent = Cm(0.4)
 
-        # Renderizar secciones del análisis
-        import re as _re
         secciones = _re.split(r'\n## ', analisis_medico)
         for i, seccion in enumerate(secciones):
             if not seccion.strip():
                 continue
-            # Primera sección puede no tener ##
-            if i == 0 and not seccion.startswith('##'):
-                lineas = seccion.replace('## ', '').strip().split('\n')
-            else:
-                lineas = seccion.strip().split('\n')
-
+            lineas = seccion.strip().split('\n')
             if not lineas:
                 continue
 
-            # Primera línea es el título de subsección
-            titulo_sec = lineas[0].strip().replace('## ', '').replace('# ', '')
+            # Título de subsección — limpiar cualquier símbolo
+            titulo_sec = limpiar_markdown(lineas[0]).strip()
             p_sec = doc.add_paragraph()
             p_sec.paragraph_format.space_before = Pt(8)
             p_sec.paragraph_format.space_after  = Pt(2)
             r_sec = p_sec.add_run(titulo_sec)
-            r_sec.bold = True
-            r_sec.font.size = Pt(10)
-            r_sec.font.color.rgb = OLIVE
+            r_sec.bold = True; r_sec.font.size = Pt(10); r_sec.font.color.rgb = OLIVE
 
-            # Resto del contenido
-            cuerpo = '\n'.join(lineas[1:]).strip()
-            if cuerpo:
-                for linea in cuerpo.split('\n'):
-                    linea = linea.strip()
-                    if not linea:
-                        continue
-                    # Limpiar markdown básico
-                    linea = _re.sub(r'\*\*(.+?)\*\*', r'\1', linea)
-                    linea = linea.lstrip('- •').strip()
-                    p_l = doc.add_paragraph(style='List Bullet') if linea else doc.add_paragraph()
-                    if linea:
-                        run = p_l.add_run(linea)
-                        run.font.size = Pt(9.5)
-                        run.font.color.rgb = RGBColor(0x1c, 0x1c, 0x1c)
-                    p_l.paragraph_format.space_before = Pt(1)
-                    p_l.paragraph_format.space_after  = Pt(1)
+            # Cuerpo de la subsección
+            cuerpo = limpiar_markdown('\n'.join(lineas[1:])).strip()
+            for linea in cuerpo.split('\n'):
+                linea = linea.strip()
+                if not linea:
+                    continue
+                p_l = doc.add_paragraph()
+                run = p_l.add_run(linea)
+                run.font.size = Pt(9.5)
+                run.font.color.rgb = RGBColor(0x1c, 0x1c, 0x1c)
+                p_l.paragraph_format.space_before = Pt(1)
+                p_l.paragraph_format.space_after  = Pt(1)
 
-        doc.add_paragraph()  # espacio antes de datos personales
+        doc.add_paragraph()
 
-    heading('1. DATOS PERSONALES')
-    t=tabla2()
-    row_tabla(t,'nombre_completo',   data.get('nombre',''))
-    row_tabla(t,'cedula_pasaporte',  data.get('cedula',''))
-    row_tabla(t,'fecha_nacimiento',  data.get('fechaNacimiento',''))
-    row_tabla(t,'edad',              data.get('edad',''))
-    row_tabla(t,'sexo',              data.get('sexo',''))
-    row_tabla(t,'celular',           data.get('celular',''))
-    row_tabla(t,'email',             data.get('email',''))
-    row_tabla(t,'direccion',         data.get('direccion',''))
-    row_tabla(t,'ocupacion',         data.get('ocupacion',''))
-    row_tabla(t,'actividad_laboral', data.get('actLaboral',''))
-    row_tabla(t,'horario_laboral',   data.get('horarioLaboral',''))
-    row_tabla(t,'como_conocio_clinica', data.get('comoConociste',''))
-    row_tabla(t,'contacto_emergencia', data.get('contactoEmergencia','') + ' (' + data.get('contactoRelacion','') + ') ' + data.get('contactoTel',''))
-    row_tabla(t,'fecha_evaluacion',  data.get('fecha',''))
+    # ── Tabla plana de campos del formulario ─────────────────────
+    def _titulo_seccion(texto):
+        p_s = doc.add_paragraph()
+        r_s = p_s.add_run(texto)
+        r_s.bold = True; r_s.font.size = Pt(10); r_s.font.color.rgb = BLANCO
+        p_s.paragraph_format.space_before = Pt(6)
+        p_s.paragraph_format.space_after  = Pt(0)
+        pPr_s = p_s._p.get_or_add_pPr()
+        shd_s = OxmlElement('w:shd')
+        shd_s.set(qn('w:val'), 'clear'); shd_s.set(qn('w:color'), 'auto')
+        shd_s.set(qn('w:fill'), '2d3a2e'); pPr_s.append(shd_s)
+        p_s.paragraph_format.left_indent  = Cm(0.3)
+        p_s.paragraph_format.right_indent = Cm(0.3)
 
-    heading('2. MEDIDAS CORPORALES')
-    t=tabla2()
-    row_tabla(t,'estatura_cm',data.get('estatura',''))
-    row_tabla(t,'peso_kg',data.get('peso',''))
-    row_tabla(t,'imc',data.get('imc',''))
+    def _nueva_tabla():
+        tb = doc.add_table(rows=0, cols=2)
+        tb.style = 'Table Grid'
+        tb.alignment = WD_TABLE_ALIGNMENT.LEFT
+        return tb
 
-    heading('3. SALUD GENERAL')
-    t=tabla2()
-    row_tabla(t,'condicion_sistemica',data.get('condicionSistemica',''))
-    row_tabla(t,'condiciones_medicas',data.get('condiciones',''))
-    row_tabla(t,'medicamentos',data.get('medicamentos',''))
-    row_tabla(t,'cirugias_previas',data.get('cirugias',''))
-    row_tabla(t,'alergias',data.get('alergias',''))
-    row_tabla(t,'fuma',data.get('fuma',''))
-    row_tabla(t,'consume_alcohol',data.get('alcohol',''))
+    def campo(tb, label, value):
+        """Fila estándar: etiqueta | valor (blanco si no respondió)."""
+        row = tb.add_row()
+        c0, c1 = row.cells[0], row.cells[1]
+        c0.text = label
+        set_cell_bg(c0, 'f4f5ef')
+        p0 = c0.paragraphs[0]; p0.runs[0].bold = True
+        p0.runs[0].font.size = Pt(9); p0.runs[0].font.color.rgb = VERDE
+        val = value
+        if isinstance(val, list): val = ', '.join(str(v) for v in val if v)
+        elif val is None: val = ''
+        else: val = str(val)
+        c1.text = val
+        if c1.paragraphs[0].runs:
+            c1.paragraphs[0].runs[0].font.size = Pt(10)
 
-    heading('4. EVALUACIÓN CUTÁNEA Y RUTINA FACIAL')
-    t=tabla2()
-    row_tabla(t,'tipo_piel',data.get('pielTipo',''))
-    row_tabla(t,'problemas_faciales',data.get('pielProblemas',''))
-    row_tabla(t,'areas_corporales',data.get('areasCorporales',''))
-    row_tabla(t,'rutina_manana',data.get('rutinaManana',''))
-    row_tabla(t,'rutina_noche',data.get('rutinaNoche',''))
-    row_tabla(t,'productos_frecuentes',data.get('productosFrecuentes',''))
-    row_tabla(t,'usa_solar',data.get('solar',''))
-    row_tabla(t,'spf_factor',data.get('spf',''))
-    row_tabla(t,'laser_activo',data.get('laserActivo',''))
-    hist=data.get('historialEstetico',[])
-    if hist: row_tabla(t,'historial_estetico',hist if isinstance(hist,str) else ', '.join(hist))
+    def campo_yn(tb, label, value):
+        """Fila Sí/No: muestra la selección con color destacado."""
+        row = tb.add_row()
+        c0, c1 = row.cells[0], row.cells[1]
+        c0.text = label
+        set_cell_bg(c0, 'f4f5ef')
+        p0 = c0.paragraphs[0]; p0.runs[0].bold = True
+        p0.runs[0].font.size = Pt(9); p0.runs[0].font.color.rgb = VERDE
+        val = str(value).strip() if value else ''
+        es_si = val.lower() in ['si', 'sí', 'yes', 'sí']
+        p1 = c1.paragraphs[0]
+        run = p1.add_run('● ' + (val if val else ''))
+        run.bold = True
+        run.font.size = Pt(10)
+        run.font.color.rgb = OLIVE if es_si else RGBColor(0x44, 0x44, 0x44)
 
-    heading('5. ALIMENTACIÓN Y NUTRICIÓN')
-    t=tabla2()
-    row_tabla(t,'intolerancias_alim',data.get('intolerancias',''))
-    row_tabla(t,'sintomas_digestivos',data.get('sintomasDigestivos',''))
-    row_tabla(t,'proteinas_frecuentes',data.get('proteinas',''))
-    row_tabla(t,'carbohidratos',data.get('carbohidratos',''))
-    row_tabla(t,'verduras',data.get('verduras',''))
-    row_tabla(t,'frutas',data.get('frutas',''))
-    row_tabla(t,'alimentos_evitar',data.get('alimentosEvitar',''))
-    row_tabla(t,'postres_dulces',data.get('postres',''))
-    row_tabla(t,'bebidas_habituales',data.get('bebidas',''))
-    row_tabla(t,'notas_alimentacion',data.get('notasAlimentacion',''))
-
-    heading('6. ACTIVIDAD FÍSICA Y SUEÑO')
-    t=tabla2()
-    row_tabla(t,'actividad_fisica',data.get('actFisica',''))
-    row_tabla(t,'horas_sueno',data.get('sueno',''))
-    row_tabla(t,'hora_despierta',data.get('horaDespierta',''))
-    row_tabla(t,'hora_duerme',data.get('horaDuerme',''))
-    row_tabla(t,'cansancio_diurno',data.get('cansancioDia',''))
-    row_tabla(t,'nivel_estres',data.get('nivelEstres',''))
-    row_tabla(t,'num_hijos',data.get('numHijos',''))
-
-    heading('7. OBJETIVOS Y PRIORIDADES')
-    t=tabla2()
-    row_tabla(t,'prioridad_principal',data.get('prioridad',''))
-    row_tabla(t,'expectativas',data.get('expectativas',''))
-    row_tabla(t,'satisfaccion_actual',str(data.get('satisfaccion',''))+'/10')
-
-    heading('8. ÁREAS DE TRATAMIENTO E HISTORIAL ESTÉTICO')
-    t=tabla2()
-    row_tabla(t,'areas_faciales',        data.get('areasFaciales',''))
-    row_tabla(t,'areas_corporales_detalle', data.get('areasCorporales',''))
+    # Preparar historial estético
     hist    = data.get('historialEstetico', [])
-    det_map = data.get('historialDetalle', {})
+    det_map = data.get('historialDetalle', {}) or {}
+    hist_str = ''
     if hist:
+        partes = []
         for trat in (hist if isinstance(hist, list) else [hist]):
-            det = det_map.get(trat, {}) if isinstance(det_map, dict) else {}
+            det   = det_map.get(trat, {}) if isinstance(det_map, dict) else {}
             fecha = det.get('fecha', '') if det else ''
-            zona  = det.get('zona', '')  if det else ''
-            val   = trat
-            if fecha: val += f' — última sesión: {fecha}'
-            if zona:  val += f' — zona: {zona}'
-            row_tabla(t, 'tratamiento', val)
-    else:
-        row_tabla(t, 'historial_estetico', '—')
+            zona  = det.get('zona',  '') if det else ''
+            txt   = trat
+            if fecha: txt += f' — última sesión: {fecha}'
+            if zona:  txt += f' — zona: {zona}'
+            partes.append(txt)
+        hist_str = '\n'.join(partes)
 
-    # Contraindicaciones — solo las marcadas como Sí
-    contra = data.get('contraindications', {})
-    contra_si = [k for k,v in contra.items() if v == 'Si'] if isinstance(contra, dict) else []
-    row_tabla(t,'contraindicaciones',    ', '.join(contra_si) if contra_si else 'Ninguna')
+    contra    = data.get('contraindications', {})
+    contra_si = [k for k, v in contra.items() if v == 'Si'] if isinstance(contra, dict) else []
 
-    heading('9. ANTECEDENTES FAMILIARES')
-    t=tabla2()
-    row_tabla(t,'antecedentes_familiares', data.get('antecedentesFam',''))
-    row_tabla(t,'detalle_antecedentes',    data.get('antecedentesFamDet',''))
+    # ═══════════════════════════════════════════════════════════
+    # TABLA UNIFICADA — snake_case con headers de sección
+    # ═══════════════════════════════════════════════════════════
+    from docx.enum.table import WD_ROW_HEIGHT_RULE
+
+    tb = doc.add_table(rows=0, cols=2)
+    tb.style = 'Table Grid'
+    tb.alignment = WD_TABLE_ALIGNMENT.LEFT
+
+    # Anchos de columna: 40% clave / 60% valor
+    from docx.shared import Inches
+    for cell in tb.columns[0].cells if False else []:
+        pass  # widths set via XML below
+
+    def _sec(titulo):
+        """Fila de sección: celda fusionada con fondo oscuro."""
+        row = tb.add_row()
+        row.height = Cm(0.75)
+        row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+        merged = row.cells[0].merge(row.cells[1])
+        merged.text = titulo
+        p = merged.paragraphs[0]
+        p.runs[0].bold = True
+        p.runs[0].font.size = Pt(9)
+        p.runs[0].font.color.rgb = BLANCO
+        set_cell_bg(merged, '2d3a2e')
+        p.paragraph_format.left_indent = Cm(0.3)
+
+    def _fila(key, val):
+        """Fila de dato: clave snake_case | valor."""
+        if isinstance(val, list):
+            val = ', '.join(str(x) for x in val if x)
+        elif val is None:
+            val = ''
+        row = tb.add_row()
+        row.height = Cm(0.80)
+        row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+        c0, c1 = row.cells[0], row.cells[1]
+        c0.text = str(key)
+        c1.text = str(val)
+        set_cell_bg(c0, 'f4f5ef')
+        p0 = c0.paragraphs[0]
+        if p0.runs:
+            p0.runs[0].font.size = Pt(9)
+            p0.runs[0].font.color.rgb = VERDE
+        p1 = c1.paragraphs[0]
+        if p1.runs:
+            p1.runs[0].font.size = Pt(10)
+
+    # Preparar variables derivadas (misma lógica que antes)
+    contra   = data.get('contraindications', {}) or {}
+    hist_lst = data.get('historialEstetico', []) or []
+    hist_low = [h.lower() for h in (hist_lst if isinstance(hist_lst, list) else [])]
+    det_m    = data.get('historialDetalle', {}) or {}
+    sint_lst = data.get('sintomasDigestivos', []) or []
+    sint_low = ' '.join(s.lower() for s in sint_lst)
+    piel_raw = data.get('pielProblemas', []) or []
+    piel_low = ' '.join((piel_raw if isinstance(piel_raw, list) else [])).lower()
+    areas_f  = data.get('areasFaciales', []) or []
+    areas_c  = data.get('areasCorporales', []) or []
+    areas_low= ' '.join((areas_f if isinstance(areas_f, list) else []) +
+                         (areas_c if isinstance(areas_c, list) else [])).lower()
+    intol_lst= data.get('intolerancias', []) or []
+    prot_str = str(data.get('proteinas', '')).lower()
+    carb_str = str(data.get('carbohidratos', '')).lower()
+    gras_str = str(data.get('grasasEvitar', '')).lower()
+
+    def _yn_c(label):
+        return 'SÍ' if contra.get(label, 'No') == 'Si' else 'NO'
+    def _yn_h(nombre):
+        return 'SÍ' if any(nombre.lower() in h for h in hist_low) else 'NO'
+    def _fh(label):
+        det = det_m.get(label, {}) or {}
+        return det.get('fecha', '') if isinstance(det, dict) else ''
+    def _zh(label):
+        det = det_m.get(label, {}) or {}
+        return det.get('zona', '') if isinstance(det, dict) else ''
+    def _yn_s(kw):
+        return 'SÍ' if kw.lower() in sint_low else 'NO'
+    def _yn_p(kw):
+        return 'SÍ' if any(k in piel_low for k in ([kw] if isinstance(kw, str) else kw)) else 'NO'
+    def _g(k):
+        v2 = data.get(k, '')
+        if isinstance(v2, list): return ', '.join(str(x) for x in v2 if x)
+        return str(v2) if v2 is not None else ''
+
+    cond  = _g('condicionSistemica')
+    fuma_v = _g('fuma')
+
+    # ── 1. DATOS PERSONALES ─────────────────────────────────────
+    _sec('1. DATOS PERSONALES')
+    _fila('nombre_completo',          _g('nombre'))
+    _fila('cedula',                   _g('cedula'))
+    _fila('fecha_nacimiento',         _g('fechaNacimiento'))
+    _fila('edad',                     _g('edad'))
+    _fila('sexo',                     _g('sexo'))
+    _fila('celular',                  _g('celular'))
+    _fila('email',                    _g('email'))
+    _fila('direccion',                _g('direccion'))
+    _fila('ocupacion',                _g('ocupacion'))
+    _fila('horario_laboral',          _g('horarioLaboral'))
+    _fila('nivel_actividad_laboral',  _g('actLaboral'))
+    _fila('num_hijos',                _g('numHijos'))
+    _fila('referencia_recomendacion', _g('comoConociste'))
+    _fila('fecha_firma',              _g('fecha'))
+
+    # ── 2. CONTACTO DE EMERGENCIA ────────────────────────────────
+    _sec('2. CONTACTO DE EMERGENCIA')
+    _fila('emergencia_nombre',   _g('contactoEmergencia'))
+    _fila('emergencia_relacion', _g('contactoRelacion'))
+    _fila('emergencia_telefono', _g('contactoTel'))
+
+    # ── 3. MEDIDAS CORPORALES ────────────────────────────────────
+    _sec('3. MEDIDAS CORPORALES')
+    _fila('estatura', _g('estatura'))
+    _fila('peso',     _g('peso'))
+    _fila('imc',      _g('imc'))
+
+    # ── 4. SALUD GENERAL ─────────────────────────────────────────
+    _sec('4. SALUD GENERAL')
+    _fila('sufre_enfermedad',  'NO' if cond in ['Sin enfermedades','','No'] else 'SÍ')
+    _fila('enfermedad_detalle','' if cond in ['Sin enfermedades','','No'] else cond)
+    _fila('embarazada',        _yn_c('Embarazo'))
+    _fila('embarazo_semanas',  '')
+    _fila('lactancia',         _yn_c('Lactancia'))
+    _fila('sop',               _yn_c('SOP'))
+    _fila('anticonceptivos',   _yn_c('Anticonceptivos'))
+    _fila('menopausia',        _yn_c('Menopausia'))
+    _fila('perimenopausia',    _g('perimenopausia') or 'NO')
+    _fila('fuma',              'SÍ' if fuma_v.lower() not in ['no',''] else 'NO')
+    _fila('fuma_frecuencia',   fuma_v.replace('Si - ','').replace('Sí - ','') if ' - ' in fuma_v else '')
+    _fila('alcohol',           _g('alcohol'))
+    _fila('toma_medicamentos', 'SÍ' if _g('medicamentos') not in ['Ninguna','No',''] else 'NO')
+    _fila('medicamento_cual',  _g('medicamentos'))
+    _fila('otras_condiciones', _g('condiciones'))
+    _fila('evacuacion',        _g('evacuacion'))
+    _fila('horas_sueno',       _g('sueno'))
+    _fila('hora_acuesta',      _g('horaDuerme'))
+    _fila('hora_levanta',      _g('horaDespierta'))
+    _fila('cansancio_dia',     _g('cansancioDia'))
+    _fila('nivel_estres',      _g('nivelEstres'))
+
+    # ── 5. SÍNTOMAS DIGESTIVOS ───────────────────────────────────
+    _sec('5. SÍNTOMAS DIGESTIVOS E INTOLERANCIAS')
+    _fila('hinchazon_abdominal',       _yn_s('hinchazon'))
+    _fila('gases_flatulencias',        _yn_s('gases'))
+    _fila('estrenimiento_diarrea',     _yn_s('estrenimiento'))
+    _fila('cansancio_comidas',         _yn_s('cansancio tras comer'))
+    _fila('digestion_lenta',           _yn_s('digestion'))
+    _fila('nauseas_malestar',          _yn_s('nauseas'))
+    _fila('antecedentes_intolerancias','SÍ' if intol_lst else 'NO')
+    _fila('sintomas_lacteos',          'SÍ' if _g('sintLacteos').lower() in ['si','sí','yes'] else 'NO')
+    _fila('sintomas_gluten',           'SÍ' if _g('sintGluten').lower()  in ['si','sí','yes'] else 'NO')
+    _fila('sintomas_procesados',       'SÍ' if _g('sintProcesados').lower() in ['si','sí','yes'] else 'NO')
+
+    # ── 6. ALERGIAS ──────────────────────────────────────────────
+    _sec('6. ALERGIAS')
+    _fila('alergia_medicamentos', 'SÍ' if 'medicamento' in _g('alergias').lower() else 'NO')
+    _fila('alergia_lidocaina',    _g('alergia_lidocaina'))
+    _fila('alergia_penicilina',   _g('alergia_penicilina'))
+    _fila('alergia_yodo',         _g('alergia_yodo'))
+    _fila('alergia_aines',        _g('alergia_aines'))
+    _fila('alergia_latex',        _g('alergia_latex'))
+    _fila('alergia_aloe',         _g('alergia_aloe'))
+    _fila('alergia_fragancias',   _g('alergia_fragancias'))
+
+    # ── 7. CIRUGÍAS Y ANTECEDENTES ───────────────────────────────
+    _sec('7. CIRUGÍAS Y ANTECEDENTES')
+    _fila('cirugias',              'SÍ' if _g('cirugias') not in ['Ninguna','No',''] else 'NO')
+    _fila('cirugias_detalle',      _g('cirugias'))
+    _fila('antecedentes_familiares','SÍ' if _g('antecedentesFam') not in ['Ninguno','No',''] else 'NO')
+    _fila('antecedentes_detalle',  _g('antecedentesFamDet'))
+    _fila('infecciones_cutaneas',       _g('infeccionesCutaneas') or 'NO')
+    _fila('infecciones_cutaneas_detalle', _g('infeccionesDet'))
+    _fila('dispositivos_medicos',       _g('dispositivosMedicos') or 'NO')
+    _fila('dispositivos_medicos_detalle', _g('dispositivosDet'))
+
+    # ── 8. ALIMENTACIÓN ──────────────────────────────────────────
+    _sec('8. ALIMENTACIÓN Y NUTRICIÓN')
+    _fila('proteina_pollo',      'Pollo'        if 'pollo'    in prot_str else '')
+    _fila('proteina_pescado',    'Pescado'      if 'pescado'  in prot_str else '')
+    _fila('proteina_mariscos',   'Mariscos'     if 'mariscos' in prot_str else '')
+    _fila('proteina_res',        'Carne de res' if 'carne'    in prot_str else '')
+    _fila('proteina_cerdo',      'Cerdo'        if 'cerdo'    in prot_str else '')
+    _fila('proteina_huevos',     'Huevos'       if 'huevos'   in prot_str else '')
+    _fila('proteina_legumbres',  'Legumbres'    if 'legumbres' in prot_str else '')
+    _fila('proteinas_evitar',    _g('proteinasEvitar'))
+    _fila('evitar_fritos',       'Alimentos fritos'  if any(x in gras_str for x in ['fritos','frito']) else '')
+    _fila('evitar_manteca',      'Manteca/Margarina' if any(x in gras_str for x in ['manteca','margarina']) else '')
+    _fila('carb_arroz_blanco',   'Arroz blanco'  if 'arroz'  in carb_str else '')
+    _fila('carb_pasta',          'Pasta'         if 'pasta'  in carb_str else '')
+    _fila('carb_pan',            'Pan'           if ' pan'   in (' ' + carb_str) else '')
+    _fila('carb_batata',         'Batata/Camote' if any(x in carb_str for x in ['batata','camote']) else '')
+    _fila('carb_frutas',         _g('frutas'))
+    _fila('carbohidratos_evitar',_g('carbosEvitar'))
+    _fila('verduras_consume',    _g('verduras'))
+    _fila('verduras_evitar',     _g('verdurasEvitar'))
+    _fila('postres_favoritos',   _g('postres'))
+    _fila('bebidas_azucaradas',  'SÍ' if _g('bebidas') not in ['No','no',''] else 'NO')
+    _fila('observaciones_alimentarias', _g('notasAlimentacion'))
+
+    # ── 9. PIEL Y RUTINA ─────────────────────────────────────────
+    _sec('9. PIEL, RUTINA Y PROTECCIÓN SOLAR')
+    _fila('tipo_piel_mixta',          _g('pielTipo') if 'mixta' in _g('pielTipo').lower() else _g('pielTipo'))
+    _fila('prob_piel_seca',           'SÍ' if _yn_p(['seca','descam']) == 'SÍ' else 'NO')
+    _fila('prob_manchas_solares',     'SÍ' if _yn_p('manchas') == 'SÍ' else 'NO')
+    _fila('prob_pecas',               'SÍ' if _yn_p('peca') == 'SÍ' else 'NO')
+    _fila('prob_lineas_finas',        'SÍ' if _yn_p(['línea','linea','arruga']) == 'SÍ' else 'NO')
+    _fila('prob_flacidez',            'SÍ' if _yn_p('flacidez') == 'SÍ' else 'NO')
+    _fila('prob_perdida_luminosidad', 'SÍ' if _yn_p(['luminosidad','opac']) == 'SÍ' else 'NO')
+    _fila('prob_ardor',               'SÍ' if _yn_p(['ardor','sensibil']) == 'SÍ' else 'NO')
+    _fila('exposicion_solar',         _g('solar'))
+    _fila('protector_solar',          _g('usaProtectorSolar'))
+    _fila('protector_marca',          _g('protectorMarca'))
+    _fila('protector_fps',            _g('spf').split()[0] if _g('spf') else '')
+    _fila('protector_hora',           _g('protectorHora'))
+    _fila('protector_reaplica',       _g('reaplicaSolar'))
+    _fila('rutina_diaria_cuidado',    _g('tieneRutina'))
+    _fila('rutina_manana',            _g('rutinaManana'))
+    _fila('rutina_tarde',             _g('rutinaTarde'))
+    _fila('rutina_noche',             _g('rutinaNoche'))
+    _fila('rutina_limpieza',          'Limpieza'   if any(x in (_g('rutinaManana')+_g('rutinaNoche')).lower() for x in ['limpiad','jabon','jabón','espuma']) else '')
+    _fila('rutina_hidratacion',       'Hidratación' if any(x in (_g('rutinaManana')+_g('rutinaNoche')).lower() for x in ['hidrat','crema']) else '')
+    _fila('rutina_retinol',           'Retinol'    if 'retinol' in (_g('rutinaManana')+_g('rutinaNoche')).lower() else '')
+    _fila('productos_cosmeticos_frecuentes', _g('productosFrecuentes'))
+    _fila('actividad_fisica',         _g('actFisica'))
+
+    # ── 10. HISTORIAL ESTÉTICO ───────────────────────────────────
+    _sec('10. HISTORIAL ESTÉTICO Y TRATAMIENTOS PREVIOS')
+    _fila('tratamientos_previos',     'SÍ' if hist_lst else 'NO')
+    _fila('tratamiento_botox',        _yn_h('botox'))
+    _fila('botox_fecha',              _fh('Botox'))
+    _fila('tratamiento_rellenos',     _yn_h('rellenos'))
+    _fila('rellenos_fecha',           _fh('Rellenos'))
+    _fila('rellenos_zonas',           _zh('Rellenos'))
+    _fila('tratamiento_hilos',        _yn_h('hilos'))
+    _fila('hilos_fecha',              _fh('Hilos PDO'))
+    _fila('tratamiento_peeling',      _yn_h('peeling'))
+    _fila('peeling_fecha',            _fh('Peeling'))
+    _fila('tratamiento_laser',        _yn_h('laser'))
+    _fila('laser_tipo',               _zh('Laser'))
+    _fila('laser_fecha',              _fh('Laser'))
+    _fila('tratamiento_microblading', _yn_h('microblading'))
+    _fila('microblading_fecha',       _fh('Microblading'))
+    _fila('tratamiento_mesoterapia',  _yn_h('mesoterapia'))
+    _fila('mesoterapia_fecha',        _fh('Mesoterapia'))
+    _fila('tratamiento_radiofrecuencia', _yn_h('radiofrecuencia'))
+    _fila('radiofrecuencia_fecha',    _fh('Radiofrecuencia'))
+    _fila('tratamiento_criolipolisis',_yn_h('criolipolisis'))
+    _fila('criolipolisis_fecha',      _fh('Criolipólisis'))
+    _fila('tratamiento_otro',         'NO')
+    _fila('laser_actual',             _g('laserActivo'))
+    _fila('laser_actual_detalle',     _g('laserActualDet'))
+    _fila('complicaciones_esteticas', 'SÍ' if _g('complicacionesDet') else 'NO')
+    _fila('complicaciones_esteticas_desc', _g('complicacionesDet'))
+
+    # ── 11. OBJETIVOS ────────────────────────────────────────────
+    _sec('11. OBJETIVOS Y EXPECTATIVAS')
+    _fila('area_arrugas',         'Arrugas'         if 'arrugas'  in areas_low else '')
+    _fila('area_manchas',         'Manchas'         if 'manchas'  in areas_low else '')
+    _fila('area_flacidez_facial', 'Flacidez facial' if 'flacidez' in areas_low else '')
+    _fila('area_ojeras',          'Ojeras'          if 'ojeras'   in areas_low else '')
+    _fila('area_celulitis',       'Celulitis'       if 'celulitis' in areas_low else '')
+    _fila('grasa_zona',           'Grasa localizada' if 'grasa'   in areas_low else '')
+    _fila('prioridad_principal',  _g('prioridad'))
+    _fila('expectativas',         _g('expectativas'))
+    _fila('satisfaccion',         _g('satisfaccion'))
+    _fila('entiende_sesiones',    'SÍ')
+
+    # ── 12. DECLARACIONES ────────────────────────────────────────
+    _sec('12. DECLARACIONES Y CONSENTIMIENTO')
+    _fila('declara_veracidad',  'Acepto')
+    _fila('declara_riesgo',     'Acepto')
+    _fila('declara_cambios',    'Acepto')
+    _fila('declara_resultados', 'Acepto')
+    _fila('autoriza_contacto',  'Acepto')
 
     doc.add_paragraph()
     p_pie = doc.add_paragraph(); p_pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
     rp = p_pie.add_run('Centro Carvajal · Líderes en Medicina Estética en Panamá · centrocarvajal.com')
-    rp.font.size=Pt(8); rp.font.color.rgb=GRIS
+    rp.font.size = Pt(8); rp.font.color.rgb = GRIS
 
-    nombre_safe = re.sub(r'[^a-zA-Z0-9]','_', data.get('nombre','Paciente'))
+
+    nombre_safe = re.sub(r'[^a-zA-Z0-9]', '_', data.get('nombre', 'Paciente'))
     docx_path = f'/tmp/Cuestionario_{nombre_safe}_{uuid.uuid4().hex[:6]}.docx'
     doc.save(docx_path)
     return docx_path
@@ -2267,21 +2508,18 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude', session_id=None
 
 def leer_docx(path):
     try:
-        with zipfile.ZipFile(path) as z:
-            xml = z.read('word/document.xml').decode('utf-8')
-        texto = re.sub(r'</w:p>', '\n', xml)
-        texto = re.sub(r'</w:tc>', '\t', texto)
-        texto = re.sub(r'<[^>]+>', '', texto)
-        texto = htmllib.unescape(texto)
-        texto = re.sub(r'[ ]+', ' ', texto)
-        lineas = [l.strip() for l in texto.split('\n') if l.strip()]
+        from docx import Document as _Doc
+        doc = _Doc(path)
         pares = []
-        for i in range(0, len(lineas) - 1, 2):
-            key = lineas[i].lower().strip()
-            val = lineas[i + 1].strip()
-            if re.match(r'^[a-z][a-z0-9_]+$', key) and val:
-                pares.append(f'{key}\t{val}')
-        return '\n'.join(pares)
+        for table in doc.tables:
+            for row in table.rows:
+                cells = [c.text.strip() for c in row.cells]
+                if len(cells) >= 2:
+                    key = cells[0].lower().strip()
+                    val = cells[1].strip()
+                    if re.match(r'^[a-z][a-z0-9_]+$', key):
+                        pares.append(f'{key}\t{val}')
+        return '\n'.join(pares) if pares else None
     except Exception as e:
         print(f'leer_docx error: {e}')
         return None
@@ -2448,6 +2686,30 @@ def _mapear_formulario(f):
         'notasAlimentacion':   s('notasAlimentacion'),
         'nivelEstres':         s('nivelEstres'),
         'numHijos':            s('numHijosVal') or s('numHijos'),
+        # Contacto emergencia
+        'contactoEmergencia':  s('contactoEmergencia'),
+        'contactoRelacion':    s('contactoRelacion'),
+        'contactoTel':         s('contactoTel'),
+        # Intolerancias con detalle
+        'sintLacteos':         s('sintLacteos'),
+        'sintGluten':          s('sintGluten'),
+        'sintProcesados':      s('sintProcesados'),
+        # Solar detallado
+        'usaProtectorSolar':   s('usaProtectorSolar'),
+        'protectorMarca':      s('protectorMarca'),
+        'protectorHora':       s('protectorHora'),
+        'reaplicaSolar':       s('reaplicaSolar'),
+        # Rutina
+        'tieneRutina':         s('tieneRutina'),
+        # Historial estético extra
+        'laserActualDet':      s('laserActualDet'),
+        'complicacionesDet':   s('complicacionesDet'),
+        # Alimentación extra
+        'grasasEvitar':        s('grasasEvitar'),
+        'grasasEvitarPorque':  s('grasasEvitarPorque'),
+        'proteinasEvitar':     s('proteinasEvitar'),
+        'carbosEvitar':        s('carbosEvitar'),
+        'verdurasEvitar':      s('verdurasEvitar'),
         'notasStaff':          '',
     }
 
@@ -2480,16 +2742,34 @@ def parsear_cuestionario(texto):
         return raw.get(k, 'NO').upper() in ['SI', 'SÍ', 'S', 'YES']
 
     faltantes = []
-    for campo, label in [('peso','Peso'),('altura','Altura'),('piel_tipo','Tipo de piel'),
-                          ('prioridad_principal','Prioridad principal'),('satisfaccion','Satisfaccion (1-10)'),
-                          ('expectativas','Expectativas'),('exposicion_solar','Exposicion solar')]:
-        if not raw.get(campo) or raw.get(campo) == '0':
-            faltantes.append(label)
+    if not (raw.get('peso') and raw.get('peso') != '0'):
+        faltantes.append('Peso')
+    if not (raw.get('altura') or raw.get('estatura') or raw.get('talla')):
+        faltantes.append('Estatura')
+    if not (raw.get('piel_tipo') or raw.get('tipo_piel') or raw.get('tipo_piel_mixta')):
+        faltantes.append('Tipo de piel')
+    if not raw.get('prioridad_principal'):
+        faltantes.append('Prioridad principal')
+    if not (raw.get('satisfaccion') or raw.get('satisfaccion_actual')):
+        faltantes.append('Satisfaccion (1-10)')
+    if not raw.get('expectativas'):
+        faltantes.append('Expectativas')
+    if not raw.get('exposicion_solar'):
+        faltantes.append('Exposicion solar')
 
     historial = []
+    det_hist = {}
     for k, l in [('botox','Botox'),('rellenos','Rellenos'),('hilos','Hilos PDO'),('peeling','Peeling'),
-                 ('laser','Laser'),('microblading','Microblading'),('radiofrecuencia','Radiofrecuencia')]:
-        if si('tratamiento_' + k): historial.append(l)
+                 ('laser','Laser'),('microblading','Microblading'),('mesoterapia','Mesoterapia'),
+                 ('radiofrecuencia','Radiofrecuencia'),('criolipolisis','Criolipólisis')]:
+        if si('tratamiento_' + k):
+            historial.append(l)
+            det = {}
+            fecha = v(k + '_fecha')
+            if fecha: det['fecha'] = fecha
+            if k == 'rellenos' and v('rellenos_zonas'): det['zona'] = v('rellenos_zonas')
+            if k == 'laser' and v('laser_tipo'): det['zona'] = v('laser_tipo')
+            if det: det_hist[l] = det
 
     contra = {}
     for c, l in [('embarazada','Embarazo'),('lactancia','Lactancia'),('anticonceptivos','Anticonceptivos'),
@@ -2538,57 +2818,108 @@ def parsear_cuestionario(texto):
         try: imc = f'{float(pes) / (float(est)/100)**2:.1f}'
         except: pass
 
+    # Proteinas — incluir todos los campos individuales
+    proteinas_partes = [v('proteina_pollo'), v('proteina_pescado'), v('proteina_mariscos'),
+                        v('proteina_res'), v('proteina_cerdo'), v('proteina_huevos'),
+                        v('proteina_legumbres'), v('proteinas_otras'), v('proteinas_frecuentes')]
+    proteinas_str = ', '.join(filter(None, proteinas_partes))
+
+    # Carbohidratos — incluir campos individuales
+    carbs_partes = [v('carb_arroz_blanco'), v('carb_pasta'), v('carb_pan'), v('carb_batata')]
+    carbs_str = ', '.join(filter(None, carbs_partes)) or v('carbohidratos') or ''
+
     data = {
         'nombre':              v('nombre_completo') or '',
+        'cedula':              v('cedula') or '',
+        'fechaNacimiento':     v('fecha_nacimiento') or '',
+        'celular':             v('celular') or '',
+        'direccion':           v('direccion') or '',
         'edad':                v('edad') or '',
         'sexo':                v('sexo') or '',
         'ocupacion':           v('ocupacion') or v('profesion_trabajo') or '',
-        'actLaboral':          v('nivel_actividad_laboral') or '',
+        'actLaboral':          v('nivel_actividad_laboral') or v('actividad_laboral') or '',
         'horarioLaboral':      v('horario_laboral') or '',
+        'comoConociste':       v('referencia_recomendacion') or v('como_conocio_clinica') or '',
         'email':               v('email') or '',
         'fecha':               datetime.now().strftime('%d de %B, %Y'),
         'estatura':            est,
         'peso':                pes,
         'imc':                 imc,
-        'pielTipo':            v('piel_tipo') or v('tipo_piel') or '',
+        'contactoEmergencia':  v('emergencia_nombre') or '',
+        'contactoRelacion':    v('emergencia_relacion') or '',
+        'contactoTel':         v('emergencia_telefono') or '',
+        'pielTipo':            v('piel_tipo') or v('tipo_piel') or v('tipo_piel_mixta') or '',
         'pielProblemas':       faciales,
         'rutinaFacial':        (v('rutina_manana') or '') + ' | ' + (v('rutina_noche') or '') if si('rutina_diaria_cuidado') else 'No tiene rutina facial',
         'rutinaManana':        v('rutina_manana') or '',
         'rutinaNoche':         v('rutina_noche') or '',
-        'productosFrecuentes': v('productos_cosmeticos_frecuentes') or '',
-        'solar':               v('exposicion_solar') or '',
-        'spf':                 (v('protector_fps') or '') + ' ' + (v('protector_marca') or ''),
+        'productosFrecuentes': v('productos_cosmeticos_frecuentes') or v('productos_frecuentes') or '',
+        'solar':               v('exposicion_solar') or v('usa_solar') or '',
+        'spf':                 (v('protector_fps') or v('spf_factor') or '') + (' ' + (v('protector_marca') or '')).rstrip(),
         'actFisica':           v('actividad_fisica') or '',
-        'sueno':               (v('horas_sueno') or '') + ' horas ' + (v('calidad_sueno') or ''),
-        'horaDespierta':       v('hora_levanta') or '',
-        'horaDuerme':          v('hora_acuesta') or '',
-        'cansancioDia':        'Si' if si('cansancio_dia') else 'No',
-        'fuma':                ('Si - ' + (v('fuma_cantidad') or '')) if si('fuma') else 'No',
-        'alcohol':             'Si' if si('alcohol') else 'No',
-        'condicionSistemica':  (v('enfermedad_detalle') or 'Si') if si('sufre_enfermedad') else 'Sin enfermedades',
-        'condiciones':         v('otras_condiciones') or '',
-        'medicamentos':        v('medicamento_cual') or '',
-        'cirugias':            (v('cirugias_detalle') or 'Si') if si('cirugias') else 'Ninguna',
+        'sueno':               (lambda _h, _c: _h if 'hora' in _h.lower() and not _c else (_h + (' horas ' if _h else '') + _c).strip())(v('horas_sueno') or '', v('calidad_sueno') or ''),
+        'horaDespierta':       v('hora_levanta') or v('hora_despierta') or '',
+        'horaDuerme':          v('hora_acuesta') or v('hora_duerme') or '',
+        'cansancioDia':        'Si' if si('cansancio_dia') or si('cansancio_diurno') else 'No',
+        'nivelEstres':         v('nivel_estres') or '',
+        'numHijos':            v('num_hijos') or v('numero_hijos') or '',
+        'fuma':                ('Si - ' + (v('fuma_frecuencia') or v('fuma_cantidad') or '').strip()).rstrip(' -') if si('fuma') else 'No',
+        'alcohol':             'Si' if si('alcohol') or (v('consume_alcohol') or '').lower() not in ['no','no respondido',''] else 'No',
+        'condicionSistemica':  (v('enfermedad_detalle') or v('condicion_sistemica') or 'Si') if si('sufre_enfermedad') else (v('condicion_sistemica') or 'Sin enfermedades'),
+        'condiciones':         v('otras_condiciones') or v('condiciones_medicas') or '',
+        'medicamentos':        v('medicamento_cual') or v('medicamentos') or '',
+        'cirugias':            (v('cirugias_detalle') or v('cirugias_previas') or 'Si') if si('cirugias') else (v('cirugias_previas') or 'Ninguna'),
         'antecedentesFam':     (v('antecedentes_detalle') or 'Si') if si('antecedentes_familiares') else 'Ninguno',
+        'antecedentesFamDet':  v('antecedentes_detalle') or v('detalle_antecedentes') or '',
         'alergias':            ', '.join(ale_list) if ale_list else 'Ninguna',
         'contraindications':   contra,
+        'embarazo':            'Si' if si('embarazada') else 'No',
+        'lactancia':           v('lactancia') or ('Si' if si('lactancia') else 'No'),
+        'anticonceptivos':     v('anticonceptivos') or ('Si' if si('anticonceptivos') else 'No'),
+        'sop':                 v('sop') or ('Si' if si('sop') else 'No'),
+        'menopausia':          v('menopausia') or ('Si' if si('menopausia') else 'No'),
+        'perimenopausia':      v('perimenopausia') or ('Si' if si('perimenopausia') else 'No'),
+        'alergia_lidocaina':   'Si' if si('alergia_lidocaina') else 'No',
+        'alergia_penicilina':  'Si' if si('alergia_penicilina') else 'No',
+        'alergia_yodo':        'Si' if si('alergia_yodo') else 'No',
+        'alergia_aines':       'Si' if si('alergia_aines') else 'No',
+        'alergia_latex':       'Si' if si('alergia_latex') else 'No',
+        'alergia_aloe':        'Si' if si('alergia_aloe') else 'No',
+        'alergia_fragancias':  'Si' if si('alergia_fragancias') else 'No',
+        'evacuacion':          v('evacuacion') or '',
+        'sintLacteos':         'Si' if si('sintomas_lacteos') else 'No',
+        'sintGluten':          'Si' if si('sintomas_gluten') else 'No',
+        'sintProcesados':      'Si' if si('sintomas_procesados') else 'No',
+        'usaProtectorSolar':   'Si' if si('protector_solar') or si('usa_protector_solar') else 'No',
+        'protectorMarca':      v('protector_marca') or '',
+        'protectorHora':       v('protector_hora') or '',
+        'reaplicaSolar':       'Si' if si('protector_reaplica') else 'No',
+        'tieneRutina':         'Si' if si('rutina_diaria_cuidado') else 'No',
+        'laserActualDet':      v('laser_actual_detalle') or '',
+        'complicacionesDet':   v('complicaciones_esteticas_desc') or '',
+        'proteinasEvitar':     v('proteinas_evitar') or '',
+        'carbosEvitar':        v('carbohidratos_evitar') or '',
+        'verdurasEvitar':      v('verduras_evitar') or '',
+        'grasasEvitar':        v('grasas_evitar') or '',
+        'grasasEvitarPorque':  v('grasas_evitar_porque') or '',
         'areasFaciales':       faciales,
         'areasCorporales':     corporales,
         'prioridad':           v('prioridad_principal') or '',
         'expectativas':        v('expectativas') or '',
-        'satisfaccion':        v('satisfaccion') or '',
+        'satisfaccion':        (v('satisfaccion') or v('satisfaccion_actual') or '').replace('/10','').strip(),
         'historialEstetico':   list(dict.fromkeys(historial)),
-        'laserActivo':         'Si' if si('laser_actual') else 'No',
+        'historialDetalle':    det_hist,
+        'laserActivo':         'Si' if si('laser_actual') or si('laser_activo') else 'No',
         'intolerancias':       intol,
         'sintomasDigestivos':  sintomas,
-        'proteinas':           ', '.join(filter(None, [v('proteina_pollo'), v('proteinas_otras')])),
-        'carbohidratos':       v('carb_arroz_blanco') or '',
-        'verduras':            v('verduras_consume') or '',
-        'frutas':              v('carb_frutas') or '',
-        'alimentosEvitar':     ', '.join(filter(None, [v('proteinas_evitar'), v('carbohidratos_evitar'), v('verduras_evitar')])),
-        'postres':             v('postres_favoritos') or '',
-        'bebidas':             (v('bebidas_azucaradas_cuales') or 'Si') if si('bebidas_azucaradas') else 'No',
-        'notasAlimentacion':   v('observaciones_alimentarias') or '',
+        'proteinas':           proteinas_str,
+        'carbohidratos':       carbs_str,
+        'verduras':            v('verduras_consume') or v('verduras') or '',
+        'frutas':              v('carb_frutas') or v('frutas') or '',
+        'alimentosEvitar':     ', '.join(filter(None, [v('proteinas_evitar'), v('carbohidratos_evitar'), v('verduras_evitar'), v('alimentos_evitar')])),
+        'postres':             v('postres_favoritos') or v('postres_dulces') or '',
+        'bebidas':             (v('bebidas_azucaradas_cuales') or 'Si') if si('bebidas_azucaradas') else (v('bebidas_habituales') or 'No'),
+        'notasAlimentacion':   v('observaciones_alimentarias') or v('notas_alimentacion') or '',
         'notasStaff':          '',
     }
     return data, faltantes
