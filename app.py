@@ -1332,7 +1332,8 @@ function generarCalendario() {
     {bg:'#fff9c4',border:'#ffe082',label:'Sue\u00f1o'}
   ];
 
-  var mesesHtml = '';
+  // Construir array con el HTML de cada mes
+  var todosMeses = [];
   var cur = new Date(d0);
   while (cur <= d1) {
     var yr  = cur.getFullYear();
@@ -1348,7 +1349,6 @@ function generarCalendario() {
 
     var celdasHtml = '';
     for (var e = 0; e < primerDia; e++) celdasHtml += '<div class="cal-day empty"></div>';
-
     for (var dia = 1; dia <= diasEnMes; dia++) {
       var dots = '';
       for (var ci = 0; ci < colores.length; ci++) {
@@ -1359,20 +1359,20 @@ function generarCalendario() {
       celdasHtml += '<div class="cal-day"><div class="cal-day-num">' + dia +
                     '</div><div class="cal-dots">' + dots + '</div></div>';
     }
-
     var total = primerDia + diasEnMes;
     var rest  = (7 - total % 7) % 7;
     for (var r = 0; r < rest; r++) celdasHtml += '<div class="cal-day empty"></div>';
 
-    mesesHtml += '<div class="cal-month">' +
+    todosMeses.push('<div class="cal-month">' +
       '<div class="cal-mhdr">' + meses[mo] + ' ' + yr + '</div>' +
       '<div class="cal-days-hdr">' + cabHtml + '</div>' +
       '<div class="cal-days-grid">' + celdasHtml + '</div>' +
-    '</div>';
+    '</div>');
 
     cur.setMonth(cur.getMonth() + 1);
   }
 
+  // Leyenda compartida
   var leyenda = '';
   for (var li = 0; li < colores.length; li++) {
     leyenda += '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280">' +
@@ -1380,38 +1380,57 @@ function generarCalendario() {
                ';border:1px solid ' + colores[li].border + '"></div>' + colores[li].label + '</div>';
   }
 
+  // Agrupar en páginas de 6 meses (3 cols x 2 filas) — cada una con su propio encabezado
+  var MESES_POR_PAG = 6;
+  var paginasHtml = '';
+  for (var pi = 0; pi < todosMeses.length; pi += MESES_POR_PAG) {
+    var grupo = todosMeses.slice(pi, pi + MESES_POR_PAG);
+    // Rellenar con celdas vacías si el grupo no completa 6
+    while (grupo.length < MESES_POR_PAG && grupo.length % 3 !== 0) {
+      grupo.push('<div class="cal-month cal-month-empty"></div>');
+    }
+    var esUltima = (pi + MESES_POR_PAG >= todosMeses.length);
+    paginasHtml +=
+      '<div class="cal-page' + (esUltima ? '' : ' page-break') + '">' +
+      '<div class="page-header">' +
+      '<h1>Calendario de Seguimiento</h1>' +
+      '<p>Centro Carvajal \u00b7 M\u00e9todo de Rejuvenecimiento Carvajal \u00b7 Marca cada d\u00eda al completar tu rutina</p>' +
+      '</div>' +
+      '<div class="cal-grid">' + grupo.join('') + '</div>' +
+      '<div class="leyenda">' + leyenda + '</div>' +
+      '<div class="footer">Centro Carvajal \u00b7 L\u00edderes en Medicina Est\u00e9tica en Panam\u00e1 \u00b7 centrocarvajal.com</div>' +
+      '</div>';
+  }
+
   var printHtml =
     '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">' +
     '<title>Calendario de Seguimiento \u2014 Centro Carvajal</title>' +
     '<style>' +
-    '@page{size:A4 landscape;margin:10mm}' +
+    '@page{size:A4 landscape;margin:8mm}' +
     '*{margin:0;padding:0;box-sizing:border-box}' +
     'body{font-family:"Segoe UI",system-ui,sans-serif;background:#faf9f6;color:#1c1c1c}' +
-    '.page-header{text-align:center;margin-bottom:14px}' +
-    '.page-header h1{font-family:Georgia,serif;font-size:18pt;color:#1c1c1c;margin-bottom:2px}' +
-    '.page-header p{font-size:9pt;color:#6b7280}' +
-    '.cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}' +
-    '.cal-month{border:1px solid rgba(143,168,50,.22);border-radius:8px;overflow:hidden;background:#fff}' +
-    '.cal-mhdr{background:#1c1c1c;color:#8fa832;text-align:center;padding:7px 10px;font-family:Georgia,serif;font-size:11pt;font-weight:700}' +
-    '.cal-days-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:rgba(143,168,50,.1)}' +
-    '.cal-dh{text-align:center;font-size:7pt;font-weight:700;color:#8fa832;padding:3px 1px;text-transform:uppercase}' +
-    '.cal-days-grid{display:grid;grid-template-columns:repeat(7,1fr)}' +
-    '.cal-day{border-right:1px solid rgba(143,168,50,.1);border-bottom:1px solid rgba(143,168,50,.1);padding:3px 4px;background:#fff;min-height:34px}' +
+    '.cal-page{width:100%;height:100vh;display:flex;flex-direction:column;justify-content:space-between}' +
+    '.page-break{page-break-after:always}' +
+    '.page-header{text-align:center;margin-bottom:10px;flex-shrink:0}' +
+    '.page-header h1{font-family:Georgia,serif;font-size:17pt;color:#1c1c1c;margin-bottom:2px}' +
+    '.page-header p{font-size:8.5pt;color:#6b7280}' +
+    '.cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1;min-height:0}' +
+    '.cal-month{border:1px solid rgba(143,168,50,.22);border-radius:8px;overflow:hidden;background:#fff;page-break-inside:avoid;display:flex;flex-direction:column}' +
+    '.cal-month-empty{border:none;background:transparent}' +
+    '.cal-mhdr{background:#1c1c1c;color:#8fa832;text-align:center;padding:6px 10px;font-family:Georgia,serif;font-size:10.5pt;font-weight:700;flex-shrink:0}' +
+    '.cal-days-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:rgba(143,168,50,.1);flex-shrink:0}' +
+    '.cal-dh{text-align:center;font-size:6.5pt;font-weight:700;color:#8fa832;padding:3px 1px;text-transform:uppercase}' +
+    '.cal-days-grid{display:grid;grid-template-columns:repeat(7,1fr);flex:1}' +
+    '.cal-day{border-right:1px solid rgba(143,168,50,.1);border-bottom:1px solid rgba(143,168,50,.1);padding:2px 3px;background:#fff;min-height:30px}' +
     '.cal-day:nth-child(7n){border-right:none}' +
     '.cal-day.empty{background:#fafafa}' +
-    '.cal-day-num{font-size:7.5pt;font-weight:700;color:#1c1c1c;margin-bottom:2px}' +
+    '.cal-day-num{font-size:7pt;font-weight:700;color:#1c1c1c;margin-bottom:2px}' +
     '.cal-dots{display:flex;gap:2px;flex-wrap:wrap}' +
-    '.leyenda{display:flex;gap:16px;justify-content:center;margin-top:12px;padding-top:8px;border-top:1px solid rgba(143,168,50,.2)}' +
-    '.footer{text-align:center;margin-top:10px;font-size:8pt;color:#9aaa8a}' +
-    '@media print{body{background:white}}' +
+    '.leyenda{display:flex;gap:16px;justify-content:center;margin-top:8px;padding-top:6px;border-top:1px solid rgba(143,168,50,.2);flex-shrink:0}' +
+    '.footer{text-align:center;margin-top:6px;font-size:7.5pt;color:#9aaa8a;flex-shrink:0}' +
+    '@media print{body{background:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}}' +
     '</style></head><body>' +
-    '<div class="page-header">' +
-    '<h1>Calendario de Seguimiento</h1>' +
-    '<p>Centro Carvajal \u00b7 M\u00e9todo de Rejuvenecimiento Carvajal \u00b7 Marca cada d\u00eda al completar tu rutina</p>' +
-    '</div>' +
-    '<div class="cal-grid">' + mesesHtml + '</div>' +
-    '<div class="leyenda">' + leyenda + '</div>' +
-    '<div class="footer">Centro Carvajal \u00b7 L\u00edderes en Medicina Est\u00e9tica en Panam\u00e1 \u00b7 centrocarvajal.com</div>' +
+    paginasHtml +
     '<script>window.onload=function(){window.print();}</scr' + 'ipt>' +
     '</body></html>';
 
