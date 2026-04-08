@@ -508,6 +508,7 @@ def subir_borrador_cloudinary(html_content, job_id):
             public_id=f'borrador_{job_id}',
             resource_type='raw',
             overwrite=True,
+            invalidate=True,  # invalida cache CDN para que _cargar_usuarios lea version fresca
         )
         os.unlink(tmp_path)
         return resultado.get('secure_url', '')
@@ -1437,7 +1438,8 @@ def _cargar_usuarios():
     if not CLOUDINARY_CLOUD_NAME:
         return {}
     try:
-        url = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/raw/upload/{USUARIOS_CLOUDINARY_ID}.json'
+        # Cache-buster para evitar que el CDN sirva version antigua tras actualizar
+        url = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/raw/upload/{USUARIOS_CLOUDINARY_ID}.json?_={int(_time.time())}'
         r = req.get(url, timeout=10)
         if r.status_code == 200:
             return r.json()
@@ -1617,7 +1619,7 @@ def api_recuperar_password():
         f'</div>'
         f'<p style="font-size:12px;color:#999;text-align:center">Este link expira en 1 hora. Si no solicitaste esto, ignora este correo.</p>'
         f'</div>'
-        f'<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div>'
+        f'<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · metodo.centrocarvajal.com</div>'
         f'</div></body></html>'
     )
     try:
@@ -1846,7 +1848,7 @@ def generar_analisis_medico(data):
         'Historial estetico': data.get('historialEstetico',''),
         'Laser activo': data.get('laserActivo',''),
         'Contraindicaciones': data.get('contraindications',''),
-        'Antecedentes familiares': data.get('antecedentesFam','') + ' ' + data.get('antecedentesFamDet',''),
+        'Antecedentes familiares': (data.get('antecedentesFam') or '') + ' ' + (data.get('antecedentesFamDet') or ''),
         'Satisfaccion actual': str(data.get('satisfaccion','')) + '/10',
         'Prioridad': data.get('prioridad',''),
         'Areas faciales': data.get('areasFaciales',''),
