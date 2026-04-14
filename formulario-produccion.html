@@ -89,8 +89,8 @@ textarea:focus{border-color:var(--gold)}
 .yn-btns{display:flex;gap:8px;flex-shrink:0}
 .yn-btn{font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:6px 14px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--muted);transition:all .2s;font-weight:500}
 .yn-btn:hover{border-color:var(--gold-light);color:var(--gold)}
-.yn-btn.active-yes{border-color:var(--gold);background:rgba(184,147,90,.1);color:var(--gold)}
-.yn-btn.active-no{border-color:var(--muted);background:rgba(140,122,104,.08);color:var(--muted)}
+.yn-btn.active-yes{border-color:var(--gold);background:rgba(184,147,90,.15);color:var(--gold);font-weight:600}
+.yn-btn.active-no{border-color:#5a4a3a;background:rgba(90,74,58,.13);color:#3a2e24;font-weight:600}
 
 .scale-group{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 .scale-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:2px;background:transparent;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .2s;font-weight:300}
@@ -1507,6 +1507,10 @@ function collectData(){
     antecedentesFam:    (document.querySelector('input[name="antecedentes_fam"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     antecedentesFamDet: document.getElementById('f-antecedentes-det')?document.getElementById('f-antecedentes-det').value||'':'',
 
+    // Contraindicaciones clínicas (step-10)
+    infeccionesCutaneas: getYNValue(document.getElementById('step-10'), 'infecciones cutáneas'),
+    dispositivosMedicos: getYNValue(document.getElementById('step-10'), 'dispositivos médicos'),
+
     notasStaff: '',
   };
 }
@@ -1569,8 +1573,8 @@ document.getElementById('fecha-envio').valueAsDate=new Date();
 // Toggle protector solar
 function toggleSolar(btn, val) {
   const row = btn.closest('.yn-btns');
-  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active','active-yes','active-no'));
+  btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
   const wrap = document.getElementById('solar-det-wrap');
   if (wrap) wrap.style.display = val === 'yes' ? 'block' : 'none';
 }
@@ -1578,8 +1582,8 @@ function toggleSolar(btn, val) {
 // Toggle rutina diaria
 function toggleRutina(btn, val) {
   const row = btn.closest('.yn-btns');
-  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active','active-yes','active-no'));
+  btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
   const wrap = document.getElementById('rutina-det-wrap');
   if (wrap) wrap.style.display = val === 'yes' ? 'block' : 'none';
 }
@@ -1594,6 +1598,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (txt.includes('láser') && txt.includes('actualmente')) {
       row.querySelectorAll('.yn-btn').forEach(btn => {
         btn.addEventListener('click', function() {
+          row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active-yes','active-no'));
+          this.classList.add(this.textContent.trim() === 'Sí' ? 'active-yes' : 'active-no');
           const wrap = document.getElementById('laser-det-wrap');
           if (wrap) wrap.style.display = this.textContent.trim() === 'Sí' ? 'block' : 'none';
         });
@@ -1602,6 +1608,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (txt.includes('complicaciones')) {
       row.querySelectorAll('.yn-btn').forEach(btn => {
         btn.addEventListener('click', function() {
+          row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active-yes','active-no'));
+          this.classList.add(this.textContent.trim() === 'Sí' ? 'active-yes' : 'active-no');
           const wrap = document.getElementById('complic-det-wrap');
           if (wrap) wrap.style.display = this.textContent.trim() === 'Sí' ? 'block' : 'none';
         });
@@ -1613,8 +1621,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Toggle síntomas por grupo de alimento
 function toggleSintAlim(btn, val, wrapId) {
   const row = btn.closest('.yn-btns');
-  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active','active-yes','active-no'));
+  btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
   const wrap = document.getElementById(wrapId);
   if (wrap) wrap.style.display = val === 'yes' ? 'block' : 'none';
 }
@@ -1622,19 +1630,17 @@ function toggleSintAlim(btn, val, wrapId) {
 // Toggle síntomas en alergias
 function toggleAlergia(btn, val, key) {
   const row = btn.closest('.yn-btns');
-  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active','active-yes','active-no'));
+  btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
   const det = document.getElementById('adet-' + key);
   if (det) det.style.display = val === 'yes' ? 'block' : 'none';
 }
 
 // Toggle fecha+zona en historial estético
 function toggleTrat(btn, val, key) {
-  // Comportamiento normal de toggleYN
   const row = btn.closest('.yn-btns');
-  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  // Mostrar/ocultar detalle
+  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active','active-yes','active-no'));
+  btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
   const det = document.getElementById('trat-det-' + key);
   if (det) det.style.display = val === 'yes' ? 'block' : 'none';
 }

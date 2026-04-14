@@ -2277,9 +2277,18 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('digestion_lenta',           _yn_s('digestion'))
     _fila('nauseas_malestar',          _yn_s('nauseas'))
     _fila('antecedentes_intolerancias','SÍ' if intol_lst else 'NO')
-    _fila('sintomas_lacteos',          'SÍ' if _g('sintLacteos').lower() in ['si','sí','yes'] else 'NO')
-    _fila('sintomas_gluten',           'SÍ' if _g('sintGluten').lower()  in ['si','sí','yes'] else 'NO')
-    _fila('sintomas_procesados',       'SÍ' if _g('sintProcesados').lower() in ['si','sí','yes'] else 'NO')
+
+    # Función local: detecta SÍ aunque el valor sea texto de detalle (no sólo 'si'/'sí')
+    def _yn_sint(key):
+        val = _g(key).strip()
+        if not val or val.lower() in ['no', 'no respondido', '']:
+            return 'NO'
+        # Es SÍ puro o es texto de detalle (ej. "hinchazón, gases") → ambos son SÍ
+        return 'SÍ' if val.lower() in ['si', 'sí', 'yes'] else f'SÍ — {val}'
+
+    _fila('sintomas_lacteos',    _yn_sint('sintLacteos'))
+    _fila('sintomas_gluten',     _yn_sint('sintGluten'))
+    _fila('sintomas_procesados', _yn_sint('sintProcesados'))
 
     # ── 6. ALERGIAS ──────────────────────────────────────────────
     _sec('6. ALERGIAS')
@@ -2298,10 +2307,18 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('cirugias_detalle',      _g('cirugias'))
     _fila('antecedentes_familiares','SÍ' if _g('antecedentesFam') not in ['Ninguno','No',''] else 'NO')
     _fila('antecedentes_detalle',  _g('antecedentesFamDet'))
-    _fila('infecciones_cutaneas',       _g('infeccionesCutaneas') or 'NO')
-    _fila('infecciones_cutaneas_detalle', _g('infeccionesDet'))
-    _fila('dispositivos_medicos',       _g('dispositivosMedicos') or 'NO')
-    _fila('dispositivos_medicos_detalle', _g('dispositivosDet'))
+
+    # Función local: normaliza Sí/No/No respondido → SÍ/NO
+    def _yn_norm(key):
+        val = _g(key).strip()
+        if not val or val.lower() in ['no', 'no respondido', '']:
+            return 'NO'
+        return 'SÍ' if val.lower() in ['sí', 'si', 'yes'] else val
+
+    _fila('infecciones_cutaneas',          _yn_norm('infeccionesCutaneas'))
+    _fila('infecciones_cutaneas_detalle',  _g('infeccionesDet'))
+    _fila('dispositivos_medicos',          _yn_norm('dispositivosMedicos'))
+    _fila('dispositivos_medicos_detalle',  _g('dispositivosDet'))
 
     # ── 8. ALIMENTACIÓN ──────────────────────────────────────────
     _sec('8. ALIMENTACIÓN Y NUTRICIÓN')
@@ -2731,6 +2748,11 @@ def _mapear_formulario(f):
         'proteinasEvitar':     s('proteinasEvitar'),
         'carbosEvitar':        s('carbosEvitar'),
         'verdurasEvitar':      s('verdurasEvitar'),
+        # Contraindicaciones clínicas adicionales
+        'infeccionesCutaneas': s('infeccionesCutaneas'),
+        'dispositivosMedicos': s('dispositivosMedicos'),
+        # Rutina tarde (campo opcional, puede estar vacío si el formulario no lo tiene)
+        'rutinaTarde':         s('rutinaTarde'),
         'notasStaff':          '',
     }
 
