@@ -61,6 +61,11 @@ if CLOUDINARY_CLOUD_NAME:
 # ── Jobs en memoria ───────────────────────────────────────────
 jobs = {}  # jobId -> {'status': ..., 'msg': ..., 'html_url': ...}
 
+# ── Fallback de créditos Claude ────────────────────────────────
+# Lista thread-safe: se llena cuando Claude devuelve 400 sin créditos.
+# El worker la lee, envía alerta y la limpia.
+_claude_sin_creditos = []
+
 # ════════════════════════════════════════════════════════════
 # RUTAS
 # ════════════════════════════════════════════════════════════
@@ -1926,7 +1931,34 @@ Sé conciso pero completo. Usa terminología médica adecuada."""
         )
         elapsed = round(time.time() - t0, 1)
         if resp.status_code != 200:
-            print(f'[analisis_medico] ERROR {resp.status_code}: {resp.text[:200]}')
+            error_text = resp.text
+            print(f'[analisis_medico] ERROR {resp.status_code}: {error_text[:200]}')
+            if resp.status_code == 400 and 'credit balance is too low' in error_text:
+                print('[analisis_medico] Sin créditos Claude — fallback a Groq')
+                if error_text not in _claude_sin_creditos:
+                    _claude_sin_creditos.append(error_text[:500])
+                try:
+                    rg = req.post(
+                        'https://api.groq.com/openai/v1/chat/completions',
+                        headers={'Authorization': f'Bearer {GROQ_KEY}', 'Content-Type': 'application/json'},
+                        json={
+                            'model': 'llama-3.3-70b-versatile',
+                            'messages': [
+                                {'role': 'system', 'content': system_prompt},
+                                {'role': 'user',   'content': f'Datos del paciente:\n{resumen}'}
+                            ],
+                            'max_tokens': 2000,
+                            'temperature': 0.4,
+                        },
+                        timeout=120
+                    )
+                    if rg.status_code == 200:
+                        txt_g = rg.json()['choices'][0]['message']['content'].strip()
+                        print(f'[analisis_medico] Groq fallback OK — {len(txt_g)} chars')
+                        return txt_g
+                    print(f'[analisis_medico] Groq fallback error {rg.status_code}')
+                except Exception as eg:
+                    print(f'[analisis_medico] Groq fallback excepción: {eg}')
             return None
         txt = resp.json()['content'][0]['text'].strip()
         print(f'[analisis_medico] OK — {elapsed}s ({len(txt)} chars)')
@@ -2510,6 +2542,21 @@ def worker(job_id, data, faltantes, fotos=None, modelo='claude', session_id=None
         )
         print(f'[worker] Correo 2 (plan) enviado: {nombre}')
 
+        # ── Alerta si Claude se quedó sin créditos durante este job ──
+        if _claude_sin_creditos:
+            error_raw = _claude_sin_creditos[-1]
+            try:
+                enviar_resend(
+                    f'⚠️ Claude sin créditos — se usó Groq como fallback ({nombre})',
+                    email_alerta_creditos(error_raw, nombre),
+                    MAIL_TO,
+                    cc=MAIL_CC or None
+                )
+                print(f'[worker] Alerta de créditos enviada')
+            except Exception as e:
+                print(f'[worker] Error enviando alerta créditos: {e}')
+            _claude_sin_creditos.clear()
+
         # Limpiar temporales
         for f_path in adjuntos_plan:
             try: os.unlink(f_path)
@@ -3052,8 +3099,14 @@ def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
             continue
 
         if resp.status_code != 200:
-            print(f"[{num}/{total}] ERROR {resp.status_code}: {resp.text[:400]}")
-            return None, f'Error API Claude ({resp.status_code}): {resp.text[:300]}'
+            error_text = resp.text
+            print(f"[{num}/{total}] ERROR {resp.status_code}: {error_text[:400]}")
+            if resp.status_code == 400 and 'credit balance is too low' in error_text:
+                print(f"[{num}/{total}] Sin créditos Claude — fallback automático a Groq")
+                if error_text not in _claude_sin_creditos:
+                    _claude_sin_creditos.append(error_text[:500])
+                return _llamar_groq(num, total, system_prompt, user_msg, max_tok)
+            return None, f'Error API Claude ({resp.status_code}): {error_text[:300]}'
 
         rj = resp.json()
         txt = rj['content'][0]['text']
@@ -4017,6 +4070,47 @@ def generar_calendario():
 # ════════════════════════════════════════════════════════════
 # EMAILS con Resend
 # ════════════════════════════════════════════════════════════
+
+def email_alerta_creditos(error_raw, nombre_paciente=''):
+    """HTML del correo de alerta cuando Claude se queda sin créditos."""
+    fecha = datetime.now().strftime('%d/%m/%Y a las %H:%M')
+    paciente_line = f' durante el procesamiento de <strong>{nombre_paciente}</strong>' if nombre_paciente else ''
+    return f'''<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="background:#f0e8de;padding:20px;font-family:sans-serif">
+<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #ddd">
+  <div style="background:#1a1410;padding:20px 24px">
+    <div style="color:#e05252;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Alerta del Sistema</div>
+    <div style="color:#fff;font-size:18px;margin-top:4px">⚠️ API de Claude sin créditos</div>
+    <div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:2px">{fecha}</div>
+  </div>
+  <div style="padding:24px">
+    <p style="font-size:13px;color:#3d2e20;margin-bottom:16px">
+      El sistema detectó un error de créditos al llamar a la API de Claude{paciente_line}.
+      El plan y el análisis clínico fueron generados usando <strong>Groq (Llama 3.3 70B)</strong> como fallback automático.
+    </p>
+    <div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:6px;padding:14px 18px;margin-bottom:20px">
+      <div style="font-size:10px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Error exacto recibido de Anthropic:</div>
+      <code style="font-size:10px;color:#7f1d1d;word-break:break-all;display:block">{error_raw}</code>
+    </div>
+    <div style="background:#fffbf0;border:1px solid #e8d89a;border-radius:6px;padding:14px 18px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:#8a7030;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">¿Qué significa este error?</div>
+      <p style="font-size:12px;color:#5a4a20;margin:0">
+        La cuenta de Anthropic se quedó sin créditos. El sistema no puede usar Claude hasta que se recargue el saldo.<br><br>
+        <strong>Acción requerida:</strong> Ingresar a
+        <a href="https://console.anthropic.com" style="color:#b8935a">console.anthropic.com</a>
+        → Plans &amp; Billing → recargar créditos.
+      </p>
+    </div>
+    <div style="background:#f0f7f0;border:1px solid #a8d5a2;border-radius:6px;padding:14px 18px">
+      <div style="font-size:11px;font-weight:700;color:#2d6a2d;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">✅ El plan fue entregado igualmente</div>
+      <p style="font-size:12px;color:#1a4a1a;margin:0">
+        El sistema usó Groq automáticamente y el plan fue generado y enviado sin interrupciones al paciente.
+      </p>
+    </div>
+  </div>
+  <div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,0.3)">Centro Carvajal · centrocarvajal.com</div>
+</div></body></html>'''
+
 
 def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adjuntos_extra=None, cc=None):
     if not RESEND_KEY:
