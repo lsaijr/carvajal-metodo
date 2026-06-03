@@ -77,6 +77,13 @@ def index():
         return f.read()
 
 
+@app.route('/plan-diario', methods=['GET'])
+def plan_diario():
+    # Plan diario personal con seguimiento (localStorage)
+    with open(os.path.join(os.path.dirname(__file__), 'plan-diario.html'), encoding='utf-8') as f:
+        return f.read()
+
+
 @app.route('/panel', methods=['GET'])
 def panel():
     from flask import redirect
