@@ -4786,7 +4786,7 @@ tr:last-child td{border-bottom:none}
   <div class="section-header"><h2>Corporales</h2><span class="badge">Cuerpo</span></div>
   <table>
     <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
-    <tr><td>EXILIS Abdomen</td><td class="sessions">8 ses</td><td class="price">$2,000.00</td></tr>
+    <tr><td>EXILIS Abdomen</td><td class="sessions">8 ses</td><td class="price">$1,000.00</td></tr>
     <tr><td>Lipoláser</td><td class="sessions">10 ses</td><td class="price">$558.00</td></tr>
     <tr><td>Sculped Body</td><td class="sessions">12 ses</td><td class="price">$458.00</td></tr>
     <tr><td>Cellulite Shock / BTL X-Wave</td><td class="sessions">10 ses</td><td class="price">$790.00</td></tr>
