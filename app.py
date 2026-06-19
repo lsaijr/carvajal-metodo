@@ -4706,6 +4706,127 @@ function mostrarError(msg) {
 </html>"""
 
 
+@app.route('/precios')
+def precios():
+    return render_template_string("""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lista de Precios — Centro Carvajal</title>
+<style>
+:root{--dark:#1a1410;--olive:#8fa832;--olive-light:rgba(143,168,50,.1);--gold:#b8935a;--cream:#f4f5ef;--white:#fff;--gray:#6b7280;--border:rgba(143,168,50,.2);}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;line-height:1.5}
+.container{max-width:960px;margin:0 auto;padding:40px 20px}
+header{text-align:center;margin-bottom:40px}
+header h1{font-family:Georgia,serif;font-size:32px;font-weight:600;color:var(--dark);margin-bottom:6px}
+header p{color:var(--gray);font-size:14px}
+.section{margin-bottom:36px;background:var(--white);border:1px solid rgba(0,0,0,.06);border-radius:12px;overflow:hidden}
+.section-header{background:var(--dark);padding:14px 20px;display:flex;align-items:center;gap:10px}
+.section-header h2{font-size:15px;font-weight:600;color:var(--white);text-transform:uppercase;letter-spacing:.8px}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;background:var(--olive-light);color:var(--olive);text-transform:uppercase;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 16px;text-align:left;font-size:13px}
+th{background:var(--olive-light);color:var(--olive);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border)}
+td{border-bottom:1px solid rgba(0,0,0,.04);color:var(--dark)}
+tr:last-child td{border-bottom:none}
+.price{font-weight:600;color:var(--dark);white-space:nowrap}
+.sessions{color:var(--gray);font-size:12px}
+.note{font-size:12px;color:var(--gray);padding:16px 20px;border-top:1px solid rgba(0,0,0,.04)}
+.footer{text-align:center;padding:30px 0;font-size:12px;color:var(--gray)}
+.footer a{color:var(--olive);text-decoration:none}
+@media(max-width:640px){.container{padding:20px 12px}th,td{padding:10px 12px;font-size:12px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>Lista de Precios</h1>
+  <p>Centro Carvajal — Clínica de Medicina Estética — Panamá</p>
+</header>
+
+<div class="section">
+  <div class="section-header"><h2>Faciales / Despigmentantes</h2><span class="badge">Rostro</span></div>
+  <table>
+    <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
+    <tr><td>Cosmelan Kit</td><td class="sessions">Completo</td><td class="price">$600.00</td></tr>
+    <tr><td>Cosmelan Mantenimiento</td><td class="sessions">Kit</td><td class="price">$300.00</td></tr>
+    <tr><td>Melas Peel</td><td class="sessions">3 ses</td><td class="price">$200.00</td></tr>
+    <tr><td>Regenerador Facial</td><td class="sessions">3 ses</td><td class="price">$613.00</td></tr>
+    <tr><td>Regenerador Facial</td><td class="sessions">1 ses</td><td class="price">$313.00</td></tr>
+    <tr><td>Fine Lift</td><td class="sessions">Paquete</td><td class="price">$999.00</td></tr>
+    <tr><td>Skin Lift Pro</td><td class="sessions">1 ses</td><td class="price">$600.00</td></tr>
+    <tr><td>Total Lift</td><td class="sessions">Paquete</td><td class="price">$1,300.00</td></tr>
+    <tr><td>De Age Treatment</td><td class="sessions">Paquete</td><td class="price">$975.00</td></tr>
+    <tr><td>Blanqueamiento Facial</td><td class="sessions">6 ses</td><td class="price">$266.00</td></tr>
+    <tr><td>Plasma Facial</td><td class="sessions">1 ses</td><td class="price">$200.00</td></tr>
+    <tr><td>Plasma Gel</td><td class="sessions">1 ses</td><td class="price">$250.00</td></tr>
+    <tr><td>Peeling Periocular</td><td class="sessions">3 ses</td><td class="price">$151.00</td></tr>
+    <tr><td>Acthyderm Rostro</td><td class="sessions">3 ses</td><td class="price">$334.00</td></tr>
+    <tr><td>Péptidos Rejuvenecedores Rostro</td><td class="sessions">3 ses</td><td class="price">$544.00</td></tr>
+    <tr><td>Péptidos Párpados</td><td class="sessions">3 ses</td><td class="price">$187.00</td></tr>
+    <tr><td>Foto Facial</td><td class="sessions">3 ses</td><td class="price">$367.00</td></tr>
+    <tr><td>Gleaming Skin</td><td class="sessions">6 ses</td><td class="price">$616.00</td></tr>
+    <tr><td>Beauty Light</td><td class="sessions">2 ses</td><td class="price">$300.00</td></tr>
+    <tr><td>Bright Eyes</td><td class="sessions">6 ses</td><td class="price">$241.00</td></tr>
+    <tr><td>Hidratación Piel</td><td class="sessions">3 ses</td><td class="price">$236.00</td></tr>
+    <tr><td>Vita C Peel</td><td class="sessions">3 ses</td><td class="price">$286.00</td></tr>
+    <tr><td>Hidrofacial</td><td class="sessions">Por sesión</td><td class="price">$90.00</td></tr>
+    <tr><td>Microdermoabrasión</td><td class="sessions">Por sesión</td><td class="price">$45.00</td></tr>
+    <tr><td>Luz Anti-Acné</td><td class="sessions">3 ses</td><td class="price">$290.00</td></tr>
+    <tr><td>Toxina Botulínica</td><td class="sessions">30 u</td><td class="price">$450.00</td></tr>
+    <tr><td>Toxina Botulínica</td><td class="sessions">50 u</td><td class="price">$750.00</td></tr>
+    <tr><td>Hilos PDO</td><td class="sessions">1 ses</td><td class="price">$800.00</td></tr>
+    <tr><td>Rellenos / Ácido Hialurónico</td><td class="sessions">Criterio médico</td><td class="price">—</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-header"><h2>Corporales</h2><span class="badge">Cuerpo</span></div>
+  <table>
+    <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
+    <tr><td>EXILIS Abdomen</td><td class="sessions">8 ses</td><td class="price">$2,000.00</td></tr>
+    <tr><td>Lipoláser</td><td class="sessions">10 ses</td><td class="price">$558.00</td></tr>
+    <tr><td>Sculped Body</td><td class="sessions">12 ses</td><td class="price">$458.00</td></tr>
+    <tr><td>Cellulite Shock / BTL X-Wave</td><td class="sessions">10 ses</td><td class="price">$790.00</td></tr>
+    <tr><td>Electro Fit / Gimnasia Pasiva</td><td class="sessions">12 ses</td><td class="price">$408.00</td></tr>
+    <tr><td>Tensor Cuerpo RF</td><td class="sessions">8 ses</td><td class="price">$808.00</td></tr>
+    <tr><td>Acthyderm Cuerpo</td><td class="sessions">12 ses</td><td class="price">$783.00</td></tr>
+    <tr><td>Post Parto</td><td class="sessions">10 ses</td><td class="price">$218.00</td></tr>
+    <tr><td>Blanqueamiento Corporal</td><td class="sessions">6 ses</td><td class="price">$266.00</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-header"><h2>Capilares</h2><span class="badge">Cabello</span></div>
+  <table>
+    <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
+    <tr><td>Plasma Capilar</td><td class="sessions">2 ses</td><td class="price">$400.00</td></tr>
+    <tr><td>Capilar Plus</td><td class="sessions">2 ses</td><td class="price">$499.00</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-header"><h2>Depilación IPL</h2><span class="badge">Luz pulsada</span></div>
+  <table>
+    <tr><th>Zona</th><th>Sesiones</th><th>Precio</th></tr>
+    <tr><td>IPL Facial</td><td class="sessions">6 ses</td><td class="price">$350.00</td></tr>
+    <tr><td>IPL Axilas</td><td class="sessions">6 ses</td><td class="price">$350.00</td></tr>
+    <tr><td>IPL Piernas</td><td class="sessions">8 ses</td><td class="price">$650.00</td></tr>
+    <tr><td>IPL Brasileño</td><td class="sessions">8 ses</td><td class="price">$600.00</td></tr>
+  </table>
+  <div class="note">Garantía: 6 sesiones garantizadas. Si al finalizar no hay resultados, 6 sesiones adicionales gratuitas.</div>
+</div>
+
+<div class="footer">
+  <p>Centro Carvajal · <a href="https://centrocarvajal.com">centrocarvajal.com</a> · Tel: 263-8134 / 209-4284</p>
+  <p style="margin-top:4px;font-size:11px">Precios en USD/Balboas · Sujetos a cambio sin previo aviso · Consulte con nuestro equipo médico</p>
+</div>
+</div>
+</body>
+</html>""")
+
 if __name__ == '__main__':
     # Inicializar usuarios al arrancar si no existen
     try:
