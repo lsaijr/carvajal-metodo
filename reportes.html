@@ -31,7 +31,8 @@ table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px} th{te
 .mobile-nav-btn svg{width:19px;height:19px}
 .mobile-nav-btn.active{background:#17212e;color:#fff}
 .mobile-nav-btn.more-open{background:var(--blue2);color:#1769b5}
-.drawer-overlay{position:fixed;inset:0;background:rgba(16,24,40,.38);z-index:48}
+.drawer-overlay{position:fixed;inset:0;background:rgba(16,24,40,.38);z-index:48;display:none}
+.drawer-overlay:not([hidden]){display:block}
 .mobile-drawer{position:fixed;top:0;left:0;bottom:0;width:min(84vw,340px);background:#fff;z-index:49;box-shadow:24px 0 50px rgba(16,24,40,.18);border-right:1px solid var(--line);padding:18px 16px 24px;overflow:auto;transform:translateX(-104%);transition:transform .24s ease}
 .mobile-drawer.open{transform:translateX(0)}
 .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.drawer-head strong{font-size:17px}.drawer-head span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
