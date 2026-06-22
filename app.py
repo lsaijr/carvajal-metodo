@@ -45,6 +45,11 @@ SESSION_DURATION = 8 * 3600  # 8 horas en segundos
 reset_tokens = {}
 RESET_DURATION = 3600  # 1 hora
 
+# ── Reportes — acceso protegido solo con contraseña ───────────────────────
+reporte_sessions = {}
+REPORTE_SESSION_DURATION = 8 * 3600  # 8 horas
+REPORTE_PASSWORD = 'reportes2026'
+
 # ── Cloudinary ────────────────────────────────────────────────
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
 CLOUDINARY_API_KEY    = os.environ.get('CLOUDINARY_API_KEY', '')
@@ -82,6 +87,71 @@ def plan_diario():
     # Plan diario personal con seguimiento (localStorage)
     with open(os.path.join(os.path.dirname(__file__), 'plan-diario.html'), encoding='utf-8') as f:
         return f.read()
+
+
+@app.route('/reportes/', methods=['GET', 'POST'])
+def reportes():
+    """Reporte protegido con solo contraseña (sin usuario)."""
+    from flask import make_response
+    tok = request.cookies.get('cv_reporte_session', '')
+    now = _time.time()
+    # Limpiar sesiones expiradas
+    expiradas = [t for t, s in reporte_sessions.items() if s['expires'] < now]
+    for t in expiradas:
+        del reporte_sessions[t]
+    sesion = reporte_sessions.get(tok)
+
+    if request.method == 'POST':
+        pwd = request.form.get('password', '').strip()
+        if pwd == REPORTE_PASSWORD:
+            tok = secrets.token_hex(32)
+            reporte_sessions[tok] = {'expires': now + REPORTE_SESSION_DURATION}
+            with open(os.path.join(os.path.dirname(__file__), 'reportes.html'), encoding='utf-8') as f:
+                html = f.read()
+            resp = make_response(html)
+            resp.set_cookie('cv_reporte_session', tok, max_age=REPORTE_SESSION_DURATION, httponly=True, samesite='Lax')
+            return resp
+        return _reportes_login_form(error='Contraseña incorrecta.'), 401
+
+    if sesion:
+        with open(os.path.join(os.path.dirname(__file__), 'reportes.html'), encoding='utf-8') as f:
+            return f.read()
+
+    return _reportes_login_form()
+
+
+def _reportes_login_form(error=''):
+    error_html = f'<div class="error">{error}</div>' if error else ''
+    return f'''<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso a reportes · Centro Carvajal</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'Segoe UI',sans-serif;background:#f4f5ef;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}}
+.box{{background:#fff;border-radius:12px;padding:44px 40px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.1);text-align:center}}
+h1{{font-size:22px;color:#1a1410;margin-bottom:8px}}
+p{{font-size:13px;color:#6b7280;margin-bottom:28px}}
+input{{width:100%;padding:13px 16px;border:1px solid #d4dcc0;border-radius:8px;font-size:14px;margin-bottom:14px;font-family:inherit;outline:none}}
+input:focus{{border-color:#8fa832}}
+button{{width:100%;padding:14px;background:#1a1410;color:#b8935a;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}}
+.error{{background:#fef2f2;color:#c0392b;border:1px solid #fecaca;padding:10px;border-radius:6px;margin-bottom:14px;font-size:13px}}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Reportes Carvajal</h1>
+  <p>Ingresa la contraseña para acceder al reporte.</p>
+  <form method="POST" action="/reportes/">
+    {error_html}
+    <input type="password" name="password" placeholder="Contraseña" autofocus>
+    <button type="submit">Ingresar</button>
+  </form>
+</div>
+</body>
+</html>'''
 
 
 @app.route('/panel', methods=['GET'])
