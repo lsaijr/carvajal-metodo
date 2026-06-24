@@ -76,6 +76,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
   font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;
 }
 .logout-btn:hover{border-color:rgba(255,255,255,.4);color:var(--white)}
+.nav-link{
+  background:transparent;border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.5);border-radius:6px;padding:6px 12px;
+  font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+}
+.nav-link:hover{border-color:rgba(255,255,255,.4);color:var(--white)}
 
 /* Main content */
 .main{flex:1;padding:28px;max-width:1200px;margin:0 auto;width:100%}
@@ -255,6 +262,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
       </div>
     </div>
     <div class="topbar-right">
+      <a class="nav-link" href="/catalogo">✎ Catálogo</a>
+      <a class="nav-link" href="/panel">← Panel</a>
       <div class="topbar-count" id="total-count">— planes</div>
       <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
     </div>

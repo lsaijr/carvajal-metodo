@@ -1,0 +1,1450 @@
+{
+  "version": "2026-06-24",
+  "ultima_actualizacion": "2026-06-24T00:00:00",
+  "notas": "Catálogo inicial extraído de app.py",
+  "tratamientos": [
+    {
+      "nombre": "Ultra Focus (HIFU)",
+      "categoria": "Rejuvenecimiento con Tecnología",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Fine Lift paquete",
+          "valor": 999
+        },
+        {
+          "nombre": "Skin Lift Pro 1ses",
+          "valor": 600
+        },
+        {
+          "nombre": "Total Lift paquete",
+          "valor": 1300
+        }
+      ],
+      "problemas": [
+        "Flacidez facial",
+        "Flacidez corporal",
+        "Papada",
+        "Redefinición contorno"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuello",
+        "Papada",
+        "Abdomen",
+        "Brazos"
+      ],
+      "grado": [
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "1-2",
+      "intervalo": "6-12 meses",
+      "recovery": "24-72h leve edema/rojeces",
+      "combinar_con": [
+        "RF microagujas",
+        "Exilis"
+      ],
+      "no_combinar": [
+        "Calor profundo intenso mismo día"
+      ],
+      "orden": "Primero HIFU, complementarios en semanas",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Cáncer activo",
+        "Infección activa",
+        "Heridas abiertas"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Exilis",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "EXILIS Abdomen 8ses",
+          "valor": 1000
+        }
+      ],
+      "problemas": [
+        "Grasa localizada",
+        "Flacidez corporal",
+        "Contorno corporal",
+        "Celulitis"
+      ],
+      "zonas": [
+        "Abdomen",
+        "Flancos",
+        "Brazos",
+        "Piernas",
+        "Glúteos"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "4",
+      "intervalo": "10-14 días",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Presoterapia",
+        "X-Wave"
+      ],
+      "no_combinar": [
+        "Calor profundo intenso mismo día"
+      ],
+      "orden": "Exilis → drenaje (mismo día o posterior)",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Cáncer activo",
+        "Infección activa",
+        "Heridas abiertas"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Celulite Shock",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Medio-Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Cellulite Shock 10ses",
+          "valor": 790
+        }
+      ],
+      "problemas": [
+        "Celulitis",
+        "Fibrosis",
+        "Textura de piel"
+      ],
+      "zonas": [
+        "Piernas",
+        "Muslos",
+        "Glúteos",
+        "Caderas"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "6-10",
+      "intervalo": "1 semana",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Presoterapia",
+        "Exilis"
+      ],
+      "no_combinar": [],
+      "orden": "X-Wave → drenaje / remodelación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Cáncer activo",
+        "Infección activa",
+        "Hematomas severos"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Acthyderm (Electroporación)",
+      "categoria": "Rejuvenecimiento con Tecnología",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Acthyderm Rostro 3ses",
+          "valor": 334
+        },
+        {
+          "nombre": "Acthyderm Cuerpo 12ses",
+          "valor": 783
+        }
+      ],
+      "problemas": [
+        "Hidratación/Opacidad",
+        "Poros/Textura",
+        "Antiedad",
+        "Manchas"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuello",
+        "Brazos",
+        "Cuerpo"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "4-8",
+      "intervalo": "1-2 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Hidrofacial",
+        "Peelings cosméticos"
+      ],
+      "no_combinar": [],
+      "orden": "Limpieza → activos → electroporación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Epilepsia",
+        "Cáncer activo",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Radiofrecuencia fraccionada con microagujas",
+      "categoria": "Rejuvenecimiento con Tecnología",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "De Age Treatment paquete",
+          "valor": 975
+        }
+      ],
+      "problemas": [
+        "Arrugas/Líneas",
+        "Poros/Textura",
+        "Cicatrices acné",
+        "Estrías",
+        "Flacidez facial"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuello",
+        "Abdomen",
+        "Glúteos"
+      ],
+      "grado": [
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "3-5",
+      "intervalo": "4-6 semanas",
+      "recovery": "3-10 días (según intensidad)",
+      "combinar_con": [
+        "Hidrofacial",
+        "Acthyderm"
+      ],
+      "no_combinar": [
+        "Peelings fuertes inmediato"
+      ],
+      "orden": "Preparación → RF → reparación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Infección activa",
+        "Alteración coagulación",
+        "Cáncer activo"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Depilación IPL",
+      "categoria": "Depilación IPL",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "IPL Facial 6ses",
+          "valor": 350
+        },
+        {
+          "nombre": "IPL Axilas",
+          "valor": 350
+        },
+        {
+          "nombre": "IPL Piernas 8ses",
+          "valor": 650
+        },
+        {
+          "nombre": "IPL Brasileno 8ses",
+          "valor": 600
+        }
+      ],
+      "problemas": [
+        "Vello no deseado"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuerpo"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "6-10",
+      "intervalo": "4-6 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [],
+      "no_combinar": [
+        "Bronceado reciente"
+      ],
+      "orden": "Evaluación → sesiones periódicas",
+      "contraindicaciones": [
+        "Embarazo",
+        "Fotosensibilizantes",
+        "Infección activa",
+        "Piel lesionada",
+        "Sol/broncedo reciente"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Presoterapia",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [],
+      "problemas": [
+        "Retención de líquidos/Edema",
+        "Postoperatorio",
+        "Celulitis",
+        "Piernas cansadas"
+      ],
+      "zonas": [
+        "Piernas",
+        "Abdomen",
+        "Brazos"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "6-10",
+      "intervalo": "1 semana",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "X-Wave",
+        "Exilis"
+      ],
+      "no_combinar": [],
+      "orden": "Drenaje post tratamiento",
+      "contraindicaciones": [
+        "Trombosis/TVP",
+        "Insuficiencia arterial",
+        "Cáncer activo",
+        "Infección activa",
+        "Embarazo"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Toxina Botulínica",
+      "categoria": "Medicina Estética",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Toxina Botulinica 30u",
+          "valor": 450
+        },
+        {
+          "nombre": "50u",
+          "valor": 750
+        }
+      ],
+      "problemas": [
+        "Arrugas/Líneas",
+        "Rejuvenecimiento facial"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "Según criterio médico",
+      "intervalo": "3-6 meses",
+      "recovery": "Mínimo",
+      "combinar_con": [
+        "Rellenos",
+        "Hilos",
+        "Peelings"
+      ],
+      "no_combinar": [],
+      "orden": "Evaluación médica → aplicación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Lactancia",
+        "Infección activa",
+        "Enfermedad neuromuscular (según criterio médico)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Rellenos Dérmicos",
+      "categoria": "Medicina Estética",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Plasma Gel 1ses",
+          "valor": 250
+        }
+      ],
+      "problemas": [
+        "Pérdida de volumen",
+        "Arrugas/Líneas",
+        "Contorno facial"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "Según criterio médico",
+      "intervalo": "—",
+      "recovery": "Mínimo",
+      "combinar_con": [
+        "Toxina Botulínica",
+        "Hilos"
+      ],
+      "no_combinar": [],
+      "orden": "Evaluación médica → plan → aplicación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Lactancia",
+        "Infección activa",
+        "Alteración coagulación (según criterio médico)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Hilos PDO",
+      "categoria": "Medicina Estética",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Hilos PDO 1ses",
+          "valor": 800
+        }
+      ],
+      "problemas": [
+        "Flacidez facial",
+        "Redefinición contorno"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuello"
+      ],
+      "grado": [
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "Según criterio médico",
+      "intervalo": "—",
+      "recovery": "Días (según caso)",
+      "combinar_con": [
+        "Toxina Botulínica",
+        "Rellenos",
+        "HIFU"
+      ],
+      "no_combinar": [],
+      "orden": "Plan médico → procedimiento → seguimiento",
+      "contraindicaciones": [
+        "Embarazo",
+        "Lactancia",
+        "Infección activa",
+        "Alteración coagulación (según criterio médico)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Plasma / Plasma Gel",
+      "categoria": "Medicina Estética",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Plasma Facial 1ses",
+          "valor": 200
+        },
+        {
+          "nombre": "Plasma Gel 1ses",
+          "valor": 250
+        }
+      ],
+      "problemas": [
+        "Rejuvenecimiento facial",
+        "Textura",
+        "Calidad de piel"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuello",
+        "Cuero cabelludo"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "Según criterio médico",
+      "intervalo": "—",
+      "recovery": "Mínimo",
+      "combinar_con": [
+        "Microneedling",
+        "Peelings (según criterio)"
+      ],
+      "no_combinar": [],
+      "orden": "Evaluación → toma → aplicación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Infección activa",
+        "Alteración coagulación (según criterio médico)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Peelings Médicos",
+      "categoria": "Medicina Estética",
+      "ticket": "Medio-Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Melas Peel 3ses",
+          "valor": 200
+        },
+        {
+          "nombre": "Vita C Peel 3ses",
+          "valor": 286
+        },
+        {
+          "nombre": "Peeling Periocular 3ses",
+          "valor": 151
+        }
+      ],
+      "problemas": [
+        "Manchas",
+        "Textura",
+        "Rejuvenecimiento facial"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "Según protocolo",
+      "intervalo": "2-6 semanas",
+      "recovery": "Variable",
+      "combinar_con": [
+        "Acthyderm",
+        "Hidrofacial (pre/post)"
+      ],
+      "no_combinar": [
+        "Exposición solar inmediata"
+      ],
+      "orden": "Preparación → peeling → cuidado",
+      "contraindicaciones": [
+        "Embarazo",
+        "Infección activa",
+        "Piel lesionada",
+        "Isotretinoína reciente (según criterio médico)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Tratamientos Despigmentantes (Cosmelan / Melas Peel)",
+      "categoria": "Medicina Estética",
+      "ticket": "Medio-Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Cosmelan Kit",
+          "valor": 600
+        },
+        {
+          "nombre": "Mantenimiento",
+          "valor": 300
+        },
+        {
+          "nombre": "Melas Peel 3ses",
+          "valor": 200
+        }
+      ],
+      "problemas": [
+        "Manchas",
+        "Melasma",
+        "Hiperpigmentación"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "Según protocolo",
+      "intervalo": "—",
+      "recovery": "Variable",
+      "combinar_con": [
+        "Acthyderm",
+        "Hidrofacial (según plan)"
+      ],
+      "no_combinar": [
+        "Sol/broncedo reciente"
+      ],
+      "orden": "Consulta → protocolo → control",
+      "contraindicaciones": [
+        "Embarazo",
+        "Infección activa",
+        "Piel lesionada"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Capilar Plus",
+      "categoria": "Medicina Estética",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Capilar Plus 2ses",
+          "valor": 499
+        },
+        {
+          "nombre": "Plasma Capilar 2ses",
+          "valor": 400
+        }
+      ],
+      "problemas": [
+        "Caída de cabello",
+        "Calidad capilar"
+      ],
+      "zonas": [
+        "Cuero cabelludo"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "Según criterio médico",
+      "intervalo": "—",
+      "recovery": "Mínimo",
+      "combinar_con": [
+        "Plasma"
+      ],
+      "no_combinar": [],
+      "orden": "Evaluación → plan → sesiones",
+      "contraindicaciones": [
+        "Infección activa",
+        "Alteración coagulación (según criterio médico)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Regenerador Facial",
+      "categoria": "Medicina Estética",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Regenerador Facial 3ses",
+          "valor": 613
+        },
+        {
+          "nombre": "1ses",
+          "valor": 313
+        }
+      ],
+      "problemas": [
+        "Rejuvenecimiento facial",
+        "Poros/Textura",
+        "Arrugas/Líneas"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuello"
+      ],
+      "grado": [
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "3-5",
+      "intervalo": "4-6 semanas",
+      "recovery": "3-10 días",
+      "combinar_con": [
+        "Hidrofacial",
+        "Acthyderm"
+      ],
+      "no_combinar": [
+        "Peelings fuertes inmediato"
+      ],
+      "orden": "Preparación → sesión → reparación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Infección activa",
+        "Alteración coagulación",
+        "Cáncer activo"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Hidrofacial",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Hidrofacial",
+          "valor": 90
+        }
+      ],
+      "problemas": [
+        "Hidratación/Opacidad",
+        "Poros/Textura",
+        "Limpieza profunda"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Acthyderm",
+        "Peelings suaves"
+      ],
+      "no_combinar": [
+        "Peelings fuertes mismo día"
+      ],
+      "orden": "Limpieza → activos",
+      "contraindicaciones": [
+        "Infección activa",
+        "Heridas abiertas (zona)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Microdermoabrasión",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Microdermoabrasion",
+          "valor": 45
+        }
+      ],
+      "problemas": [
+        "Poros/Textura",
+        "Opacidad",
+        "Manchas (superficiales)"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Rojeces leves",
+      "combinar_con": [
+        "Acthyderm",
+        "Hidrofacial"
+      ],
+      "no_combinar": [],
+      "orden": "Exfoliación → activos",
+      "contraindicaciones": [
+        "Infección activa",
+        "Piel lesionada",
+        "Heridas abiertas"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Peelings Cosméticos",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Melas Peel 3ses",
+          "valor": 200
+        },
+        {
+          "nombre": "Vita C Peel 3ses",
+          "valor": 286
+        }
+      ],
+      "problemas": [
+        "Manchas",
+        "Poros/Textura",
+        "Opacidad"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Leve descamación",
+      "combinar_con": [
+        "Acthyderm",
+        "Hidrofacial"
+      ],
+      "no_combinar": [
+        "Sol inmediato"
+      ],
+      "orden": "Preparación → peeling → hidratación",
+      "contraindicaciones": [
+        "Infección activa",
+        "Piel lesionada"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Tratamientos con Péptidos",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Peptidos Rejuvenecedores 3ses",
+          "valor": 544
+        },
+        {
+          "nombre": "Parpados 3ses",
+          "valor": 187
+        }
+      ],
+      "problemas": [
+        "Hidratación/Opacidad",
+        "Rejuvenecimiento facial"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Acthyderm",
+        "Hidrofacial"
+      ],
+      "no_combinar": [],
+      "orden": "Limpieza → aplicación → sellado",
+      "contraindicaciones": [
+        "Alergias a componentes (según producto)",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Beauty Light / Fotofacial",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Beauty Light 2ses",
+          "valor": 300
+        },
+        {
+          "nombre": "Foto Facial 3ses",
+          "valor": 367
+        },
+        {
+          "nombre": "Gleaming Skin 6ses",
+          "valor": 616
+        }
+      ],
+      "problemas": [
+        "Manchas",
+        "Rejuvenecimiento facial",
+        "Enrojecimiento (según caso)"
+      ],
+      "zonas": [
+        "Rostro",
+        "Cuello"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "3-6",
+      "intervalo": "4 semanas",
+      "recovery": "Leve enrojecimiento",
+      "combinar_con": [
+        "Hidrofacial",
+        "Acthyderm"
+      ],
+      "no_combinar": [
+        "Bronceado reciente"
+      ],
+      "orden": "Preparación → IPL → hidratación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Fotosensibilizantes",
+        "Infección activa",
+        "Sol/broncedo reciente"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Bright Eyes",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Bright Eyes 6ses",
+          "valor": 241
+        }
+      ],
+      "problemas": [
+        "Ojeras",
+        "Textura",
+        "Rejuvenecimiento facial"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Acthyderm",
+        "Hidrofacial"
+      ],
+      "no_combinar": [],
+      "orden": "Limpieza → protocolo ojos",
+      "contraindicaciones": [
+        "Infección activa",
+        "Heridas abiertas"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Hidratación Piel Sensible",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Hidratacion Piel 3ses",
+          "valor": 236
+        }
+      ],
+      "problemas": [
+        "Hidratación/Opacidad",
+        "Reactividad"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Acthyderm"
+      ],
+      "no_combinar": [],
+      "orden": "Limpieza suave → activos calmantes",
+      "contraindicaciones": [
+        "Alergias a componentes (según producto)",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Facial Personalizado",
+      "categoria": "Rejuvenecimiento Facial",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Blanqueamiento Facial 6ses",
+          "valor": 266
+        }
+      ],
+      "problemas": [
+        "Hidratación/Opacidad",
+        "Poros/Textura",
+        "Rejuvenecimiento facial"
+      ],
+      "zonas": [
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Acthyderm",
+        "Hidrofacial"
+      ],
+      "no_combinar": [],
+      "orden": "Diagnóstico → protocolo",
+      "contraindicaciones": [
+        "Infección activa",
+        "Heridas abiertas"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Lipoláser",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Lipolaser 10ses",
+          "valor": 558
+        }
+      ],
+      "problemas": [
+        "Grasa localizada",
+        "Contorno corporal"
+      ],
+      "zonas": [
+        "Abdomen",
+        "Flancos",
+        "Piernas",
+        "Brazos"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "6-10",
+      "intervalo": "1 semana",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Presoterapia"
+      ],
+      "no_combinar": [],
+      "orden": "Equipo → drenaje",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Cáncer activo",
+        "Infección activa",
+        "Insuficiencia renal/hepática (según docs)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Electro Fit / Gimnasia Pasiva",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Electro Fit 12ses",
+          "valor": 408
+        }
+      ],
+      "problemas": [
+        "Tonificación",
+        "Flacidez corporal",
+        "Contorno corporal"
+      ],
+      "zonas": [
+        "Abdomen",
+        "Glúteos",
+        "Piernas",
+        "Brazos"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "8-12",
+      "intervalo": "1 semana",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Presoterapia"
+      ],
+      "no_combinar": [],
+      "orden": "Gimnasia → drenaje",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Epilepsia",
+        "Hipertensión no controlada"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Post Parto",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Post Parto 10ses",
+          "valor": 218
+        }
+      ],
+      "problemas": [
+        "Post parto",
+        "Retención de líquidos/Edema",
+        "Flacidez corporal"
+      ],
+      "zonas": [
+        "Abdomen",
+        "Piernas"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "6-10",
+      "intervalo": "1 semana",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Gimnasia pasiva",
+        "Exilis"
+      ],
+      "no_combinar": [],
+      "orden": "Drenaje → tonificación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Trombosis/TVP",
+        "Infección activa (según criterio)"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Sculpted Body / Tensor Corporal",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Sculped Body 12ses",
+          "valor": 458
+        },
+        {
+          "nombre": "Tensor Cuerpo RF 8ses",
+          "valor": 808
+        }
+      ],
+      "problemas": [
+        "Grasa localizada",
+        "Flacidez corporal",
+        "Contorno corporal"
+      ],
+      "zonas": [
+        "Abdomen",
+        "Flancos",
+        "Brazos",
+        "Piernas"
+      ],
+      "grado": [
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "4-8",
+      "intervalo": "1-2 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Presoterapia",
+        "X-Wave"
+      ],
+      "no_combinar": [],
+      "orden": "Equipo principal → drenaje → complementarios",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Cáncer activo",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Acthyderm Corporal",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Acthyderm Cuerpo 12ses",
+          "valor": 783
+        }
+      ],
+      "problemas": [
+        "Textura",
+        "Hidratación/Opacidad",
+        "Manchas"
+      ],
+      "zonas": [
+        "Brazos",
+        "Cuerpo"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "4-8",
+      "intervalo": "1-2 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Exfoliación corporal"
+      ],
+      "no_combinar": [],
+      "orden": "Exfoliación → activos → electroporación",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Epilepsia",
+        "Cáncer activo",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Ultra Focus Cuerpo",
+      "categoria": "Remodelación Corporal",
+      "ticket": "Alto",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Total Lift paquete",
+          "valor": 1300
+        }
+      ],
+      "problemas": [
+        "Flacidez corporal",
+        "Contorno corporal"
+      ],
+      "zonas": [
+        "Abdomen",
+        "Brazos",
+        "Piernas"
+      ],
+      "grado": [
+        "Moderado",
+        "Severo"
+      ],
+      "sesiones": "1-2",
+      "intervalo": "6-12 meses",
+      "recovery": "24-72h leve edema",
+      "combinar_con": [
+        "Exilis",
+        "Presoterapia"
+      ],
+      "no_combinar": [
+        "Calor profundo intenso mismo día"
+      ],
+      "orden": "Primero HIFU → complementarios",
+      "contraindicaciones": [
+        "Embarazo",
+        "Marcapasos",
+        "Cáncer activo",
+        "Infección activa",
+        "Heridas abiertas"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Masajes & Relajación",
+      "categoria": "Masajes & Relajación",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [],
+      "problemas": [
+        "Estrés",
+        "Tensión muscular",
+        "Bienestar"
+      ],
+      "zonas": [
+        "Cuerpo",
+        "Rostro"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "Según preferencia",
+      "intervalo": "—",
+      "recovery": "Sin downtime",
+      "combinar_con": [],
+      "no_combinar": [],
+      "orden": "Sesión manual",
+      "contraindicaciones": [
+        "Lesión aguda en zona",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Exfoliación Corporal",
+      "categoria": "Masajes & Relajación",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [
+        {
+          "nombre": "Blanqueamiento Corporal 6ses",
+          "valor": 266
+        }
+      ],
+      "problemas": [
+        "Textura",
+        "Opacidad"
+      ],
+      "zonas": [
+        "Cuerpo"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Acthyderm Corporal"
+      ],
+      "no_combinar": [],
+      "orden": "Exfoliación → hidratación",
+      "contraindicaciones": [
+        "Heridas abiertas",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Parafinas",
+      "categoria": "Masajes & Relajación",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [],
+      "problemas": [
+        "Hidratación/Opacidad",
+        "Resequedad"
+      ],
+      "zonas": [
+        "Manos/Pies",
+        "Espalda"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "1-6",
+      "intervalo": "2-4 semanas",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Masajes & Relajación"
+      ],
+      "no_combinar": [],
+      "orden": "Aplicación → descanso",
+      "contraindicaciones": [
+        "Heridas abiertas",
+        "Infección activa",
+        "Sensibilidad al calor"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Piernas Cansadas",
+      "categoria": "Masajes & Relajación",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [],
+      "problemas": [
+        "Retención de líquidos/Edema",
+        "Piernas cansadas"
+      ],
+      "zonas": [
+        "Piernas"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "4-8",
+      "intervalo": "1 semana",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Masajes & Relajación"
+      ],
+      "no_combinar": [],
+      "orden": "Drenaje → descanso",
+      "contraindicaciones": [
+        "Trombosis/TVP",
+        "Insuficiencia arterial",
+        "Cáncer activo",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    },
+    {
+      "nombre": "Fisio Tape",
+      "categoria": "Masajes & Relajación",
+      "ticket": "Medio",
+      "activo": true,
+      "precios": [],
+      "problemas": [
+        "Dolor muscular",
+        "Soporte postural",
+        "Bienestar"
+      ],
+      "zonas": [
+        "Cuerpo"
+      ],
+      "grado": [
+        "Leve",
+        "Moderado"
+      ],
+      "sesiones": "Según criterio",
+      "intervalo": "—",
+      "recovery": "Sin downtime",
+      "combinar_con": [
+        "Masajes & Relajación"
+      ],
+      "no_combinar": [],
+      "orden": "Evaluación → aplicación",
+      "contraindicaciones": [
+        "Alergia adhesivos",
+        "Heridas abiertas",
+        "Infección activa"
+      ],
+      "notas_medicas": ""
+    }
+  ]
+}
