@@ -1648,7 +1648,7 @@ def api_login():
         'expires': _time.time() + SESSION_DURATION,
     }
     from flask import make_response
-    resp = make_response(jsonify({'ok': True, 'rol': user.get('rol', 'staff')}))
+    resp = make_response(jsonify({'ok': True, 'rol': user.get('rol', 'staff'), 'token': tok}))
     resp.set_cookie('cv_session', tok, max_age=SESSION_DURATION, httponly=True, samesite='Lax')
     print(f'[auth] Login: {email}')
     return resp
