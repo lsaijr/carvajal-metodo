@@ -228,8 +228,7 @@ textarea.field-input{min-height:60px;resize:vertical}
     </svg>
     <h2>Centro Carvajal</h2>
     <p>Catálogo de tratamientos · Alimentación de la IA</p>
-    <div class="login-error" id="login-error">Credenciales incorrectas. Inténtalo de nuevo.</div>
-    <input type="email" class="login-field" id="login-email" placeholder="Correo electrónico" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    <div class="login-error" id="login-error">Contraseña incorrecta. Inténtalo de nuevo.</div>
     <input type="password" class="login-field" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
   </div>
@@ -288,20 +287,19 @@ let catalogo = {tratamientos:[]};
 let usuario = null;
 
 async function doLogin(){
-  const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const err   = document.getElementById('login-error');
   err.style.display = 'none';
-  if(!email || !pass){err.style.display='block';return;}
+  if(!pass){err.style.display='block';err.textContent='Ingresa la contraseña';return;}
   try{
     const r = await fetch('/api/login',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email,password:pass})
+      body:JSON.stringify({password:pass})
     });
     const d = await r.json();
     if(d.ok){
       token = d.token;
-      usuario = {email,rol:d.rol};
+      usuario = {email:d.email||'admin@centrocarvajal.com',rol:d.rol};
       sessionStorage.setItem('cc_token',token);
       document.getElementById('login-screen').style.display='none';
       document.getElementById('app').style.display='flex';
