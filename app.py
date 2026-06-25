@@ -1628,19 +1628,27 @@ def api_login():
     data = request.get_json(silent=True) or {}
     email = data.get('email', '').strip().lower()
     pwd   = data.get('password', '').strip()
-    if not email or not pwd:
-        return jsonify({'ok': False, 'error': 'Email y contraseña requeridos'}), 400
+    # Login simple con solo contraseña para panel/planes: usa el primer usuario coincidente
+    if not pwd:
+        return jsonify({'ok': False, 'error': 'Contraseña requerida'}), 400
     usuarios = _cargar_usuarios()
     if not usuarios:
         usuarios = _inicializar_usuarios()
-    user = usuarios.get(email)
+    if email:
+        user = usuarios.get(email)
+    else:
+        # Buscar primera coincidencia por contraseña
+        user = None
+        for u_email, u_data in usuarios.items():
+            try:
+                if bcrypt.checkpw(pwd.encode(), u_data.get('hash','').encode()):
+                    user = u_data
+                    email = u_email
+                    break
+            except Exception:
+                continue
     if not user:
         return jsonify({'ok': False, 'error': 'Credenciales incorrectas'}), 401
-    try:
-        if not bcrypt.checkpw(pwd.encode(), user['hash'].encode()):
-            return jsonify({'ok': False, 'error': 'Credenciales incorrectas'}), 401
-    except Exception:
-        return jsonify({'ok': False, 'error': 'Error de autenticación'}), 500
     tok = secrets.token_hex(32)
     auth_sessions[tok] = {
         'email':   email,

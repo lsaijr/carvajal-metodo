@@ -243,8 +243,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
     </svg>
     <h2>Centro Carvajal</h2>
     <p>Panel de administración · Planes generados</p>
-    <div class="login-error" id="login-error">Credenciales incorrectas. Inténtalo de nuevo.</div>
-    <input type="email" class="login-field" id="login-email" placeholder="Correo electrónico" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    <div class="login-error" id="login-error">Contraseña incorrecta. Inténtalo de nuevo.</div>
     <input type="password" class="login-field" id="login-pass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
   </div>
@@ -333,13 +332,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
 let token = sessionStorage.getItem('cc_token') || '';
 
 async function doLogin() {
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  const pass  = document.getElementById('login-pass').value.trim();
-  if (!email || !pass) return;
+  const pass = document.getElementById('login-pass').value.trim();
+  if (!pass) return;
   const r = await fetch('/api/login', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({email, password: pass})
+    body: JSON.stringify({password: pass})
   });
   const data = await r.json();
   if (data.ok && data.token) {
@@ -350,7 +348,7 @@ async function doLogin() {
     document.getElementById('login-error').style.display = 'none';
     cargarPlanes();
   } else {
-    document.getElementById('login-error').textContent = data.error || 'Credenciales incorrectas. Inténtalo de nuevo.';
+    document.getElementById('login-error').textContent = data.error || 'Contraseña incorrecta. Inténtalo de nuevo.';
     document.getElementById('login-error').style.display = 'block';
     document.getElementById('login-pass').value = '';
     document.getElementById('login-pass').focus();
