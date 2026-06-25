@@ -893,6 +893,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
   font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;
 }
 .logout-btn:hover{border-color:rgba(255,255,255,.4);color:var(--white)}
+.nav-link{
+  background:transparent;border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.5);border-radius:6px;padding:6px 12px;
+  font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+}
+.nav-link:hover{border-color:rgba(255,255,255,.4);color:var(--white)}
 
 /* Main content */
 .main{flex:1;padding:28px;max-width:1200px;margin:0 auto;width:100%}
@@ -1053,8 +1060,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
     </svg>
     <h2>Centro Carvajal</h2>
     <p>Panel de administración · Planes generados</p>
-    <div class="login-error" id="login-error">Credenciales incorrectas. Inténtalo de nuevo.</div>
-    <input type="email" class="login-field" id="login-email" placeholder="Correo electrónico" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    <div class="login-error" id="login-error">Contraseña incorrecta. Inténtalo de nuevo.</div>
     <input type="password" class="login-field" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
     <button class="login-btn" onclick="mostrarRecuperar()" style="background:transparent;color:#8fa832;border:1px solid #8fa832;margin-top:8px">Olvidé mi contraseña</button>
@@ -1079,9 +1085,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
       </div>
     </div>
     <div class="topbar-right">
+      <a class="nav-link" href="/catalogo">✎ Catálogo</a>
+      <a class="nav-link" href="/panel">← Panel</a>
       <span id="user-email-display" style="font-size:11px;color:rgba(255,255,255,.4);margin-right:4px"></span>
       <div class="topbar-count" id="total-count">— planes</div>
-
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
     </div>
   </div>
 
@@ -1227,20 +1235,19 @@ function mostrarApp() {
 }
 
 async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
   errEl.style.display = 'none';
-  if (!email || !pass) { errEl.style.display='block'; errEl.textContent='Ingresa tu correo y contraseña.'; return; }
+  if (!pass) { errEl.style.display='block'; errEl.textContent='Ingresa la contraseña.'; return; }
   try {
     const r = await fetch('/api/login', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email, password: pass})
+      body: JSON.stringify({password: pass})
     });
     const d = await r.json();
     if (d.ok) {
-      currentUser = {email, rol: d.rol};
+      currentUser = {email: d.email || 'admin@centrocarvajal.com', rol: d.rol};
       const next = window._cv_next || new URLSearchParams(window.location.search).get('next');
       if (next && next.startsWith('/')) { window.location.href = next; return; }
       mostrarApp();
@@ -1661,7 +1668,7 @@ def api_login():
         'expires': _time.time() + SESSION_DURATION,
     }
     from flask import make_response
-    resp = make_response(jsonify({'ok': True, 'rol': user.get('rol', 'staff'), 'token': tok}))
+    resp = make_response(jsonify({'ok': True, 'rol': user.get('rol', 'staff'), 'token': tok, 'email': email}))
     resp.set_cookie('cv_session', tok, max_age=SESSION_DURATION, httponly=True, samesite='Lax')
     print(f'[auth] Login: {email}')
     return resp
