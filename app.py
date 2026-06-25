@@ -48,7 +48,7 @@ RESET_DURATION = 3600  # 1 hora
 # ── Reportes — acceso protegido solo con contraseña ───────────────────────
 reporte_sessions = {}
 REPORTE_SESSION_DURATION = 8 * 3600  # 8 horas
-REPORTE_PASSWORD = 'reportes2026'
+REPORTE_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'reportes2026')
 
 # ── Cloudinary ────────────────────────────────────────────────
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
@@ -1634,8 +1634,13 @@ def api_login():
     usuarios = _cargar_usuarios()
     if not usuarios:
         usuarios = _inicializar_usuarios()
+    admin_pwd = os.environ.get('ADMIN_PASSWORD', '').strip()
     if email:
         user = usuarios.get(email)
+    elif admin_pwd and pwd == admin_pwd:
+        # Login universal con ADMIN_PASSWORD para panel/planes/catalogo
+        user = {'rol': 'admin'}
+        email = 'admin@centrocarvajal.com'
     else:
         # Buscar primera coincidencia por contraseña
         user = None
