@@ -72,17 +72,15 @@ main{max-width:720px; margin:0 auto; padding:20px 14px}
 .field-meta .opt{
   display:inline-block; background:rgba(0,0,0,.04); border-radius:4px; padding:1px 6px; margin:2px 3px 0 0;
 }
-.field-id{font-size:10px; color:#b8a888; font-family:monospace}
-
-.decision-row{display:flex; gap:8px; margin-top:4px}
+.decision-row{display:flex; gap:10px; margin-top:8px}
 .dbtn{
-  flex:1; font-size:12.5px; font-weight:600; padding:9px 8px; border-radius:7px; border:1.5px solid var(--border);
+  flex:1; font-size:16px; font-weight:700; padding:16px 10px; border-radius:12px; border:2px solid var(--border);
   background:var(--warm-white); color:var(--muted); cursor:pointer; text-align:center;
-  display:flex; align-items:center; justify-content:center; gap:5px;
+  display:flex; align-items:center; justify-content:center; gap:7px;
 }
-.dbtn-keep.on{background:var(--green); border-color:var(--green); color:#fff}
-.dbtn-remove.on{background:var(--red); border-color:var(--red); color:#fff}
-.dbtn:active{transform:scale(.97)}
+.dbtn-keep.on{background:var(--green); border-color:var(--green); color:#fff; box-shadow:0 2px 8px rgba(63,143,79,.35)}
+.dbtn-remove.on{background:var(--red); border-color:var(--red); color:#fff; box-shadow:0 2px 8px rgba(192,57,43,.35)}
+.dbtn:active{transform:scale(.96)}
 
 .step-footer{
   display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding-top:16px;
@@ -96,16 +94,15 @@ main{max-width:720px; margin:0 auto; padding:20px 14px}
 
 .action-bar{
   position:fixed; bottom:0; left:0; right:0; background:var(--warm-white); border-top:1px solid var(--border);
-  padding:12px 14px; display:flex; gap:8px; z-index:30; box-shadow:0 -2px 12px rgba(0,0,0,.08);
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom)); z-index:30; box-shadow:0 -2px 12px rgba(0,0,0,.08);
 }
-.action-btn{
-  flex:1; font-size:12.5px; font-weight:600; padding:12px 8px; border-radius:8px; border:none; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; gap:6px;
+.action-send{
+  width:100%; font-size:17px; font-weight:700; padding:17px 8px; border-radius:12px; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:var(--gold); color:#fff; box-shadow:0 3px 10px rgba(184,147,90,.4);
 }
-.action-send{background:var(--gold); color:#fff}
-.action-export{background:var(--border); color:var(--dark)}
-.action-filter{background:var(--border); color:var(--dark)}
-.action-filter.on{background:var(--dark); color:var(--gold-light)}
+.action-send:active{transform:scale(.98)}
+.action-send:disabled{opacity:.6}
 
 .toast{
   position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -113,8 +110,6 @@ main{max-width:720px; margin:0 auto; padding:20px 14px}
   opacity:0; pointer-events:none; transition:all .3s ease; z-index:50; max-width:90%; text-align:center;
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
-
-.hidden-by-filter{display:none !important}
 
 @media(min-width:640px){
   .field-card{padding:18px 20px 16px}
@@ -139,10 +134,7 @@ main{max-width:720px; margin:0 auto; padding:20px 14px}
 <main id="main"></main>
 
 <div class="action-bar">
-  <button class="action-btn action-filter" id="btn-filter" onclick="toggleFilter()">👁 Solo pendientes</button>
-  <button class="action-btn action-export" onclick="exportarJSON()">⬇ JSON</button>
-  <button class="action-btn action-export" onclick="exportarCSV()">⬇ CSV</button>
-  <button class="action-btn action-send" onclick="enviarCorreo()">✉ Enviar correo</button>
+  <button class="action-send" onclick="enviarCorreo()">✉ Enviar formulario</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -362,7 +354,6 @@ let decisiones = {};
 try { decisiones = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { decisiones = {}; }
 
 let currentStep = 0;
-let filterPending = false;
 
 function guardar(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(decisiones)); }
 
@@ -407,15 +398,13 @@ function renderStep(i){
     if (c.sub) { html += `<div class="sub-label">${c.sub}</div>`; return; }
     const dec = decisiones[c.uid];
     const cardClass = dec === 'mantener' ? 'mantener' : dec === 'quitar' ? 'quitar' : '';
-    const isPending = !dec;
-    html += `<div class="field-card ${cardClass}${filterPending && !isPending ? ' hidden-by-filter' : ''}">
+    html += `<div class="field-card ${cardClass}">
       <div class="field-label">${c.label}${c.req ? '<span class="field-req">*</span>' : ''}</div>
       ${fieldMetaHtml(c)}
       <div class="decision-row">
         <button class="dbtn dbtn-keep${dec==='mantener'?' on':''}" onclick="setDecision('${c.uid}','mantener')">✓ Mantener</button>
         <button class="dbtn dbtn-remove${dec==='quitar'?' on':''}" onclick="setDecision('${c.uid}','quitar')">✕ Quitar</button>
       </div>
-      ${c.id ? `<div class="field-id">${c.id}</div>` : ''}
     </div>`;
   });
   html += `<div class="step-footer">
@@ -429,12 +418,6 @@ function renderStep(i){
 function goStep(i){
   if (i < 0 || i >= STEPS.length) return;
   renderStep(i);
-}
-
-function toggleFilter(){
-  filterPending = !filterPending;
-  document.getElementById('btn-filter').classList.toggle('on', filterPending);
-  renderStep(currentStep);
 }
 
 function showToast(msg, dur=2600){
@@ -459,30 +442,13 @@ function buildResultados(){
   return resultados;
 }
 
-function exportarJSON(){
-  const data = buildResultados();
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'revision-formulario-carvajal.json';
-  a.click();
-  showToast('JSON descargado');
-}
-
-function exportarCSV(){
-  const data = buildResultados();
-  const rows = [['Paso','Campo','ID','Decisión'], ...data.map(r=>[r.paso, r.campo, r.id, r.decision])];
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'revision-formulario-carvajal.csv';
-  a.click();
-  showToast('CSV descargado');
-}
-
 async function enviarCorreo(){
   const data = buildResultados();
+  const pendientes = data.filter(r => r.decision === 'sin_marcar').length;
+  if (pendientes > 0) {
+    const seguir = confirm(`Todavía tienes ${pendientes} campos sin marcar.\n\n¿Enviar el formulario de todas formas?`);
+    if (!seguir) return;
+  }
   const btn = event.target;
   const originalText = btn.textContent;
   btn.disabled = true; btn.textContent = '⏳ Enviando...';
