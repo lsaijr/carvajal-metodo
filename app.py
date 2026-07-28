@@ -358,6 +358,56 @@ def formulario_demo():
     with open(os.path.join(os.path.dirname(__file__), 'formulario-demo.html'), encoding='utf-8') as f:
         return f.read()
 
+
+@app.route('/formulario-seleccion', methods=['GET'])
+def formulario_seleccion():
+    # Herramienta interna: revisión de campos del formulario para decidir qué se mantiene/quita
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'formulario-seleccion.html')
+
+
+@app.route('/api/formulario-seleccion/enviar', methods=['POST'])
+def api_formulario_seleccion_enviar():
+    data = request.get_json(silent=True) or {}
+    campos = data.get('campos', [])
+    if not isinstance(campos, list) or not campos:
+        return jsonify({'error': 'Sin campos para enviar'}), 400
+
+    def esc(s): return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+    label_estado = {'mantener': ('✓ Mantener', '#3f8f4f', '#eaf6ec'), 'quitar': ('✕ Quitar', '#c0392b', '#fbeceb'), 'sin_marcar': ('○ Sin marcar', '#8a7a68', '#f2ede4')}
+    pasos = {}
+    for c in campos:
+        pasos.setdefault(c.get('paso', ''), []).append(c)
+
+    secciones_html = ''
+    for paso, items in pasos.items():
+        filas = ''
+        for c in items:
+            txt, color, bg = label_estado.get(c.get('decision', 'sin_marcar'), label_estado['sin_marcar'])
+            filas += f'<tr><td style="padding:7px 12px;font-size:13px;border-bottom:1px solid #eee">{esc(c.get("campo",""))}</td><td style="padding:7px 12px;font-size:12px;font-weight:600;color:{color};background:{bg};border-bottom:1px solid #eee;white-space:nowrap">{txt}</td></tr>'
+        secciones_html += f'<div style="margin:18px 24px 0"><div style="font-size:12px;font-weight:700;color:#b8935a;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">{esc(paso)}</div><table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #eee;border-radius:4px;overflow:hidden">{filas}</table></div>'
+
+    total_mantener = sum(1 for c in campos if c.get('decision') == 'mantener')
+    total_quitar = sum(1 for c in campos if c.get('decision') == 'quitar')
+    total_pendiente = sum(1 for c in campos if c.get('decision') not in ('mantener', 'quitar'))
+
+    cuerpo = f'''<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="background:#f0e8de;padding:20px;font-family:sans-serif">
+<div style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #ddd">
+<div style="background:#1a1410;padding:20px 24px">
+<div style="color:#b8935a;font-size:11px;letter-spacing:3px;text-transform:uppercase">Centro Carvajal · Revisión de Formulario</div>
+<div style="color:#fff;font-size:18px;margin-top:4px">Resultado de selección de campos</div>
+<div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:6px">{total_mantener} mantener · {total_quitar} quitar · {total_pendiente} sin marcar</div>
+</div>
+{secciones_html}
+<div style="background:#1a1410;padding:12px 24px;text-align:center;font-size:10px;color:rgba(255,255,255,.3);margin-top:20px">Centro Carvajal · centrocarvajal.com</div>
+</div></body></html>'''
+
+    try:
+        enviar_resend('Revisión de campos — Formulario Método Carvajal', cuerpo, 'isai.josue@gmail.com')
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/planes_generados/<path:filename>')
 def serve_plan(filename):
     return send_from_directory(PLANES_DIR, filename)

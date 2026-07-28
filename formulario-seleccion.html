@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisión de Campos — Formulario Método Carvajal</title>
+<style>
+:root{
+  --cream:#f6f1e9; --warm-white:#fffdf9; --dark:#1a1410; --gold:#b8935a; --gold-light:#e8d4a8;
+  --border:#e2d8c8; --muted:#8a7a68; --green:#3f8f4f; --green-bg:#eaf6ec; --red:#c0392b; --red-bg:#fbeceb;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  font-family:'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background:var(--cream); color:var(--dark); line-height:1.4; padding-bottom:120px;
+}
+header{
+  background:var(--dark); color:var(--warm-white); padding:20px 16px 16px;
+  position:sticky; top:0; z-index:20; box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+header h1{font-size:18px; font-weight:600; color:var(--gold-light)}
+header p{font-size:12px; color:rgba(255,255,255,.5); margin-top:2px}
+.summary-bar{
+  display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;
+}
+.summary-pill{
+  font-size:11px; padding:5px 10px; border-radius:20px; font-weight:600;
+  display:flex; align-items:center; gap:5px;
+}
+.pill-keep{background:rgba(63,143,79,.2); color:#8fd99c}
+.pill-remove{background:rgba(192,57,43,.2); color:#e8938a}
+.pill-pending{background:rgba(255,255,255,.1); color:rgba(255,255,255,.6)}
+
+.step-nav{
+  display:flex; gap:6px; overflow-x:auto; padding:12px 16px; background:var(--warm-white);
+  border-bottom:1px solid var(--border); position:sticky; top:96px; z-index:19;
+  -webkit-overflow-scrolling:touch;
+}
+.step-nav::-webkit-scrollbar{display:none}
+.step-btn{
+  flex-shrink:0; font-size:12px; padding:8px 14px; border-radius:20px; border:1.5px solid var(--border);
+  background:var(--warm-white); color:var(--muted); font-weight:500; white-space:nowrap; cursor:pointer;
+}
+.step-btn.active{background:var(--dark); border-color:var(--dark); color:var(--gold-light)}
+.step-btn .badge{font-size:10px; opacity:.7; margin-left:4px}
+
+main{max-width:720px; margin:0 auto; padding:20px 14px}
+
+.step-panel{display:none}
+.step-panel.active{display:block; animation:fade .25s ease}
+@keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
+
+.step-title{font-size:22px; font-weight:600; margin-bottom:2px}
+.step-subtitle{font-size:13px; color:var(--muted); margin-bottom:18px}
+.sub-label{
+  font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--gold);
+  font-weight:700; margin:20px 0 8px; padding-top:8px; border-top:1px dashed var(--border);
+}
+.sub-label:first-of-type{border-top:none; margin-top:0}
+
+.field-card{
+  background:var(--warm-white); border:2px solid var(--border); border-radius:10px;
+  padding:14px 14px 12px; margin-bottom:10px; transition:border-color .15s ease, background .15s ease;
+}
+.field-card.mantener{border-color:var(--green); background:var(--green-bg)}
+.field-card.quitar{border-color:var(--red); background:var(--red-bg)}
+
+.field-label{font-size:14.5px; font-weight:600; color:var(--dark); margin-bottom:3px}
+.field-card.quitar .field-label{text-decoration:line-through; color:var(--muted)}
+.field-req{color:var(--red); font-weight:700; margin-left:2px}
+.field-meta{font-size:11.5px; color:var(--muted); margin-bottom:10px; line-height:1.5}
+.field-meta .opt{
+  display:inline-block; background:rgba(0,0,0,.04); border-radius:4px; padding:1px 6px; margin:2px 3px 0 0;
+}
+.field-id{font-size:10px; color:#b8a888; font-family:monospace}
+
+.decision-row{display:flex; gap:8px; margin-top:4px}
+.dbtn{
+  flex:1; font-size:12.5px; font-weight:600; padding:9px 8px; border-radius:7px; border:1.5px solid var(--border);
+  background:var(--warm-white); color:var(--muted); cursor:pointer; text-align:center;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+}
+.dbtn-keep.on{background:var(--green); border-color:var(--green); color:#fff}
+.dbtn-remove.on{background:var(--red); border-color:var(--red); color:#fff}
+.dbtn:active{transform:scale(.97)}
+
+.step-footer{
+  display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding-top:16px;
+}
+.nav-btn{
+  font-size:13px; font-weight:600; padding:11px 18px; border-radius:8px; border:1.5px solid var(--dark);
+  background:var(--dark); color:var(--warm-white); cursor:pointer;
+}
+.nav-btn.ghost{background:transparent; color:var(--dark)}
+.nav-btn:disabled{opacity:.35; cursor:default}
+
+.action-bar{
+  position:fixed; bottom:0; left:0; right:0; background:var(--warm-white); border-top:1px solid var(--border);
+  padding:12px 14px; display:flex; gap:8px; z-index:30; box-shadow:0 -2px 12px rgba(0,0,0,.08);
+}
+.action-btn{
+  flex:1; font-size:12.5px; font-weight:600; padding:12px 8px; border-radius:8px; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.action-send{background:var(--gold); color:#fff}
+.action-export{background:var(--border); color:var(--dark)}
+.action-filter{background:var(--border); color:var(--dark)}
+.action-filter.on{background:var(--dark); color:var(--gold-light)}
+
+.toast{
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--dark); color:#fff; font-size:13px; padding:11px 20px; border-radius:8px;
+  opacity:0; pointer-events:none; transition:all .3s ease; z-index:50; max-width:90%; text-align:center;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+.hidden-by-filter{display:none !important}
+
+@media(min-width:640px){
+  .field-card{padding:18px 20px 16px}
+  .decision-row{max-width:280px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Revisión de Campos del Formulario</h1>
+  <p>Marca cada campo: se queda o se elimina del rediseño. Método Carvajal — formulario de producción (10 pasos).</p>
+  <div class="summary-bar">
+    <div class="summary-pill pill-keep">✓ <span id="cnt-keep">0</span> mantener</div>
+    <div class="summary-pill pill-remove">✕ <span id="cnt-remove">0</span> quitar</div>
+    <div class="summary-pill pill-pending">○ <span id="cnt-pending">0</span> sin marcar</div>
+  </div>
+</header>
+
+<nav class="step-nav" id="step-nav"></nav>
+
+<main id="main"></main>
+
+<div class="action-bar">
+  <button class="action-btn action-filter" id="btn-filter" onclick="toggleFilter()">👁 Solo pendientes</button>
+  <button class="action-btn action-export" onclick="exportarJSON()">⬇ JSON</button>
+  <button class="action-btn action-export" onclick="exportarCSV()">⬇ CSV</button>
+  <button class="action-btn action-send" onclick="enviarCorreo()">✉ Enviar correo</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Inventario de campos (extraído de formulario-produccion.html) ──
+const STEPS = [
+{titulo:"Datos Personales", subtitulo:"Información básica para identificarte y contactarte.", campos:[
+  {id:"f-nombre", label:"Nombre completo", tipo:"texto", req:true},
+  {id:"f-cedula", label:"Cédula / Pasaporte", tipo:"texto"},
+  {id:"f-direccion", label:"Dirección de residencia", tipo:"texto"},
+  {id:"f-edad", label:"Edad", tipo:"número", req:true},
+  {label:"Sexo", tipo:"opción única", opciones:["Femenino","Masculino"], req:true},
+  {id:"f-fechanac", label:"Fecha de nacimiento", tipo:"fecha"},
+  {id:"f-celular", label:"Celular", tipo:"teléfono", req:true},
+  {id:"f-email", label:"Correo electrónico", tipo:"email", req:true},
+  {id:"f-ocupacion", label:"Ocupación", tipo:"texto"},
+  {label:"¿Trabaja actualmente?", tipo:"opción única", opciones:["Sí","No"], req:true},
+  {label:"Horario laboral", tipo:"opción única + detalle si 'Otro'", opciones:["Mañana","Tarde","Noche","Variable","Otro"], req:true},
+  {label:"Nivel de actividad laboral", tipo:"opción única", opciones:["Sedentario","Moderado","Activo"]},
+  {label:"Número de hijos", tipo:"opción única", opciones:["0","1","2","3","4+"], req:true},
+  {label:"¿Con quién vive?", tipo:"selección múltiple", opciones:["Solo/a","Con pareja","Con hijos","Con padres u otros","Con mascotas","Otro"], req:true},
+  {id:"f-familiares", label:"Familiares en casa (relación)", tipo:"texto largo"},
+  {label:"¿Cuenta con ayuda en casa?", tipo:"opción única", opciones:["Sí","No"], req:true},
+  {label:"Tipo de apoyo recibido", tipo:"selección múltiple", opciones:["Limpieza del hogar","Cocina / alimentación","Cuido de niños o adultos","Acompañamiento diario","Otro"]},
+  {label:"¿Cómo nos conociste?", tipo:"opción única", opciones:["Internet / Google","Redes sociales","Recomendación de amigo/a","Paciente anterior","Otro"]},
+  {sub:"Contacto de Emergencia"},
+  {id:"f-cont-nombre", label:"Nombre completo (contacto emergencia)", tipo:"texto", req:true},
+  {id:"f-cont-relacion", label:"Relación", tipo:"texto", req:true},
+  {id:"f-cont-tel", label:"Teléfono", tipo:"teléfono", req:true},
+]},
+{titulo:"Condición Actual", subtitulo:"Estado de salud general, medidas y hábitos relevantes.", campos:[
+  {id:"f-estatura", label:"Estatura (cm)", tipo:"número", req:true},
+  {id:"f-peso", label:"Peso (kg)", tipo:"número decimal", req:true},
+  {label:"¿Sufre de alguna enfermedad?", tipo:"sí/no + detalle", req:true},
+  {sub:"Condiciones hormonales (solo mujeres)"},
+  {label:"Actualmente embarazada", tipo:"sí/no"},
+  {label:"Periodo de lactancia", tipo:"sí/no"},
+  {label:"Síndrome de ovario poliquístico (SOP)", tipo:"sí/no"},
+  {label:"Uso de anticonceptivos hormonales", tipo:"sí/no"},
+  {label:"Menopausia", tipo:"sí/no"},
+  {label:"Perimenopausia", tipo:"sí/no"},
+  {label:"Andropausia (solo hombres)", tipo:"sí/no"},
+  {sub:"Hábitos"},
+  {label:"Fuma", tipo:"sí/no", req:true},
+  {label:"Si fuma, frecuencia", tipo:"opción única", opciones:["Diario","Ocasional"]},
+  {label:"Consume alcohol", tipo:"sí/no", req:true},
+  {label:"Si consume alcohol, frecuencia", tipo:"opción única", opciones:["Diario","Semanal","Ocasional"]},
+  {label:"¿Toma medicamentos, vitaminas o suplementos?", tipo:"sí/no + detalle", req:true},
+  {sub:"Otras condiciones médicas"},
+  {id:"f-otras-condiciones", label:"Otras condiciones no mencionadas", tipo:"texto largo"},
+  {sub:"Hábito intestinal"},
+  {label:"¿Vas al baño todos los días?", tipo:"sí/no", req:true},
+  {label:"¿A qué hora del día?", tipo:"opción única", opciones:["Mañana","Tarde","Noche"]},
+  {label:"¿Cómo es tu evacuación?", tipo:"opción única", opciones:["Normal","Difícil","Irregular","Con esfuerzo"]},
+  {sub:"Hábitos de sueño"},
+  {label:"Promedio de horas por noche", tipo:"opción única", opciones:["Menos de 5h","5–7h","7–9h","Más de 9h"], req:true},
+  {label:"Calidad del sueño", tipo:"opción única", opciones:["Profundo y reparador","Interrumpido o ligero","Dificultad para conciliar","Insomnio frecuente"], req:true},
+  {id:"f-hora-duerme", label:"Hora que se acuesta", tipo:"hora"},
+  {id:"f-hora-despierta", label:"Hora que se levanta", tipo:"hora"},
+  {label:"¿Siente cansancio o somnolencia durante el día?", tipo:"sí/no", req:true},
+  {label:"¿Utiliza medicamento o suplemento para dormir?", tipo:"sí/no", req:true},
+  {label:"¿Trabaja en turnos nocturnos o con cambios de horario?", tipo:"sí/no", req:true},
+  {sub:"Nivel de estrés"},
+  {id:"scale-estres", label:"Nivel de estrés diario (escala 1–10)", tipo:"escala 1-10", req:true},
+]},
+{titulo:"Intolerancias Alimentarias", subtitulo:"Responde Sí o No a cada síntoma para detectar posibles intolerancias.", campos:[
+  {label:"¿Hinchazón abdominal después de comer?", tipo:"sí/no", req:true},
+  {label:"¿Gases o flatulencias frecuentes?", tipo:"sí/no", req:true},
+  {label:"¿Estreñimiento o diarrea sin causa aparente?", tipo:"sí/no", req:true},
+  {label:"¿Cansancio o somnolencia después de las comidas?", tipo:"sí/no", req:true},
+  {label:"¿Dolor de cabeza o migrañas recurrentes?", tipo:"sí/no", req:true},
+  {label:"¿Picazón, enrojecimiento o urticaria tras comer?", tipo:"sí/no", req:true},
+  {label:"¿Congestión nasal o estornudos luego de comer?", tipo:"sí/no", req:true},
+  {label:"¿Inflamación en articulaciones o rigidez sin explicación?", tipo:"sí/no", req:true},
+  {label:"¿Cambios de humor, ansiedad o irritabilidad después de comer?", tipo:"sí/no", req:true},
+  {label:"¿Tu digestión es lenta o pesada?", tipo:"sí/no", req:true},
+  {label:"¿Dificultad para bajar de peso a pesar de comer bien?", tipo:"sí/no", req:true},
+  {label:"¿Náuseas o malestar general con algunos alimentos?", tipo:"sí/no", req:true},
+  {label:"¿Antecedentes familiares de intolerancias o alergias?", tipo:"sí/no", req:true},
+  {sub:"Síntomas por grupo de alimento"},
+  {label:"¿Síntomas al consumir lácteos?", tipo:"sí/no + detalle síntomas", req:true},
+  {label:"¿Síntomas al consumir gluten (pan, pasta, galletas)?", tipo:"sí/no + detalle síntomas", req:true},
+  {label:"¿Síntomas con alimentos procesados o con aditivos?", tipo:"sí/no + detalle síntomas", req:true},
+]},
+{titulo:"Preferencias Alimentarias", subtitulo:"Indícanos tus gustos y hábitos de alimentación.", campos:[
+  {sub:"Proteínas favoritas"},
+  {label:"Proteínas favoritas", tipo:"selección múltiple", opciones:["Pollo","Pavo","Pescado","Mariscos","Carne de res","Cerdo","Huevos","Legumbres","Tofu/Tempeh"]},
+  {id:"f-proteinas-evitar", label:"Proteínas a evitar", tipo:"texto"},
+  {sub:"Carbohidratos favoritos"},
+  {label:"Carbohidratos favoritos", tipo:"selección múltiple", opciones:["Arroz blanco","Arroz integral","Pasta","Avena","Pan","Tortillas","Yuca","Papa","Batata/Camote"]},
+  {id:"f-carbos-evitar", label:"Carbohidratos a evitar", tipo:"texto"},
+  {sub:"Verduras y Hortalizas"},
+  {id:"f-verduras", label:"Verduras que más consume", tipo:"texto largo"},
+  {id:"f-verduras-evitar", label:"Verduras que no consume o no tolera", tipo:"texto largo"},
+  {sub:"Frutas"},
+  {id:"f-frutas", label:"Frutas que consume habitualmente", tipo:"texto largo"},
+  {sub:"Grasas saludables"},
+  {label:"Grasas saludables que consume", tipo:"selección múltiple", opciones:["Aguacate","Aceite de oliva","Aceite de coco","Nueces / Almendras","Semillas (chía, linaza)","Mantequilla de maní"]},
+  {sub:"Grasas o frituras a evitar"},
+  {label:"Grasas o frituras que prefiere evitar", tipo:"selección múltiple", opciones:["Alimentos fritos","Manteca / Margarina","Aceites vegetales procesados","Grasas trans"]},
+  {id:"f-grasas-evitar-porque", label:"¿Por qué deseas evitarlas?", tipo:"texto"},
+  {sub:"Postres y dulces"},
+  {id:"f-postres", label:"Postres preferidos o dulces", tipo:"texto"},
+  {label:"Frecuencia de consumo", tipo:"opción única", opciones:["Diario","2–3 veces/semana","1 vez/semana","Ocasionalmente"], req:true},
+  {sub:"Otros hábitos alimentarios"},
+  {label:"¿Cuántas comidas al día?", tipo:"opción única", opciones:["1","2","3","4+"], req:true},
+  {label:"¿Consume bebidas azucaradas?", tipo:"sí/no + detalle", req:true},
+  {id:"f-nota-alim", label:"Observaciones adicionales sobre hábitos u objetivos", tipo:"texto largo"},
+]},
+{titulo:"Alergias y Sensibilidades", subtitulo:"Indica si presentas alergia o sensibilidad a alguno de los siguientes.", campos:[
+  {label:"Medicamentos en general", tipo:"sí/no + detalle reacción"},
+  {label:"Lidocaína o anestésicos locales", tipo:"sí/no + detalle reacción"},
+  {label:"Penicilina u otros antibióticos", tipo:"sí/no + detalle reacción"},
+  {label:"Yodopovidona (Isodine)", tipo:"sí/no + detalle reacción"},
+  {label:"Antiinflamatorios (ibuprofeno, naproxeno, etc.)", tipo:"sí/no + detalle reacción"},
+  {label:"Alimentos en general", tipo:"sí/no + detalle reacción"},
+  {label:"Mariscos o algas", tipo:"sí/no + detalle reacción"},
+  {label:"Látex", tipo:"sí/no + detalle reacción"},
+  {label:"Aloe vera", tipo:"sí/no + detalle reacción"},
+  {label:"Fragancias o perfumes", tipo:"sí/no + detalle reacción"},
+  {label:"Otro", tipo:"sí/no + detalle reacción"},
+]},
+{titulo:"Historial Quirúrgico y Condición de la Piel", subtitulo:"Antecedentes de cirugías y estado general de tu piel.", campos:[
+  {sub:"Historial Quirúrgico"},
+  {label:"¿Se ha realizado alguna cirugía?", tipo:"sí/no + detalle", req:true},
+  {sub:"Tipo de Piel"},
+  {label:"¿Cómo describiría su piel?", tipo:"opción única", opciones:["Normal","Seca","Grasa","Mixta","Sensible","No lo sé"], req:true},
+  {sub:"Problemas específicos de piel"},
+  {label:"Textura y superficie", tipo:"selección múltiple", opciones:["Piel áspera","Muy seca / descamación","Poros dilatados","Piel engrosada"]},
+  {label:"Oleosidad", tipo:"selección múltiple", opciones:["Brillo excesivo","Producción irregular de sebo","Espinillas (comedones)"]},
+  {label:"Inflamación / Brotes", tipo:"selección múltiple", opciones:["Acné leve","Acné moderado","Acné severo","Piel inflamada","Enrojecimiento frecuente"]},
+  {label:"Pigmentación", tipo:"selección múltiple", opciones:["Manchas solares","Melasma","Pecas","Hipopigmentación","Marcas post-acné"]},
+  {label:"Envejecimiento cutáneo", tipo:"selección múltiple", opciones:["Líneas finas","Arrugas marcadas","Flacidez facial","Pérdida de luminosidad"]},
+  {label:"Sensibilidades", tipo:"selección múltiple", opciones:["Ardor","Picor","Alergia a cosméticos","Rosácea diagnosticada","Dermatitis"]},
+  {id:"f-otros-piel", label:"Otros problemas de piel no mencionados", tipo:"texto largo"},
+]},
+{titulo:"Evaluación Capilar", subtitulo:"Estado del cabello y caída.", campos:[
+  {sub:"Caída del Cabello"},
+  {label:"¿Desde cuándo notas la caída?", tipo:"opción única", opciones:["Menos de 3 meses","Entre 3 y 6 meses","Más de 6 meses","No tengo caída"]},
+  {label:"¿La caída es?", tipo:"opción única", opciones:["Difusa (toda la cabeza)","Por zonas específicas","No aplica"]},
+  {label:"Síntomas asociados", tipo:"selección múltiple", opciones:["Picor","Descamación","Dolor","Ninguno"]},
+  {label:"Factores recientes relacionados", tipo:"selección múltiple", opciones:["Estrés","Enfermedad","Cirugía","Cambio de medicación","Ninguno"]},
+  {label:"¿Antecedentes familiares de alopecia?", tipo:"sí/no"},
+  {label:"¿Has usado tratamientos para la caída?", tipo:"sí/no"},
+  {sub:"Depilación y Manejo de Vello"},
+  {label:"¿Deseas reducir o eliminar vello?", tipo:"sí/no", req:true},
+  {label:"Zonas de interés", tipo:"selección múltiple", opciones:["Axilas","Ingles","Piernas","Facial","Pecho / Espalda"]},
+  {label:"Métodos previos de depilación", tipo:"selección múltiple", opciones:["Láser","Cera","Afeitado","Cremas","Ninguno"]},
+  {label:"¿Has notado aumento reciente de vello?", tipo:"sí/no"},
+  {label:"¿Cambios hormonales recientes?", tipo:"sí/no"},
+  {label:"Reacciones previas con depilación", tipo:"selección múltiple", opciones:["Irritación","Foliculitis","Hiperpigmentación","Ninguna"]},
+]},
+{titulo:"Objetivos y Estética Previa", subtitulo:"Tratamientos anteriores, objetivos actuales y áreas a tratar.", campos:[
+  {sub:"Historial Estético Previo"},
+  {label:"¿Ha recibido tratamientos estéticos anteriormente?", tipo:"sí/no", req:true},
+  {label:"Toxina botulínica (Botox)", tipo:"sí/no + fecha + zona"},
+  {label:"Rellenos dérmicos (ácido hialurónico)", tipo:"sí/no + fecha + zona"},
+  {label:"Hilos tensores", tipo:"sí/no + fecha + zona"},
+  {label:"Peeling químico", tipo:"sí/no + fecha + zona"},
+  {label:"Láser facial / corporal", tipo:"sí/no + fecha + zona"},
+  {label:"Microblading o micropigmentación", tipo:"sí/no + fecha + zona"},
+  {label:"Mesoterapia", tipo:"sí/no + fecha + zona"},
+  {label:"Radiofrecuencia", tipo:"sí/no + fecha + zona"},
+  {label:"Criolipólisis", tipo:"sí/no + fecha + zona"},
+  {label:"Otro tratamiento estético", tipo:"sí/no + fecha + zona"},
+  {label:"¿Actualmente está en tratamiento con láser?", tipo:"sí/no + detalle", req:true},
+  {label:"¿Ha tenido complicaciones con algún tratamiento estético previo?", tipo:"sí/no + detalle", req:true},
+  {sub:"Área de Interés y Expectativas"},
+  {label:"Áreas FACIALES a tratar", tipo:"selección múltiple", opciones:["Arrugas / líneas","Manchas","Flacidez facial","Acné o cicatrices","Ojeras o bolsas","Contorno facial","Poros dilatados","Textura de la piel"], req:true},
+  {label:"Áreas CORPORALES a tratar", tipo:"selección múltiple", opciones:["Grasa localizada","Celulitis","Flacidez corporal","Estrías","Várices o arañitas","Exceso de vello","Otro"]},
+  {id:"f-prioridad", label:"¿Cuál es su PRIORIDAD principal?", tipo:"texto largo", req:true},
+  {id:"f-expectativas", label:"¿Qué expectativas tiene del tratamiento?", tipo:"texto largo", req:true},
+  {id:"scale-satisfaccion", label:"Satisfacción actual con el área a tratar (escala 1-10)", tipo:"escala 1-10", req:true},
+  {label:"¿Entiende que pueden necesitarse múltiples sesiones?", tipo:"sí/no", req:true},
+]},
+{titulo:"Estilo de Vida y Antecedentes", subtitulo:"Hábitos del sol, cuidado de la piel, actividad física y antecedentes familiares.", campos:[
+  {sub:"Exposición Solar y Cuidado Facial"},
+  {label:"Exposición solar", tipo:"opción única", opciones:["Mínima","Moderada","Alta"], req:true},
+  {label:"¿Usa protector solar diariamente?", tipo:"sí/no + marca/FPS/hora/reaplicación", req:true},
+  {label:"¿Realiza rutina diaria de cuidado facial o corporal?", tipo:"sí/no + detalle rutina", req:true},
+  {id:"f-rutina-manana", label:"Rutina de la mañana (productos y orden)", tipo:"texto largo"},
+  {id:"f-rutina-noche", label:"Rutina de la noche (productos y orden)", tipo:"texto largo"},
+  {label:"Rutina actual incluye", tipo:"selección múltiple", opciones:["Limpieza facial diaria","Hidratación","Retinol o ácidos","Tratamientos dermatológicos"], req:true},
+  {id:"f-productos", label:"Productos cosméticos de uso frecuente", tipo:"texto largo"},
+  {sub:"Actividad Física"},
+  {label:"Nivel de actividad física", tipo:"opción única", opciones:["Sedentario","Ligero (1–2/sem)","Moderado (3–4/sem)","Intenso (5+/sem)"], req:true},
+  {sub:"Antecedentes Familiares y Contraindicaciones"},
+  {label:"¿En su familia hay historia de alguna enfermedad relevante?", tipo:"sí/no", req:true},
+  {label:"¿Tienes alergias a medicamentos o productos tópicos?", tipo:"sí/no", req:true},
+  {label:"¿Has tenido infecciones cutáneas en zonas a tratar?", tipo:"sí/no", req:true},
+  {label:"¿Tienes marcapasos, implantes metálicos o dispositivos médicos?", tipo:"sí/no", req:true},
+  {sub:"Antecedentes Familiares"},
+  {label:"¿Algún familiar directo con enfermedades relevantes?", tipo:"opción única + detalle", opciones:["Sí","No"]},
+  {id:"f-antecedentes-det", label:"¿Cuáles? (diabetes, cáncer, cardíacas, etc.)", tipo:"texto largo"},
+]},
+{titulo:"Declaración y Consentimiento", subtitulo:"Para finalizar, confirma los siguientes puntos marcando cada uno.", campos:[
+  {label:"Declaro que la información es verídica y completa", tipo:"checkbox consentimiento", req:true},
+  {label:"Comprendo el riesgo de ocultar información médica", tipo:"checkbox consentimiento", req:true},
+  {label:"Me comprometo a informar cambios en mi estado de salud", tipo:"checkbox consentimiento", req:true},
+  {label:"Entiendo que los resultados pueden variar según cada paciente", tipo:"checkbox consentimiento", req:true},
+  {label:"Autorizo a la clínica a contactarme para seguimiento", tipo:"checkbox consentimiento", req:true},
+  {id:"fecha-envio", label:"Fecha de envío", tipo:"fecha", req:true},
+]},
+];
+
+// ── Asignar índice único a cada campo (para persistencia) ──
+let uid = 0;
+STEPS.forEach((step, si) => {
+  step.campos.forEach(c => {
+    if (!c.sub) { c.uid = 'c' + (uid++); c.stepIndex = si; }
+  });
+});
+
+const STORAGE_KEY = 'carvajal_revision_formulario_v1';
+let decisiones = {};
+try { decisiones = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { decisiones = {}; }
+
+let currentStep = 0;
+let filterPending = false;
+
+function guardar(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(decisiones)); }
+
+function setDecision(uidVal, valor){
+  if (decisiones[uidVal] === valor) delete decisiones[uidVal];
+  else decisiones[uidVal] = valor;
+  guardar();
+  renderStep(currentStep);
+  updateCounters();
+}
+
+function updateCounters(){
+  let keep=0, remove=0;
+  Object.values(decisiones).forEach(v => { if (v==='mantener') keep++; else if (v==='quitar') remove++; });
+  document.getElementById('cnt-keep').textContent = keep;
+  document.getElementById('cnt-remove').textContent = remove;
+  document.getElementById('cnt-pending').textContent = uid - keep - remove;
+}
+
+function renderNav(){
+  const nav = document.getElementById('step-nav');
+  nav.innerHTML = STEPS.map((s,i) => `<button class="step-btn${i===currentStep?' active':''}" onclick="goStep(${i})">${i+1}. ${s.titulo}</button>`).join('');
+}
+
+function fieldMetaHtml(c){
+  let parts = [c.tipo];
+  let html = `<div class="field-meta">${parts.join(' · ')}`;
+  if (c.opciones) {
+    html += '<div style="margin-top:5px">' + c.opciones.map(o=>`<span class="opt">${o}</span>`).join('') + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderStep(i){
+  currentStep = i;
+  renderNav();
+  const step = STEPS[i];
+  const main = document.getElementById('main');
+  let html = `<div class="step-panel active"><div class="step-title">${step.titulo}</div><div class="step-subtitle">${step.subtitulo}</div>`;
+  step.campos.forEach(c => {
+    if (c.sub) { html += `<div class="sub-label">${c.sub}</div>`; return; }
+    const dec = decisiones[c.uid];
+    const cardClass = dec === 'mantener' ? 'mantener' : dec === 'quitar' ? 'quitar' : '';
+    const isPending = !dec;
+    html += `<div class="field-card ${cardClass}${filterPending && !isPending ? ' hidden-by-filter' : ''}">
+      <div class="field-label">${c.label}${c.req ? '<span class="field-req">*</span>' : ''}</div>
+      ${fieldMetaHtml(c)}
+      <div class="decision-row">
+        <button class="dbtn dbtn-keep${dec==='mantener'?' on':''}" onclick="setDecision('${c.uid}','mantener')">✓ Mantener</button>
+        <button class="dbtn dbtn-remove${dec==='quitar'?' on':''}" onclick="setDecision('${c.uid}','quitar')">✕ Quitar</button>
+      </div>
+      ${c.id ? `<div class="field-id">${c.id}</div>` : ''}
+    </div>`;
+  });
+  html += `<div class="step-footer">
+    <button class="nav-btn ghost" onclick="goStep(${i-1})" ${i===0?'disabled':''}>← Anterior</button>
+    <button class="nav-btn" onclick="goStep(${i+1})" ${i===STEPS.length-1?'disabled':''}>Siguiente →</button>
+  </div></div>`;
+  main.innerHTML = html;
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+function goStep(i){
+  if (i < 0 || i >= STEPS.length) return;
+  renderStep(i);
+}
+
+function toggleFilter(){
+  filterPending = !filterPending;
+  document.getElementById('btn-filter').classList.toggle('on', filterPending);
+  renderStep(currentStep);
+}
+
+function showToast(msg, dur=2600){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+function buildResultados(){
+  const resultados = [];
+  STEPS.forEach(step => {
+    step.campos.forEach(c => {
+      if (c.sub) return;
+      resultados.push({
+        paso: step.titulo,
+        campo: c.label,
+        id: c.id || '',
+        decision: decisiones[c.uid] || 'sin_marcar',
+      });
+    });
+  });
+  return resultados;
+}
+
+function exportarJSON(){
+  const data = buildResultados();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'revision-formulario-carvajal.json';
+  a.click();
+  showToast('JSON descargado');
+}
+
+function exportarCSV(){
+  const data = buildResultados();
+  const rows = [['Paso','Campo','ID','Decisión'], ...data.map(r=>[r.paso, r.campo, r.id, r.decision])];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'revision-formulario-carvajal.csv';
+  a.click();
+  showToast('CSV descargado');
+}
+
+async function enviarCorreo(){
+  const data = buildResultados();
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Enviando...';
+  try {
+    const resp = await fetch('/api/formulario-seleccion/enviar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({campos: data})
+    });
+    const result = await resp.json();
+    if (result.ok) showToast('✓ Correo enviado a isai.josue@gmail.com');
+    else showToast('Error: ' + (result.error || '?'), 4000);
+  } catch(e) {
+    showToast('Error de conexión', 4000);
+  } finally {
+    btn.disabled = false; btn.textContent = originalText;
+  }
+}
+
+renderStep(0);
+updateCounters();
+</script>
+</body>
+</html>
