@@ -204,7 +204,7 @@ textarea:focus{border-color:var(--gold)}
         <input id="f-horario-otro" type="text" placeholder="Describe tu horario habitual..." maxlength="150">
       </div>
     </div>
-    <div class="field full"><label class="field-label">Nivel de actividad laboral</label>
+    <div class="field full" style="display:none"><label class="field-label">Nivel de actividad laboral</label>
       <div class="radio-group">
         <label class="radio-item"><input type="radio" name="act_laboral"><div class="radio-dot"></div>Sedentario</label>
         <label class="radio-item"><input type="radio" name="act_laboral"><div class="radio-dot"></div>Moderado</label>
@@ -320,7 +320,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="yn-row"><span class="yn-label">¿Vas al baño todos los días? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="form-grid" style="margin-top:14px">
       <div class="field" style="display:none"><label class="field-label">¿A qué hora del día?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Mañana</label><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Tarde</label><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Noche</label></div></div>
-      <div class="field"><label class="field-label">¿Cómo es tu evacuación?</label><div class="radio-group" style="flex-direction:column;gap:6px"><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Normal</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Difícil</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Irregular</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Con esfuerzo</label></div></div>
+      <div class="field" style="display:none"><label class="field-label">¿Cómo es tu evacuación?</label><div class="radio-group" style="flex-direction:column;gap:6px"><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Normal</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Difícil</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Irregular</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Con esfuerzo</label></div></div>
     </div>
   </div>
 
@@ -1381,7 +1381,6 @@ function collectData(){
     celular:        document.getElementById('f-celular').value||'',
     ocupacion:      document.getElementById('f-ocupacion').value||'',
     horarioLaboral: horarioLaboral,
-    actLaboral:     (document.querySelector('input[name="act_laboral"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     numHijos:       (document.querySelector('input[name="num_hijos"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     comoConociste:  (document.querySelector('input[name="como_conociste"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     fecha:          new Date().toLocaleDateString('es-CR',{day:'numeric',month:'long',year:'numeric'}),
@@ -1481,9 +1480,6 @@ function collectData(){
     alergia_latex:      getYNValue(document.getElementById('step-5'),'látex'),
     alergia_aloe:       getYNValue(document.getElementById('step-5'),'aloe'),
     alergia_fragancias: getYNValue(document.getElementById('step-5'),'fragancias'),
-
-    // Hábitos digestivos
-    evacuacion:         (document.querySelector('input[name="evacuacion"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
 
     // Solar detallado
     usaProtectorSolar:  document.getElementById('solar-det-wrap')&&document.getElementById('solar-det-wrap').style.display!=='none' ? 'Sí' : 'No',

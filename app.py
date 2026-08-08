@@ -2030,7 +2030,6 @@ def generar_analisis_medico(data):
         'Cansancio diurno': data.get('cansancioDia',''),
         'Nivel estres': data.get('nivelEstres',''),
         'Actividad fisica': data.get('actFisica',''),
-        'Evacuacion': data.get('evacuacion',''),
         'Intolerancias': data.get('intolerancias',''),
         'Sintomas digestivos': data.get('sintomasDigestivos',''),
         'Tipo piel': data.get('pielTipo',''),
@@ -2427,7 +2426,6 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('direccion',                _g('direccion'))
     _fila('ocupacion',                _g('ocupacion'))
     _fila('horario_laboral',          _g('horarioLaboral'))
-    _fila('nivel_actividad_laboral',  _g('actLaboral'))
     _fila('num_hijos',                _g('numHijos'))
     _fila('referencia_recomendacion', _g('comoConociste'))
     _fila('fecha_firma',              _g('fecha'))
@@ -2461,7 +2459,6 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('toma_medicamentos', 'SÍ' if _g('medicamentos') not in ['Ninguna','No',''] else 'NO')
     _fila('medicamento_cual',  _g('medicamentos'))
     _fila('otras_condiciones', _g('condiciones'))
-    _fila('evacuacion',        _g('evacuacion'))
     _fila('horas_sueno',       _g('sueno'))
     _fila('hora_acuesta',      _g('horaDuerme'))
     _fila('hora_levanta',      _g('horaDespierta'))
@@ -2870,7 +2867,6 @@ def _mapear_formulario(f):
         'fechaNacimiento':     s('fechaNacimiento'),
         'sexo':                s('sexo'),
         'ocupacion':           s('ocupacion'),
-        'actLaboral':          s('actLaboral'),
         'horarioLaboral':      s('horarioLaboral'),
         'email':               s('email'),
         'celular':             s('celular'),
@@ -2915,7 +2911,6 @@ def _mapear_formulario(f):
         'alergia_latex':       s('alergia_latex'),
         'alergia_aloe':        s('alergia_aloe'),
         'alergia_fragancias':  s('alergia_fragancias'),
-        'evacuacion':          s('evacuacion'),
         'antecedentesFam':     s('antecedentesFam'),
         'antecedentesFamDet':  s('antecedentesFamDet'),
         'comoConociste':       s('comoConociste'),
@@ -3197,7 +3192,7 @@ def _datos_paciente(d):
     contra_txt = 'CONTRAINDICACIONES ACTIVAS: ' + ', '.join(contra_activas) if contra_activas else 'Sin contraindicaciones activas.'
     return f"""DATOS DEL PACIENTE:
 Nombre: {d['nombre']} | Edad: {d['edad']} | Sexo: {d['sexo']}
-Ocupacion: {d['ocupacion']} | Horario: {d['horarioLaboral']} | Act.laboral: {d['actLaboral']}
+Ocupacion: {d['ocupacion']} | Horario: {d['horarioLaboral']}
 Fecha evaluacion: {d['fecha']}
 Estatura: {est}cm | Peso: {pes}kg | IMC: {imc}
 
@@ -4479,7 +4474,6 @@ def email_formulario_inmediato(d, fotos=None):
         row('Edad',              d.get('edad','')),
         row('Sexo',              d.get('sexo','')),
         row('Ocupación',         d.get('ocupacion','')),
-        row('Act. laboral',      d.get('actLaboral','')),
         row('Horario laboral',   d.get('horarioLaboral','')),
         row('Hijos',             d.get('numHijos','')),
         row('Cómo nos conoció',  d.get('comoConociste','')),
@@ -4499,7 +4493,6 @@ def email_formulario_inmediato(d, fotos=None):
         row('Cirugías',            d.get('cirugias','')),
         row('Fuma',                d.get('fuma','')),
         row('Alcohol',             d.get('alcohol','')),
-        row('Evacuación',          d.get('evacuacion','')),
         row('Antec. familiares',   d.get('antecedentesFam','')),
         row('Detalle antec.',      d.get('antecedentesFamDet','')),
 
