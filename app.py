@@ -2030,7 +2030,6 @@ def generar_analisis_medico(data):
         'Exposicion solar': data.get('solar',''),
         'SPF': data.get('spf',''),
         'Historial estetico': data.get('historialEstetico',''),
-        'Laser activo': data.get('laserActivo',''),
         'Contraindicaciones': data.get('contraindications',''),
         'Antecedentes familiares': (data.get('antecedentesFam') or '') + ' ' + (data.get('antecedentesFamDet') or ''),
         'Satisfaccion actual': str(data.get('satisfaccion','')) + '/10',
@@ -2514,29 +2513,7 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     # ── 10. HISTORIAL ESTÉTICO ───────────────────────────────────
     _sec('10. HISTORIAL ESTÉTICO Y TRATAMIENTOS PREVIOS')
     _fila('tratamientos_previos',     'SÍ' if hist_lst else 'NO')
-    _fila('tratamiento_botox',        _yn_h('botox'))
-    _fila('botox_fecha',              _fh('Botox'))
-    _fila('tratamiento_rellenos',     _yn_h('rellenos'))
-    _fila('rellenos_fecha',           _fh('Rellenos'))
-    _fila('rellenos_zonas',           _zh('Rellenos'))
-    _fila('tratamiento_hilos',        _yn_h('hilos'))
-    _fila('hilos_fecha',              _fh('Hilos PDO'))
-    _fila('tratamiento_peeling',      _yn_h('peeling'))
-    _fila('peeling_fecha',            _fh('Peeling'))
-    _fila('tratamiento_laser',        _yn_h('laser'))
-    _fila('laser_tipo',               _zh('Laser'))
-    _fila('laser_fecha',              _fh('Laser'))
-    _fila('tratamiento_microblading', _yn_h('microblading'))
-    _fila('microblading_fecha',       _fh('Microblading'))
-    _fila('tratamiento_mesoterapia',  _yn_h('mesoterapia'))
-    _fila('mesoterapia_fecha',        _fh('Mesoterapia'))
-    _fila('tratamiento_radiofrecuencia', _yn_h('radiofrecuencia'))
-    _fila('radiofrecuencia_fecha',    _fh('Radiofrecuencia'))
-    _fila('tratamiento_criolipolisis',_yn_h('criolipolisis'))
-    _fila('criolipolisis_fecha',      _fh('Criolipólisis'))
-    _fila('tratamiento_otro',         'NO')
-    _fila('laser_actual',             _g('laserActivo'))
-    _fila('laser_actual_detalle',     _g('laserActualDet'))
+    _fila('tratamiento_otro',         _yn_h('otro'))
     _fila('complicaciones_esteticas', 'SÍ' if _g('complicacionesDet') else 'NO')
     _fila('complicaciones_esteticas_desc', _g('complicacionesDet'))
 
@@ -2549,9 +2526,8 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('area_celulitis',       'Celulitis'       if 'celulitis' in areas_low else '')
     _fila('grasa_zona',           'Grasa localizada' if 'grasa'   in areas_low else '')
     _fila('prioridad_principal',  _g('prioridad'))
-    _fila('expectativas',         _g('expectativas'))
     _fila('satisfaccion',         _g('satisfaccion'))
-    _fila('entiende_sesiones',    'SÍ')
+    _fila('entiende_sesiones',    _g('entiendeSesiones'))
 
     # ── 12. DECLARACIONES ────────────────────────────────────────
     _sec('12. DECLARACIONES Y CONSENTIMIENTO')
@@ -2850,11 +2826,10 @@ def _mapear_formulario(f):
         'areasFaciales':       faciales,
         'areasCorporales':     corporales,
         'prioridad':           s('prioridad'),
-        'expectativas':        s('expectativas'),
         'satisfaccion':        s('satisfaccion'),
         'historialEstetico':   lst('historialEstetico'),
         'historialDetalle':    f.get('historialDetalle', {}),
-        'laserActivo':         'Si' if s('laserActivo').lower() in ['si','sí','yes'] else 'No',
+        'entiendeSesiones':    'Si' if s('entiendeSesiones').lower() in ['si','sí','yes'] else 'No',
         'sintomasDigestivos':  sintomas,
         'notasAlimentacion':   s('notasAlimentacion'),
         'nivelEstres':         s('nivelEstres'),
@@ -3127,7 +3102,7 @@ Alergias: {d['alergias']}
 
 OBJETIVOS: Faciales: {', '.join(d['areasFaciales'])} | Corporales: {', '.join(d['areasCorporales'])}
 Prioridad (palabras del paciente): "{d['prioridad']}"
-Expectativas: {d['expectativas']} | Satisfaccion: {d['satisfaccion']}/10
+Satisfaccion: {d['satisfaccion']}/10
 Historial estetico: {', '.join(d['historialEstetico']) or 'Ninguno'}
 
 ALIMENTACION:
@@ -4306,8 +4281,7 @@ def email_formulario(d, faltantes, borrador_url=''):
     rows = ''.join(f'<tr><td style="color:#b8935a;font-weight:600;padding:8px 16px;font-size:12px;text-transform:uppercase;letter-spacing:1px;width:140px">{k}</td><td style="padding:8px 16px;font-size:13px">{v}</td></tr>'
         for k, v in [('Nombre', nombre), ('Edad', d.get('edad','')), ('Ocupacion', d.get('ocupacion','')),
                      ('Medicamentos', d.get('medicamentos','')), ('Cirugias', d.get('cirugias','')),
-                     ('Prioridad', d.get('prioridad','')), ('Satisfaccion', d.get('satisfaccion','') + '/10'),
-                     ('Expectativas', d.get('expectativas',''))])
+                     ('Prioridad', d.get('prioridad','')), ('Satisfaccion', d.get('satisfaccion','') + '/10')])
     faltantes_html = ''
     if faltantes:
         items = ''.join(f'<li style="font-size:12px;color:#6a5a20;padding:2px 0">{f}</li>' for f in faltantes)
@@ -4426,7 +4400,6 @@ def email_formulario_inmediato(d, fotos=None):
         row('Factor SPF',          d.get('spf','')),
         row('Hora aplicación SPF', d.get('protectorHora','')),
         row('Reaplicación solar',  d.get('reaplicaSolar','')),
-        row('Láser activo',        d.get('laserActivo','')),
         row('Detalle láser',       d.get('laserActualDet','')),
         row('Complicaciones prev.',d.get('complicacionesDet','')),
         row('Historial estético',  hist_str or d.get('historialEstetico','')),
@@ -4443,7 +4416,6 @@ def email_formulario_inmediato(d, fotos=None):
         row('Cansancio diurno',    d.get('cansancioDia','')),
         row('Nivel de estrés',     d.get('nivelEstres','')),
         row('Prioridad',           d.get('prioridad','')),
-        row('Expectativas',        d.get('expectativas','')),
         row('Satisfacción actual', str(d.get('satisfaccion','')) + '/10' if d.get('satisfaccion') else ''),
     ])
 
