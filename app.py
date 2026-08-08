@@ -2518,11 +2518,12 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
 
     # ── 12. DECLARACIONES ────────────────────────────────────────
     _sec('12. DECLARACIONES Y CONSENTIMIENTO')
-    _fila('declara_veracidad',  'Acepto')
-    _fila('declara_riesgo',     'Acepto')
-    _fila('declara_cambios',    'Acepto')
-    _fila('declara_resultados', 'Acepto')
-    _fila('autoriza_contacto',  'Acepto')
+    decl = data.get('declaraciones', [])
+    _fila('declara_veracidad',  'Acepto' if len(decl) > 0 and decl[0] else 'No indicado')
+    _fila('declara_riesgo',     'Acepto' if len(decl) > 1 and decl[1] else 'No indicado')
+    _fila('declara_cambios',    'Acepto' if len(decl) > 2 and decl[2] else 'No indicado')
+    _fila('declara_resultados', 'Acepto' if len(decl) > 3 and decl[3] else 'No indicado')
+    _fila('autoriza_contacto',  'Acepto' if len(decl) > 4 and decl[4] else 'No indicado')
 
     doc.add_paragraph()
     p_pie = doc.add_paragraph(); p_pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -2831,6 +2832,7 @@ def _mapear_formulario(f):
         'dispositivosMedicos': s('dispositivosMedicos'),
         # Rutina tarde (campo opcional, puede estar vacío si el formulario no lo tiene)
         'rutinaTarde':         s('rutinaTarde'),
+        'declaraciones':       f.get('declaraciones', []),
         'notasStaff':          '',
     }
 

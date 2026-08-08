@@ -1418,6 +1418,9 @@ function collectData(){
     // Contraindicaciones clínicas (step-10)
     dispositivosMedicos: getYNValue(document.getElementById('step-10'), 'dispositivos médicos'),
 
+    // Declaraciones y consentimiento (step-11)
+    declaraciones: [...document.querySelectorAll('#step-11 .consent-item input[type="checkbox"]')].map(c=>c.checked),
+
     notasStaff: '',
   };
 }
