@@ -2387,10 +2387,6 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     areas_c  = data.get('areasCorporales', []) or []
     areas_low= ' '.join((areas_f if isinstance(areas_f, list) else []) +
                          (areas_c if isinstance(areas_c, list) else [])).lower()
-    intol_lst= data.get('intolerancias', []) or []
-    prot_str = str(data.get('proteinas', '')).lower()
-    carb_str = str(data.get('carbohidratos', '')).lower()
-    gras_str = str(data.get('grasasEvitar', '')).lower()
 
     def _yn_c(label):
         return 'SÍ' if contra.get(label, 'No') == 'Si' else 'NO'
@@ -2469,23 +2465,7 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _sec('5. SÍNTOMAS DIGESTIVOS E INTOLERANCIAS')
     _fila('hinchazon_abdominal',       _yn_s('hinchazon'))
     _fila('gases_flatulencias',        _yn_s('gases'))
-    _fila('estrenimiento_diarrea',     _yn_s('estrenimiento'))
-    _fila('cansancio_comidas',         _yn_s('cansancio tras comer'))
-    _fila('digestion_lenta',           _yn_s('digestion'))
     _fila('nauseas_malestar',          _yn_s('nauseas'))
-    _fila('antecedentes_intolerancias','SÍ' if intol_lst else 'NO')
-
-    # Función local: detecta SÍ aunque el valor sea texto de detalle (no sólo 'si'/'sí')
-    def _yn_sint(key):
-        val = _g(key).strip()
-        if not val or val.lower() in ['no', 'no respondido', '']:
-            return 'NO'
-        # Es SÍ puro o es texto de detalle (ej. "hinchazón, gases") → ambos son SÍ
-        return 'SÍ' if val.lower() in ['si', 'sí', 'yes'] else f'SÍ — {val}'
-
-    _fila('sintomas_lacteos',    _yn_sint('sintLacteos'))
-    _fila('sintomas_gluten',     _yn_sint('sintGluten'))
-    _fila('sintomas_procesados', _yn_sint('sintProcesados'))
 
     # ── 6. ALERGIAS ──────────────────────────────────────────────
     _sec('6. ALERGIAS')
@@ -2519,26 +2499,6 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
 
     # ── 8. ALIMENTACIÓN ──────────────────────────────────────────
     _sec('8. ALIMENTACIÓN Y NUTRICIÓN')
-    _fila('proteina_pollo',      'Pollo'        if 'pollo'    in prot_str else '')
-    _fila('proteina_pescado',    'Pescado'      if 'pescado'  in prot_str else '')
-    _fila('proteina_mariscos',   'Mariscos'     if 'mariscos' in prot_str else '')
-    _fila('proteina_res',        'Carne de res' if 'carne'    in prot_str else '')
-    _fila('proteina_cerdo',      'Cerdo'        if 'cerdo'    in prot_str else '')
-    _fila('proteina_huevos',     'Huevos'       if 'huevos'   in prot_str else '')
-    _fila('proteina_legumbres',  'Legumbres'    if 'legumbres' in prot_str else '')
-    _fila('proteinas_evitar',    _g('proteinasEvitar'))
-    _fila('evitar_fritos',       'Alimentos fritos'  if any(x in gras_str for x in ['fritos','frito']) else '')
-    _fila('evitar_manteca',      'Manteca/Margarina' if any(x in gras_str for x in ['manteca','margarina']) else '')
-    _fila('carb_arroz_blanco',   'Arroz blanco'  if 'arroz'  in carb_str else '')
-    _fila('carb_pasta',          'Pasta'         if 'pasta'  in carb_str else '')
-    _fila('carb_pan',            'Pan'           if ' pan'   in (' ' + carb_str) else '')
-    _fila('carb_batata',         'Batata/Camote' if any(x in carb_str for x in ['batata','camote']) else '')
-    _fila('carb_frutas',         _g('frutas'))
-    _fila('carbohidratos_evitar',_g('carbosEvitar'))
-    _fila('verduras_consume',    _g('verduras'))
-    _fila('verduras_evitar',     _g('verdurasEvitar'))
-    _fila('postres_favoritos',   _g('postres'))
-    _fila('bebidas_azucaradas',  'SÍ' if _g('bebidas') not in ['No','no',''] else 'NO')
     _fila('observaciones_alimentarias', _g('notasAlimentacion'))
 
     # ── 9. PIEL Y RUTINA ─────────────────────────────────────────
@@ -2843,13 +2803,9 @@ def _mapear_formulario(f):
     contra_raw = f.get('contraindications', {})
     contra = {k: ('Si' if str(v).lower() in ['si','sí','yes'] else 'No') for k, v in contra_raw.items()}
 
-    intolerancias = lst('intolerancias')
     sintomas_map = {
         'hinchazon_abdominal': 'Hinchazon',
         'gases':               'Gases',
-        'estrenimiento':       'Estrenimiento',
-        'cansancio_comidas':   'Cansancio tras comer',
-        'digestion_lenta':     'Digestion lenta',
         'nauseas':             'Nauseas',
     }
     sintomas = [sintomas_map[k] for k in lst('sintomasDigestivos') if k in sintomas_map]
@@ -2922,15 +2878,7 @@ def _mapear_formulario(f):
         'historialEstetico':   lst('historialEstetico'),
         'historialDetalle':    f.get('historialDetalle', {}),
         'laserActivo':         'Si' if s('laserActivo').lower() in ['si','sí','yes'] else 'No',
-        'intolerancias':       intolerancias,
         'sintomasDigestivos':  sintomas,
-        'proteinas':           s('proteinas'),
-        'carbohidratos':       s('carbohidratos'),
-        'verduras':            s('verduras'),
-        'frutas':              s('frutas'),
-        'alimentosEvitar':     s('alimentosEvitar'),
-        'postres':             s('postres'),
-        'bebidas':             s('bebidas'),
         'notasAlimentacion':   s('notasAlimentacion'),
         'nivelEstres':         s('nivelEstres'),
         'numHijos':            s('numHijosVal') or s('numHijos'),
@@ -2938,10 +2886,6 @@ def _mapear_formulario(f):
         'contactoEmergencia':  s('contactoEmergencia'),
         'contactoRelacion':    s('contactoRelacion'),
         'contactoTel':         s('contactoTel'),
-        # Intolerancias con detalle
-        'sintLacteos':         s('sintLacteos'),
-        'sintGluten':          s('sintGluten'),
-        'sintProcesados':      s('sintProcesados'),
         # Solar detallado
         'usaProtectorSolar':   s('usaProtectorSolar'),
         'protectorMarca':      s('protectorMarca'),
@@ -2952,12 +2896,6 @@ def _mapear_formulario(f):
         # Historial estético extra
         'laserActualDet':      s('laserActualDet'),
         'complicacionesDet':   s('complicacionesDet'),
-        # Alimentación extra
-        'grasasEvitar':        s('grasasEvitar'),
-        'grasasEvitarPorque':  s('grasasEvitarPorque'),
-        'proteinasEvitar':     s('proteinasEvitar'),
-        'carbosEvitar':        s('carbosEvitar'),
-        'verdurasEvitar':      s('verdurasEvitar'),
         # Contraindicaciones clínicas adicionales
         'infeccionesCutaneas': s('infeccionesCutaneas'),
         'dispositivosMedicos': s('dispositivosMedicos'),
@@ -3216,10 +3154,6 @@ Expectativas: {d['expectativas']} | Satisfaccion: {d['satisfaccion']}/10
 Historial estetico: {', '.join(d['historialEstetico']) or 'Ninguno'}
 
 ALIMENTACION:
-Intolerancias: {', '.join(d['intolerancias']) or 'Ninguna'}
-Proteinas: {d['proteinas']} | Carbos: {d['carbohidratos']}
-Verduras: {d['verduras']} | Frutas: {d['frutas']}
-Evitar: {d['alimentosEvitar']}
 Notas: {d['notasAlimentacion']}
 
 CONTEXTO PERSONAL ADICIONAL:
@@ -4527,20 +4461,7 @@ def email_formulario_inmediato(d, fotos=None):
         row('Historial estético',  hist_str or d.get('historialEstetico','')),
 
         seccion('Alimentación'),
-        row('Intolerancias',       d.get('intolerancias','')),
-        row('Síntomas lácteos',    d.get('sintLacteos','')),
-        row('Síntomas gluten',     d.get('sintGluten','')),
-        row('Síntomas procesados', d.get('sintProcesados','')),
         row('Síntomas digestivos', d.get('sintomasDigestivos','')),
-        row('Proteínas',           d.get('proteinas','')),
-        row('Carbohidratos',       d.get('carbohidratos','')),
-        row('Verduras',            d.get('verduras','')),
-        row('Frutas',              d.get('frutas','')),
-        row('Alimentos a evitar',  d.get('alimentosEvitar','')),
-        row('Grasas a evitar',     d.get('grasasEvitar','')),
-        row('Por qué evita grasas',d.get('grasasEvitarPorque','')),
-        row('Postres',             d.get('postres','')),
-        row('Bebidas',             d.get('bebidas','')),
         row('Notas alimentación',  d.get('notasAlimentacion','')),
 
         seccion('Hábitos y objetivos'),
