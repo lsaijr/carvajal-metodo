@@ -512,7 +512,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_medicamentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_lidocaina">
+  <div class="yn-row" id="arow-alg_lidocaina" style="display:none">
     <span class="yn-label">Lidocaína o anestésicos locales</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_lidocaina')">Sí</button>
@@ -525,7 +525,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_lidocaina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_penicilina">
+  <div class="yn-row" id="arow-alg_penicilina" style="display:none">
     <span class="yn-label">Penicilina u otros antibióticos</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_penicilina')">Sí</button>
@@ -538,7 +538,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_penicilina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_yodo">
+  <div class="yn-row" id="arow-alg_yodo" style="display:none">
     <span class="yn-label">Yodopovidona (Isodine)</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_yodo')">Sí</button>
@@ -551,7 +551,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_yodo" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_aines">
+  <div class="yn-row" id="arow-alg_aines" style="display:none">
     <span class="yn-label">Antiinflamatorios (ibuprofeno, naproxeno, etc.)</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_aines')">Sí</button>
@@ -577,7 +577,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_alimentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_mariscos">
+  <div class="yn-row" id="arow-alg_mariscos" style="display:none">
     <span class="yn-label">Mariscos o algas</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_mariscos')">Sí</button>
@@ -590,7 +590,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_mariscos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_latex">
+  <div class="yn-row" id="arow-alg_latex" style="display:none">
     <span class="yn-label">Látex</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_latex')">Sí</button>
@@ -603,7 +603,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_latex" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_aloe">
+  <div class="yn-row" id="arow-alg_aloe" style="display:none">
     <span class="yn-label">Aloe vera</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_aloe')">Sí</button>
@@ -616,7 +616,7 @@ textarea:focus{border-color:var(--gold)}
       <input type="text" id="asint-alg_aloe" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
     </div>
   </div>
-  <div class="yn-row" id="arow-alg_fragancias">
+  <div class="yn-row" id="arow-alg_fragancias" style="display:none">
     <span class="yn-label">Fragancias o perfumes</span>
     <div class="yn-btns">
       <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_fragancias')">Sí</button>
@@ -1252,15 +1252,7 @@ function collectData(){
   const alergiasDetalle={};
   const alergiaKeys=[
     ['alg_medicamentos','Medicamentos'],
-    ['alg_lidocaina','Lidocaína'],
-    ['alg_penicilina','Penicilina'],
-    ['alg_yodo','Yodo/Isodine'],
-    ['alg_aines','AINEs'],
     ['alg_alimentos','Alimentos'],
-    ['alg_mariscos','Mariscos/Algas'],
-    ['alg_latex','Látex'],
-    ['alg_aloe','Aloe vera'],
-    ['alg_fragancias','Fragancias'],
     ['alg_otro','Otro'],
   ];
   alergiaKeys.forEach(([key,nombre])=>{
@@ -1280,11 +1272,6 @@ function collectData(){
     'SOP':             getYNValue(s3,'ovario poliquístico'),
     'Menopausia':      getYNValue(s3,'menopausia'),
     'Tabaquismo':      getYNValue(s3,'fuma'),
-    'Alergia lidocaina':  getYNValue(document.getElementById('step-5'),'lidocaína'),
-    'Alergia penicilina': getYNValue(document.getElementById('step-5'),'penicilina'),
-    'Alergia yodo':       getYNValue(document.getElementById('step-5'),'yodopovidona'),
-    'Alergia AINEs':      getYNValue(document.getElementById('step-5'),'antiinflamatorios'),
-    'Alergia latex':      getYNValue(document.getElementById('step-5'),'látex'),
   };
 
   // Historial estético con fecha y zona
@@ -1434,15 +1421,6 @@ function collectData(){
     sop:                getYNValue(s3,'ovario poliquístico'),
     menopausia:         getYNValue(s3,'menopausia'),
     perimenopausia:     getYNValue(s3,'perimenopausia'),
-
-    // Alergias detalladas
-    alergia_lidocaina:  getYNValue(document.getElementById('step-5'),'lidocaína'),
-    alergia_penicilina: getYNValue(document.getElementById('step-5'),'penicilina'),
-    alergia_yodo:       getYNValue(document.getElementById('step-5'),'yodopovidona'),
-    alergia_aines:      getYNValue(document.getElementById('step-5'),'antiinflamatorios'),
-    alergia_latex:      getYNValue(document.getElementById('step-5'),'látex'),
-    alergia_aloe:       getYNValue(document.getElementById('step-5'),'aloe'),
-    alergia_fragancias: getYNValue(document.getElementById('step-5'),'fragancias'),
 
     // Solar detallado
     usaProtectorSolar:  document.getElementById('solar-det-wrap')&&document.getElementById('solar-det-wrap').style.display!=='none' ? 'Sí' : 'No',

@@ -2017,13 +2017,6 @@ def generar_analisis_medico(data):
         'SOP': data.get('sop',''),
         'Menopausia': data.get('menopausia',''),
         'Perimenopausia': data.get('perimenopausia',''),
-        'Alergia lidocaina': data.get('alergia_lidocaina',''),
-        'Alergia penicilina': data.get('alergia_penicilina',''),
-        'Alergia yodo': data.get('alergia_yodo',''),
-        'Alergia AINEs': data.get('alergia_aines',''),
-        'Alergia latex': data.get('alergia_latex',''),
-        'Alergia aloe': data.get('alergia_aloe',''),
-        'Alergia fragancias': data.get('alergia_fragancias',''),
         'Sueno': data.get('sueno',''),
         'Hora duerme': data.get('horaDuerme',''),
         'Hora despierta': data.get('horaDespierta',''),
@@ -2470,13 +2463,6 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     # ── 6. ALERGIAS ──────────────────────────────────────────────
     _sec('6. ALERGIAS')
     _fila('alergia_medicamentos', 'SÍ' if 'medicamento' in _g('alergias').lower() else 'NO')
-    _fila('alergia_lidocaina',    _g('alergia_lidocaina'))
-    _fila('alergia_penicilina',   _g('alergia_penicilina'))
-    _fila('alergia_yodo',         _g('alergia_yodo'))
-    _fila('alergia_aines',        _g('alergia_aines'))
-    _fila('alergia_latex',        _g('alergia_latex'))
-    _fila('alergia_aloe',         _g('alergia_aloe'))
-    _fila('alergia_fragancias',   _g('alergia_fragancias'))
 
     # ── 7. CIRUGÍAS Y ANTECEDENTES ───────────────────────────────
     _sec('7. CIRUGÍAS Y ANTECEDENTES')
@@ -2860,13 +2846,6 @@ def _mapear_formulario(f):
         'sop':                 s('sop'),
         'menopausia':          s('menopausia'),
         'perimenopausia':      s('perimenopausia'),
-        'alergia_lidocaina':   s('alergia_lidocaina'),
-        'alergia_penicilina':  s('alergia_penicilina'),
-        'alergia_yodo':        s('alergia_yodo'),
-        'alergia_aines':       s('alergia_aines'),
-        'alergia_latex':       s('alergia_latex'),
-        'alergia_aloe':        s('alergia_aloe'),
-        'alergia_fragancias':  s('alergia_fragancias'),
         'antecedentesFam':     s('antecedentesFam'),
         'antecedentesFamDet':  s('antecedentesFamDet'),
         'comoConociste':       s('comoConociste'),
@@ -4374,14 +4353,8 @@ def email_formulario_inmediato(d, fotos=None):
     contra = d.get('contraindications', {})
     contra_si = [k for k, v in contra.items() if v == 'Si'] if isinstance(contra, dict) else []
 
-    # Alergias individuales
+    # Alergias individuales (solo Medicamentos/Alimentos/Otro quedan, van en 'alergias' agregado)
     alergias_ind = []
-    for campo, label in [
-        ('alergia_lidocaina','Lidocaína'),('alergia_penicilina','Penicilina'),
-        ('alergia_yodo','Yodo'),('alergia_aines','AINEs'),('alergia_latex','Látex'),
-        ('alergia_aloe','Aloe'),('alergia_fragancias','Fragancias'),
-    ]:
-        if d.get(campo,'') == 'Sí': alergias_ind.append(label)
 
     # Historial estético con detalle
     hist = d.get('historialEstetico', [])
