@@ -2490,13 +2490,11 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     # ── 9. PIEL Y RUTINA ─────────────────────────────────────────
     _sec('9. PIEL, RUTINA Y PROTECCIÓN SOLAR')
     _fila('tipo_piel_mixta',          _g('pielTipo') if 'mixta' in _g('pielTipo').lower() else _g('pielTipo'))
-    _fila('prob_piel_seca',           'SÍ' if _yn_p(['seca','descam']) == 'SÍ' else 'NO')
     _fila('prob_manchas_solares',     'SÍ' if _yn_p('manchas') == 'SÍ' else 'NO')
     _fila('prob_pecas',               'SÍ' if _yn_p('peca') == 'SÍ' else 'NO')
     _fila('prob_lineas_finas',        'SÍ' if _yn_p(['línea','linea','arruga']) == 'SÍ' else 'NO')
     _fila('prob_flacidez',            'SÍ' if _yn_p('flacidez') == 'SÍ' else 'NO')
     _fila('prob_perdida_luminosidad', 'SÍ' if _yn_p(['luminosidad','opac']) == 'SÍ' else 'NO')
-    _fila('prob_ardor',               'SÍ' if _yn_p(['ardor','sensibil']) == 'SÍ' else 'NO')
     _fila('exposicion_solar',         _g('solar'))
     _fila('protector_solar',          _g('usaProtectorSolar'))
     _fila('protector_marca',          _g('protectorMarca'))
@@ -2818,7 +2816,7 @@ def _mapear_formulario(f):
         'peso':                pes or None,
         'imc':                 imc,
         'pielTipo':            s('pielTipo'),
-        'pielProblemas':       faciales,
+        'pielProblemas':       lst('pielProblemas'),
         'rutinaFacial':        rutina_facial,
         'rutinaManana':        rutina_m,
         'rutinaNoche':         rutina_n,
