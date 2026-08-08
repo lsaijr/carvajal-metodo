@@ -935,9 +935,9 @@ textarea:focus{border-color:var(--gold)}
   <div class="subsection">
     <div class="subsection-title">Exposición Solar y Cuidado Facial</div>
     <div class="form-grid">
-      <div class="field full"><label class="field-label">Exposición solar <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="sol"><div class="radio-dot"></div>Mínima</label><label class="radio-item"><input type="radio" name="sol"><div class="radio-dot"></div>Moderada</label><label class="radio-item"><input type="radio" name="sol"><div class="radio-dot"></div>Alta</label></div></div>
+      <div class="field full" style="display:none"><label class="field-label">Exposición solar <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="sol"><div class="radio-dot"></div>Mínima</label><label class="radio-item"><input type="radio" name="sol"><div class="radio-dot"></div>Moderada</label><label class="radio-item"><input type="radio" name="sol"><div class="radio-dot"></div>Alta</label></div></div>
     </div>
-    <div class="yn-row"><span class="yn-label">¿Usa protector solar diariamente? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSolar(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleSolar(this,'no')">No</button></div></div>
+    <div class="yn-row" style="display:none"><span class="yn-label">¿Usa protector solar diariamente? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleSolar(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleSolar(this,'no')">No</button></div></div>
     <div id="solar-det-wrap" style="display:none;margin-top:12px">
       <div class="form-grid">
         <div class="field"><label class="field-label">Marca o tipo</label><input id="f-protector-marca" maxlength="100" type="text" placeholder="Ej. Heliocare, La Roche-Posay, Isdin..."></div>
@@ -966,7 +966,7 @@ textarea:focus{border-color:var(--gold)}
         </div>
       </div>
       <div class="form-grid" style="margin-top:14px">
-        <div class="field full"><label class="field-label">Productos cosméticos de uso frecuente</label><textarea id="f-productos" placeholder="Maquillaje, cremas, sueros, tónicos que usa habitualmente..." maxlength="300" oninput="updateCounter('f-productos', 300)"></textarea><span class="char-counter" id="cnt-f-productos">300</span></div>
+        <div class="field full" style="display:none"><label class="field-label">Productos cosméticos de uso frecuente</label><textarea id="f-productos" placeholder="Maquillaje, cremas, sueros, tónicos que usa habitualmente..." maxlength="300" oninput="updateCounter('f-productos', 300)"></textarea><span class="char-counter" id="cnt-f-productos">300</span></div>
       </div>
     </div>
   </div>
@@ -987,7 +987,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="subsection-title">Antecedentes Familiares y Contraindicaciones</div>
     <div class="yn-row"><span class="yn-label">¿En su familia hay historia de alguna enfermedad relevante? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="yn-row"><span class="yn-label">¿Tienes alergias a medicamentos o productos tópicos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="yn-row"><span class="yn-label">¿Has tenido infecciones cutáneas en zonas a tratar? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
+    <div class="yn-row" style="display:none"><span class="yn-label">¿Has tenido infecciones cutáneas en zonas a tratar? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="yn-row"><span class="yn-label">¿Tienes marcapasos, implantes metálicos o dispositivos médicos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   </div>
   <div class="subsection" style="margin-top:8px">
@@ -1375,9 +1375,6 @@ function collectData(){
     rutinaManana:        rutinaManana,
     rutinaNoche:         rutinaNoche,
     rutinaFacial:        rutinaManana||rutinaNoche?(rutinaManana+' | '+rutinaNoche):'No tiene rutina facial',
-    productosFrecuentes: document.getElementById('f-productos').value||'',
-    solar:               (document.querySelector('input[name="sol"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
-    spf:                 document.getElementById('f-spf').value||'',
 
     // Actividad física
     actFisica: (document.querySelector('input[name="act_fisica"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
@@ -1407,13 +1404,6 @@ function collectData(){
     menopausia:         getYNValue(s3,'menopausia'),
     perimenopausia:     getYNValue(s3,'perimenopausia'),
 
-    // Solar detallado
-    usaProtectorSolar:  document.getElementById('solar-det-wrap')&&document.getElementById('solar-det-wrap').style.display!=='none' ? 'Sí' : 'No',
-    marcaSpf:           document.getElementById('f-spf')?document.getElementById('f-spf').value||'':'',
-    protectorMarca:     document.getElementById('f-protector-marca')?document.getElementById('f-protector-marca').value||'':'',
-    protectorHora:      document.getElementById('f-protector-hora')?document.getElementById('f-protector-hora').value||'':'',
-    reaplicaSolar:      (document.querySelector('input[name="reaplica_solar"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
-
     // Rutina
     tieneRutina:        document.getElementById('rutina-det-wrap')&&document.getElementById('rutina-det-wrap').style.display!=='none' ? 'Sí' : 'No',
 
@@ -1426,7 +1416,6 @@ function collectData(){
     antecedentesFamDet: document.getElementById('f-antecedentes-det')?document.getElementById('f-antecedentes-det').value||'':'',
 
     // Contraindicaciones clínicas (step-10)
-    infeccionesCutaneas: getYNValue(document.getElementById('step-10'), 'infecciones cutáneas'),
     dispositivosMedicos: getYNValue(document.getElementById('step-10'), 'dispositivos médicos'),
 
     notasStaff: '',

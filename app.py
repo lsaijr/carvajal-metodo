@@ -2023,12 +2023,9 @@ def generar_analisis_medico(data):
         'Cansancio diurno': data.get('cansancioDia',''),
         'Nivel estres': data.get('nivelEstres',''),
         'Actividad fisica': data.get('actFisica',''),
-        'Intolerancias': data.get('intolerancias',''),
         'Sintomas digestivos': data.get('sintomasDigestivos',''),
         'Tipo piel': data.get('pielTipo',''),
         'Problemas piel': data.get('pielProblemas',''),
-        'Exposicion solar': data.get('solar',''),
-        'SPF': data.get('spf',''),
         'Historial estetico': data.get('historialEstetico',''),
         'Contraindicaciones': data.get('contraindications',''),
         'Antecedentes familiares': (data.get('antecedentesFam') or '') + ' ' + (data.get('antecedentesFamDet') or ''),
@@ -2477,10 +2474,7 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
             return 'NO'
         return 'SÍ' if val.lower() in ['sí', 'si', 'yes'] else val
 
-    _fila('infecciones_cutaneas',          _yn_norm('infeccionesCutaneas'))
-    _fila('infecciones_cutaneas_detalle',  _g('infeccionesDet'))
     _fila('dispositivos_medicos',          _yn_norm('dispositivosMedicos'))
-    _fila('dispositivos_medicos_detalle',  _g('dispositivosDet'))
 
     # ── 8. ALIMENTACIÓN ──────────────────────────────────────────
     _sec('8. ALIMENTACIÓN Y NUTRICIÓN')
@@ -2494,12 +2488,6 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('prob_lineas_finas',        'SÍ' if _yn_p(['línea','linea','arruga']) == 'SÍ' else 'NO')
     _fila('prob_flacidez',            'SÍ' if _yn_p('flacidez') == 'SÍ' else 'NO')
     _fila('prob_perdida_luminosidad', 'SÍ' if _yn_p(['luminosidad','opac']) == 'SÍ' else 'NO')
-    _fila('exposicion_solar',         _g('solar'))
-    _fila('protector_solar',          _g('usaProtectorSolar'))
-    _fila('protector_marca',          _g('protectorMarca'))
-    _fila('protector_fps',            _g('spf').split()[0] if _g('spf') else '')
-    _fila('protector_hora',           _g('protectorHora'))
-    _fila('protector_reaplica',       _g('reaplicaSolar'))
     _fila('rutina_diaria_cuidado',    _g('tieneRutina'))
     _fila('rutina_manana',            _g('rutinaManana'))
     _fila('rutina_tarde',             _g('rutinaTarde'))
@@ -2507,7 +2495,6 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('rutina_limpieza',          'Limpieza'   if any(x in (_g('rutinaManana')+_g('rutinaNoche')).lower() for x in ['limpiad','jabon','jabón','espuma']) else '')
     _fila('rutina_hidratacion',       'Hidratación' if any(x in (_g('rutinaManana')+_g('rutinaNoche')).lower() for x in ['hidrat','crema']) else '')
     _fila('rutina_retinol',           'Retinol'    if 'retinol' in (_g('rutinaManana')+_g('rutinaNoche')).lower() else '')
-    _fila('productos_cosmeticos_frecuentes', _g('productosFrecuentes'))
     _fila('actividad_fisica',         _g('actFisica'))
 
     # ── 10. HISTORIAL ESTÉTICO ───────────────────────────────────
@@ -2796,9 +2783,6 @@ def _mapear_formulario(f):
         'rutinaFacial':        rutina_facial,
         'rutinaManana':        rutina_m,
         'rutinaNoche':         rutina_n,
-        'productosFrecuentes': s('productosFrecuentes'),
-        'solar':               s('solar'),
-        'spf':                 s('spf'),
         'actFisica':           s('actFisica'),
         'sueno':               s('sueno'),
         'horaDespierta':       s('horaDespierta'),
@@ -2838,18 +2822,12 @@ def _mapear_formulario(f):
         'contactoEmergencia':  s('contactoEmergencia'),
         'contactoRelacion':    s('contactoRelacion'),
         'contactoTel':         s('contactoTel'),
-        # Solar detallado
-        'usaProtectorSolar':   s('usaProtectorSolar'),
-        'protectorMarca':      s('protectorMarca'),
-        'protectorHora':       s('protectorHora'),
-        'reaplicaSolar':       s('reaplicaSolar'),
         # Rutina
         'tieneRutina':         s('tieneRutina'),
         # Historial estético extra
         'laserActualDet':      s('laserActualDet'),
         'complicacionesDet':   s('complicacionesDet'),
         # Contraindicaciones clínicas adicionales
-        'infeccionesCutaneas': s('infeccionesCutaneas'),
         'dispositivosMedicos': s('dispositivosMedicos'),
         # Rutina tarde (campo opcional, puede estar vacío si el formulario no lo tiene)
         'rutinaTarde':         s('rutinaTarde'),
@@ -3088,7 +3066,6 @@ Estatura: {est}cm | Peso: {pes}kg | IMC: {imc}
 
 PIEL: {d['pielTipo']} | Problemas: {', '.join(d['pielProblemas'])}
 Rutina manana: {d['rutinaManana']} | Noche: {d['rutinaNoche']}
-Productos: {d['productosFrecuentes']} | Solar: {d['solar']} | SPF: {d['spf']}
 
 HABITOS: Act.fisica: {d['actFisica']} | Sueno: {d['sueno']}
 Fuma: {d['fuma']} | Alcohol: {d['alcohol']}
@@ -4394,12 +4371,6 @@ def email_formulario_inmediato(d, fotos=None):
         row('Áreas corporales',    d.get('areasCorporales','')),
         row('Rutina mañana',       d.get('rutinaManana','')),
         row('Rutina noche',        d.get('rutinaNoche','')),
-        row('Productos frecuentes',d.get('productosFrecuentes','')),
-        row('Protector solar',     d.get('usaProtectorSolar','')),
-        row('Marca SPF',           d.get('protectorMarca','')),
-        row('Factor SPF',          d.get('spf','')),
-        row('Hora aplicación SPF', d.get('protectorHora','')),
-        row('Reaplicación solar',  d.get('reaplicaSolar','')),
         row('Detalle láser',       d.get('laserActualDet','')),
         row('Complicaciones prev.',d.get('complicacionesDet','')),
         row('Historial estético',  hist_str or d.get('historialEstetico','')),
