@@ -186,7 +186,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="field"><label class="field-label">Celular <span class="req">*</span></label><input id="f-celular" type="tel" placeholder="+506 0000 0000"></div>
     <div class="field"><label class="field-label">Correo electrónico <span class="req">*</span></label><input id="f-email" type="email" placeholder="tu@correo.com"></div>
     <div class="field"><label class="field-label">Ocupación</label><input id="f-ocupacion" type="text" placeholder="Ej. Docente, Enfermera, Músico..." maxlength="150"></div>
-    <div class="field"><label class="field-label">¿Trabaja actualmente? <span class="req">*</span></label>
+    <div class="field" style="display:none"><label class="field-label">¿Trabaja actualmente? <span class="req">*</span></label>
       <div class="radio-group">
         <label class="radio-item"><input type="radio" name="trabaja"><div class="radio-dot"></div>Sí</label>
         <label class="radio-item"><input type="radio" name="trabaja"><div class="radio-dot"></div>No</label>
@@ -220,7 +220,7 @@ textarea:focus{border-color:var(--gold)}
         <label class="radio-item"><input type="radio" name="num_hijos"><div class="radio-dot"></div>4+</label>
       </div>
     </div>
-    <div class="field full"><label class="field-label">¿Con quién vive? <span class="req">*</span></label>
+    <div class="field full" style="display:none"><label class="field-label">¿Con quién vive? <span class="req">*</span></label>
       <div class="check-grid">
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Solo/a</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Con pareja</label>
@@ -230,14 +230,14 @@ textarea:focus{border-color:var(--gold)}
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Otro</label>
       </div>
     </div>
-    <div class="field full"><label class="field-label">Familiares en casa (relación)</label><textarea id="f-familiares" placeholder="Ej. esposo, 2 hijos menores..." maxlength="200" oninput="updateCounter('f-familiares', 200)"></textarea><span class="char-counter" id="cnt-f-familiares">200</span></div>
-    <div class="field"><label class="field-label">¿Cuenta con ayuda en casa? <span class="req">*</span></label>
+    <div class="field full" style="display:none"><label class="field-label">Familiares en casa (relación)</label><textarea id="f-familiares" placeholder="Ej. esposo, 2 hijos menores..." maxlength="200" oninput="updateCounter('f-familiares', 200)"></textarea><span class="char-counter" id="cnt-f-familiares">200</span></div>
+    <div class="field" style="display:none"><label class="field-label">¿Cuenta con ayuda en casa? <span class="req">*</span></label>
       <div class="radio-group">
         <label class="radio-item"><input type="radio" name="ayuda_casa"><div class="radio-dot"></div>Sí</label>
         <label class="radio-item"><input type="radio" name="ayuda_casa"><div class="radio-dot"></div>No</label>
       </div>
     </div>
-    <div class="field full"><label class="field-label">Tipo de apoyo recibido</label>
+    <div class="field full" style="display:none"><label class="field-label">Tipo de apoyo recibido</label>
       <div class="check-grid">
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Limpieza del hogar</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Cocina / alimentación</label>
@@ -297,7 +297,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="yn-row"><span class="yn-label">Uso de anticonceptivos hormonales</span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="yn-row"><span class="yn-label">Menopausia</span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="yn-row"><span class="yn-label">Perimenopausia</span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="yn-row"><span class="yn-label">Andropausia (solo hombres)</span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
+    <div class="yn-row" style="display:none"><span class="yn-label">Andropausia (solo hombres)</span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   </div>
 
   <div class="subsection">
@@ -319,7 +319,7 @@ textarea:focus{border-color:var(--gold)}
     <div class="subsection-title">Hábito intestinal</div>
     <div class="yn-row"><span class="yn-label">¿Vas al baño todos los días? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="form-grid" style="margin-top:14px">
-      <div class="field"><label class="field-label">¿A qué hora del día?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Mañana</label><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Tarde</label><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Noche</label></div></div>
+      <div class="field" style="display:none"><label class="field-label">¿A qué hora del día?</label><div class="radio-group"><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Mañana</label><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Tarde</label><label class="radio-item"><input type="radio" name="banio_hora"><div class="radio-dot"></div>Noche</label></div></div>
       <div class="field"><label class="field-label">¿Cómo es tu evacuación?</label><div class="radio-group" style="flex-direction:column;gap:6px"><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Normal</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Difícil</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Irregular</label><label class="radio-item"><input type="radio" name="evacuacion"><div class="radio-dot"></div>Con esfuerzo</label></div></div>
     </div>
   </div>
@@ -333,8 +333,8 @@ textarea:focus{border-color:var(--gold)}
       <div class="field"><label class="field-label">Hora que se levanta</label><input id="f-hora-despierta" type="time"></div>
     </div>
     <div class="yn-row" style="margin-top:12px"><span class="yn-label">¿Siente cansancio o somnolencia durante el día? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="yn-row"><span class="yn-label">¿Utiliza medicamento o suplemento para dormir? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="yn-row"><span class="yn-label">¿Trabaja en turnos nocturnos o con cambios de horario? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
+    <div class="yn-row" style="display:none"><span class="yn-label">¿Utiliza medicamento o suplemento para dormir? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
+    <div class="yn-row" style="display:none"><span class="yn-label">¿Trabaja en turnos nocturnos o con cambios de horario? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   </div>
 
   <div class="subsection">
@@ -690,13 +690,13 @@ textarea:focus{border-color:var(--gold)}
     <div class="field" style="margin-top:12px"><label class="field-label">Sensibilidades</label>
       <div class="check-grid"><label class="check-item"><input type="checkbox"><div class="check-box"></div>Ardor</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Picor</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Alergia a cosméticos</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Rosácea diagnosticada</label><label class="check-item"><input type="checkbox"><div class="check-box"></div>Dermatitis</label></div>
     </div>
-    <div class="field" style="margin-top:14px"><label class="field-label">Otros problemas no mencionados</label><textarea id="f-otros-piel" placeholder="Describa cualquier otro problema de piel..." maxlength="300" oninput="updateCounter('f-otros-piel', 300)"></textarea><span class="char-counter" id="cnt-f-otros-piel">300</span></div>
+    <div class="field" style="margin-top:14px;display:none"><label class="field-label">Otros problemas no mencionados</label><textarea id="f-otros-piel" placeholder="Describa cualquier otro problema de piel..." maxlength="300" oninput="updateCounter('f-otros-piel', 300)"></textarea><span class="char-counter" id="cnt-f-otros-piel">300</span></div>
   </div>
 </div>
 
 
 <!-- STEP 8: Evaluación Capilar y Depilación -->
-<div class="step-panel" id="step-8">
+<div class="step-panel" id="step-8" style="display:none">
   <div class="step-title">Evaluación Capilar</div>
   <div class="step-subtitle">Estado del cabello y caída.</div>
   <div class="divider"></div>
@@ -1061,8 +1061,8 @@ textarea:focus{border-color:var(--gold)}
 
 <script>
 let current = 1;
-const total = 11;
-const stepIds = ['step-1','step-2','step-3','step-4','step-5','step-6','step-8','step-9','step-10','step-11'];
+const total = 10;
+const stepIds = ['step-1','step-2','step-3','step-4','step-5','step-6','step-9','step-10','step-11'];
 
 // ── Sesión — guardado progresivo en Cloudinary ──────────────
 // Se genera una vez al cargar, se reutiliza en cada paso
