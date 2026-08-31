@@ -3447,8 +3447,24 @@ REGLAS: Respetar intolerancias. Tips con nombre, profesion, horario real.'''
     SYS3 = '''Eres el generador de contenido para planes del METODO CARVAJAL.
 Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
 Genera SOLO estas 3 claves: pilar4, pilar5, compromiso.
-{"pilar4":{"titulo":"Optimizacion del Sueno","objetivo":"objetivo personalizado 2-3 lineas","frase_motivacional":"frase corta","frase_posicion":"inicio","protocolo":["paso1","paso2","paso3","paso4","paso5"],"reglas":["regla higiene sueno 1","regla2","regla3"],"tips":[{"texto":"tip especifico con nombre"}]},"pilar5":{"titulo":"Tratamientos Esteticos","objetivo":"objetivo personalizado","frase_motivacional":"frase","frase_posicion":"medio","bimestres":[{"periodo":"Bimestre 1","titulo":"titulo enfoque","tratamientos":[{"nombre":"Nombre tratamiento","sesiones":"N sesiones","inversion":"$XXX","beneficio":"beneficio concreto"}],"total":000},{"periodo":"Bimestre 2","titulo":"titulo","tratamientos":[{"nombre":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 3","titulo":"titulo","tratamientos":[{"nombre":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 4","titulo":"titulo","tratamientos":[{"nombre":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 5","titulo":"titulo","tratamientos":[{"nombre":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 6","titulo":"titulo","tratamientos":[{"nombre":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000}],"total_anual":0000,"notas_criticas":["nota importante si aplica"],"rutina_am":[{"paso":1,"producto":"producto AM","descripcion":"como y cuando"}],"rutina_pm":[{"paso":1,"producto":"producto PM","descripcion":"como y cuando"}],"tips":[{"texto":"tip"}]},"compromiso":{"parrafo":"parrafo motivacional de cierre 3-4 lineas","resultados":[{"texto":"resultado esperable 1"},{"texto":"resultado esperable 2"},{"texto":"resultado esperable 3"}],"proximos_pasos":["paso concreto 1","paso concreto 2","paso concreto 3"]}}
-REGLAS: Usar UNICAMENTE tratamientos del catalogo provisto. Verificar contraindicaciones. Calcular totales reales. Tips con nombre, profesion, horario real.''' + '\nCATALOGO DE TRATAMIENTOS:\n' + CATALOGO
+
+REGLAS DE COSTOS:
+- El plan cubre 12 meses divididos en 6 bimestres.
+- Cada bimestre tiene su propio "total" que es la suma real de las inversiones de sus tratamientos.
+- El "total_anual" es la suma real de los 6 bimestres.
+- Debes incluir el campo "costo_mensual_estimado" en pilar5, calculado como: costo_mensual_estimado = total_anual / 12.
+- El "inversion" de cada tratamiento sigue siendo el precio del paquete/sesion segun el catalogo.
+- El costo mensual estimado es la cifra principal de inversion que vera el paciente.
+
+REGLAS DE MEDICINA ESTETICA:
+- El catalogo incluye el campo "categoria" para cada tratamiento.
+- La categoria "Medicina Estetica" agrupa los tratamientos mas efectivos clinicamente: Toxina Botulinica, Rellenos Dermicos, Hilos PDO, Plasma / Plasma Gel, Peelings Medicos, Tratamientos Despigmentantes, Capilar Plus, Regenerador Facial.
+- Prioriza los tratamientos de "Medicina Estetica" cuando el perfil del paciente justifique mayor eficacia (arrugas, flacidez marcada, perdida de volumen, papada, pigmentacion profunda, caída capilar, secuelas de acne, etc.).
+- Para cada tratamiento recomendado, incluye el campo "tipo" con valor "Medicina Estetica" o "Estetico" segun la categoria del catalogo.
+- NO inventes tratamientos ni precios; usa UNICAMENTE los del catalogo.
+
+{"pilar4":{"titulo":"Optimizacion del Sueno","objetivo":"objetivo personalizado 2-3 lineas","frase_motivacional":"frase corta","frase_posicion":"inicio","protocolo":["paso1","paso2","paso3","paso4","paso5"],"reglas":["regla higiene sueno 1","regla2","regla3"],"tips":[{"texto":"tip especifico con nombre"}]},"pilar5":{"titulo":"Tratamientos Esteticos","objetivo":"objetivo personalizado","frase_motivacional":"frase","frase_posicion":"medio","costo_mensual_estimado":000,"bimestres":[{"periodo":"Bimestre 1","titulo":"titulo enfoque","tratamientos":[{"nombre":"Nombre tratamiento","tipo":"Medicina Estetica","sesiones":"N sesiones","inversion":"$XXX","beneficio":"beneficio concreto"}],"total":000},{"periodo":"Bimestre 2","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"Estetico","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 3","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 4","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 5","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 6","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000}],"total_anual":0000,"notas_criticas":["nota importante si aplica"],"rutina_am":[{"paso":1,"producto":"producto AM","descripcion":"como y cuando"}],"rutina_pm":[{"paso":1,"producto":"producto PM","descripcion":"como y cuando"}],"tips":[{"texto":"tip"}]},"compromiso":{"parrafo":"parrafo motivacional de cierre 3-4 lineas","resultados":[{"texto":"resultado esperable 1"},{"texto":"resultado esperable 2"},{"texto":"resultado esperable 3"}],"proximos_pasos":["paso concreto 1","paso concreto 2","paso concreto 3"]}}
+REGLAS: Usar UNICAMENTE tratamientos del catalogo provisto. Verificar contraindicaciones. Calcular totales reales. El costo mensual estimado DEBE ser total_anual / 12. Tips con nombre, profesion, horario real.''' + '\nCATALOGO DE TRATAMIENTOS:\n' + CATALOLOGO
 
     actualizar(f'Sección 3/3 — Sueño, tratamientos y plan de compromiso... ({nombre_modelo})', 75)
     r3, err = _llamar(3, 3, SYS3, datos, max_tok=tok3)
@@ -3613,10 +3629,12 @@ body{padding-top:44px}
 .bim-table td{padding:6px 9px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4}
 .bim-table tr:last-child td{border-bottom:none}
 .bim-total{background:var(--olive-light);padding:7px 13px;text-align:right;font-weight:700;color:var(--olive);font-size:8pt;border-top:1px solid var(--olive-border)}
-.total-anual-box{background:var(--dark);border-radius:6px;padding:20px;text-align:center;margin:14px 0}
-.ta-label{font-size:6.5pt;letter-spacing:3px;text-transform:uppercase;color:rgba(143,168,50,0.7);margin-bottom:5px}
-.ta-amount{font-family:"Cormorant Garamond",serif;font-size:34pt;font-weight:600;color:var(--olive)}
-.ta-sub{font-size:7pt;color:rgba(255,255,255,0.25);margin-top:3px}
+.bim-badge-med{display:inline-block;background:var(--gold);color:#fff;font-size:6pt;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle}
+.costo-mensual-box{background:var(--dark);border-radius:6px;padding:18px 20px;text-align:center;margin:14px 0;border:2px solid var(--olive)}
+.costo-label{font-size:6.5pt;letter-spacing:3px;text-transform:uppercase;color:rgba(143,168,50,0.9);margin-bottom:4px}
+.costo-amount{font-family:"Cormorant Garamond",serif;font-size:38pt;font-weight:600;color:var(--olive);line-height:1}
+.costo-period{font-size:11pt;color:var(--olive);font-weight:500;letter-spacing:1px}
+.costo-sub{font-size:7pt;color:rgba(255,255,255,0.35);margin-top:6px}
 .rut-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
 .rut-box{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden}
 .rut-header{padding:8px 13px;font-size:8.5pt;font-weight:600;display:flex;align-items:center;gap:6px}
@@ -3885,10 +3903,10 @@ body{padding-top:44px}
   </div>
   <div class="content-sm">
     {{P5_BIMESTRES_B}}
-    <div class="total-anual-box">
-      <div class="ta-label">Inversión Total del Plan</div>
-      <div class="ta-amount">{{P5_TOTAL_ANUAL}}</div>
-      <div class="ta-sub">12 meses · 6 bimestres · Plan integral personalizado · Centro Carvajal</div>
+    <div class="costo-mensual-box">
+      <div class="costo-label">Costo mensual estimado para tu rutina personalizada</div>
+      <div class="costo-amount">{{P5_COSTO_MENSUAL}}<span class="costo-period"> / mes</span></div>
+      <div class="costo-sub">Plan anual estimado: {{P5_TOTAL_ANUAL}} · 12 meses · 6 bimestres · Centro Carvajal</div>
     </div>
     <div>
       <div class="sec-label" style="margin-bottom:5px">Rutina de Cuidado en Casa</div>
@@ -4040,16 +4058,40 @@ def render_plan(j, d, job_id=''):
     p5 = j.get('pilar5', {})
     bimestres = p5.get('bimestres',[])
 
+    # Catálogo para detectar tratamientos de Medicina Estética y validar precios
+    catalogo_json = _cargar_catalogo()
+    catalogo_activos = [t for t in catalogo_json.get('tratamientos', []) if t.get('activo', True)]
+    categoria_por_nombre = {t['nombre'].strip().lower(): t.get('categoria','') for t in catalogo_activos}
+
+    def es_medicina_estetica(nombre_trat, tipo_trat=''):
+        if str(tipo_trat).strip().lower() in ('medicina estetica', 'medicina estética'):
+            return True
+        key = str(nombre_trat).strip().lower()
+        if categoria_por_nombre.get(key) == 'Medicina Estética':
+            return True
+        # matching parcial robusto
+        for cat_nombre, cat_categoria in categoria_por_nombre.items():
+            if cat_categoria == 'Medicina Estética' and (key in cat_nombre or cat_nombre in key):
+                return True
+        return False
+
     def render_bim(bim):
-        rows = ''.join(
-            f'<tr><td contenteditable="true"><strong>{esc(t.get("nombre",""))}</strong></td><td contenteditable="true">{esc(t.get("sesiones",""))}</td><td contenteditable="true"><strong>{esc(t.get("inversion",""))}</strong></td><td contenteditable="true">{esc(t.get("beneficio",""))}</td></tr>'
-            for t in bim.get('tratamientos',[])
-        )
+        rows = ''
+        for t in bim.get('tratamientos',[]):
+            badge = '<span class="bim-badge-med">Medicina Estética</span>' if es_medicina_estetica(t.get('nombre',''), t.get('tipo','')) else ''
+            rows += (
+                f'<tr>'
+                f'<td contenteditable="true"><strong>{esc(t.get("nombre",""))}</strong>{badge}</td>'
+                f'<td contenteditable="true">{esc(t.get("sesiones",""))}</td>'
+                f'<td contenteditable="true"><strong>{esc(t.get("inversion",""))}</strong></td>'
+                f'<td contenteditable="true">{esc(t.get("beneficio",""))}</td>'
+                f'</tr>'
+            )
         total = bim.get('total',0)
         return (
             f'<div class="bim-header">{esc(bim.get("periodo",""))} · {esc(bim.get("titulo",""))}<span style="font-size:7pt;color:rgba(143,168,50,0.6)">Bimestre {bim.get("bimestre","")}</span></div>'
             f'<div class="bim-body"><table class="bim-table"><thead><tr><th>Tratamiento</th><th style="width:75px">Sesiones</th><th style="width:65px">Inversión</th><th>Beneficio</th></tr></thead><tbody>{rows}</tbody></table>'
-            f'<div class="bim-total">💰 Inversión: ${total:,}</div></div>'
+            f'<div class="bim-total">💰 Inversión bimestre: ${total:,}</div></div>'
         )
 
     # Enumerate bimestres to add bimestre number
@@ -4075,6 +4117,17 @@ def render_plan(j, d, job_id=''):
         p5_notas = f'<div class="nota-medica" style="margin-top:9px"><strong>⚠ Notas Críticas</strong>{items}</div>'
 
     total_anual = p5.get('total_anual', 0)
+
+    # Costo mensual estimado (IA debe devolverlo; si no, fallback a total_anual / 12)
+    costo_mensual = p5.get('costo_mensual_estimado')
+    try:
+        costo_mensual = float(costo_mensual) if costo_mensual is not None else None
+    except (TypeError, ValueError):
+        costo_mensual = None
+    if costo_mensual is None and total_anual:
+        costo_mensual = round(total_anual / 12, 2)
+    elif costo_mensual is None:
+        costo_mensual = 0.0
 
     # ── Compromiso ──
     comp = j.get('compromiso', {})
@@ -4129,6 +4182,7 @@ def render_plan(j, d, job_id=''):
         '{{P5_OBJETIVO}}': esc(p5.get('objetivo','')),
         '{{P5_BIMESTRES_A}}': p5_bim_a,
         '{{P5_BIMESTRES_B}}': p5_bim_b,
+        '{{P5_COSTO_MENSUAL}}': f'${costo_mensual:,.2f}',
         '{{P5_TOTAL_ANUAL}}': f'${total_anual:,}',
         '{{P5_RUTINA_AM}}': p5_am,
         '{{P5_RUTINA_PM}}': p5_pm,

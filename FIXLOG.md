@@ -1,5 +1,35 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-08-31: Costo mensual estimado y prioridad a Medicina Estética
+
+### Cambio
+
+La sección de tratamientos del plan personalizado ahora muestra el **costo mensual estimado** como la cifra principal de inversión, en lugar de resaltar el total anual.
+
+### Archivos modificados
+
+- `app.py` (~línea 3447): prompt `SYS3` actualizado para pedir a la IA:
+  - Campo `costo_mensual_estimado` calculado como `total_anual / 12`.
+  - Campo `tipo` por tratamiento (`Medicina Estética` o `Estético`).
+  - Priorizar tratamientos de la categoría **Medicina Estética** del catálogo cuando el perfil clínico lo justifique.
+- `app.py` (~línea 3609): estilos CSS nuevos para el recuadro de costo mensual y el badge "Medicina Estética".
+- `app.py` (~línea 3888): plantilla HTML reemplaza el recuadro "Inversión Total del Plan" por "Costo mensual estimado para tu rutina personalizada ... / mes" con el total anual como referencia secundaria.
+- `app.py` (~línea 4057): `render_plan()` carga el catálogo, detecta tratamientos de Medicina Estética por nombre/categoría, agrega el badge y calcula el costo mensual como fallback si la IA no lo devuelve.
+
+### Detalle técnico
+
+- El catálogo `catalogo_tratamientos.json` ya contiene el campo `categoria`; no requirió cambios.
+- Si la IA no devuelve `costo_mensual_estimado`, el backend lo calcula como `total_anual / 12`.
+- El total anual sigue visible en letra pequeña debajo del costo mensual.
+
+### Validación
+
+- Generar plan de prueba (preferiblemente con `groq` por costo) y verificar que `pilar5` incluya `costo_mensual_estimado`.
+- Confirmar visualmente el badge "Medicina Estética" en tratamientos correspondientes.
+- Confirmar que el fallback funciona si el campo está ausente.
+
+---
+
 ## Diseño 2026-08-08: Reducción de campos del formulario según revisión del cliente
 
 ### Contexto
