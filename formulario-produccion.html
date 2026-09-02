@@ -1361,7 +1361,7 @@ function collectData(){
 
     // Hábitos
     fuma:    (()=>{ const f=getYNValue(s3,'fuma'); const frec=document.querySelector('input[name="fuma_frec"]:checked'); return f==='Sí'?('Sí'+(frec?' - '+frec.closest('.radio-item').textContent.trim():'')):'No'; })(),
-    alcohol: getYNValue(document.getElementById('step-4'),'alcohol'),
+    alcohol: (()=>{ const a=getYNValue(document.getElementById('step-4'),'alcohol'); const afrec=document.querySelector('input[name="alcohol_frec"]:checked'); return a==='Sí'?('Sí'+(afrec?' - '+afrec.closest('.radio-item').textContent.trim():'')):'No'; })(),
 
     // Sueño
     sueno:          sueno.trim(),
