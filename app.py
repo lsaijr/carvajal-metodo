@@ -2812,10 +2812,7 @@ def _mapear_formulario(f):
 
     est = s('estatura')
     pes = s('peso')
-    imc = 'No registrado'
-    if est and pes:
-        try: imc = f'{float(pes) / (float(est)/100)**2:.1f}'
-        except: pass
+    imc = _calcular_imc_robusto(pes, est)
 
     contra_raw = f.get('contraindications', {})
     contra = {k: ('Si' if str(v).lower() in ['si','sí','yes'] else 'No') for k, v in contra_raw.items()}
@@ -3005,10 +3002,7 @@ def parsear_cuestionario(texto):
 
     est = v('altura') or v('talla') or v('estatura')
     pes = v('peso')
-    imc = 'No registrado'
-    if est and pes:
-        try: imc = f'{float(pes) / (float(est)/100)**2:.1f}'
-        except: pass
+    imc = _calcular_imc_robusto(pes, est)
 
     # Proteinas — incluir todos los campos individuales
     proteinas_partes = [v('proteina_pollo'), v('proteina_pescado'), v('proteina_mariscos'),
@@ -4066,6 +4060,30 @@ function showToast(msg, dur=2500) {
 </body>
 </html>"""
 
+def _calcular_imc_robusto(peso, estatura):
+    """Calcula IMC detectando si estatura viene en metros o centímetros.
+    Devuelve string con 1 decimal o 'No registrado'.
+    """
+    try:
+        p = float(str(peso).replace(',', '.'))
+        e = float(str(estatura).replace(',', '.'))
+    except Exception:
+        return 'No registrado'
+    if p <= 0 or e <= 0:
+        return 'No registrado'
+    # Si estatura < 3, probablemente está en metros (ej: 1.75)
+    # Si estatura > 10, probablemente está en centímetros (ej: 175)
+    if e < 3:
+        e_m = e
+    else:
+        e_m = e / 100.0
+    imc = p / (e_m ** 2)
+    # Sanity check: IMC realista entre 10 y 70
+    if imc < 10 or imc > 70:
+        return 'No registrado'
+    return f'{imc:.1f}'
+
+
 def render_plan(j, d, job_id=''):
     tpl = PLANTILLA_PLAN_HTML
 
@@ -4230,13 +4248,16 @@ def render_plan(j, d, job_id=''):
     cond = d.get('condicionSistemica','') or ''
     cond_corta = cond[:20] + '…' if len(cond) > 20 else cond
 
+    # Recalcular IMC de forma robusta; si falla, usar el valor almacenado
+    imc_final = _calcular_imc_robusto(d.get('peso'), d.get('estatura')) or d.get('imc', 'N/A')
+
     replacements = {
         '{{JOB_ID}}': job_id,
         '{{NOMBRE}}': esc(nombre),
         '{{EDAD}}': esc(d.get('edad','')),
         '{{OCUPACION}}': esc(d.get('ocupacion','')),
         '{{FECHA}}': esc(d.get('fecha','')),
-        '{{IMC}}': esc(d.get('imc','N/A')),
+        '{{IMC}}': esc(imc_final),
         '{{SATISFACCION}}': esc(str(d.get('satisfaccion','?'))),
         '{{CONDICION_CORTA}}': esc(cond_corta),
         '{{INTRO}}': esc(j.get('portada',{}).get('intro','')),
