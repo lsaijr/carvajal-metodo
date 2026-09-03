@@ -3459,7 +3459,10 @@ REGLAS DE COSTOS:
 REGLAS DE MEDICINA ESTETICA:
 - El catalogo incluye el campo "categoria" para cada tratamiento.
 - La categoria "Medicina Estetica" agrupa los tratamientos mas efectivos clinicamente: Toxina Botulinica, Rellenos Dermicos, Hilos PDO, Plasma / Plasma Gel, Peelings Medicos, Tratamientos Despigmentantes, Capilar Plus, Regenerador Facial.
-- Prioriza los tratamientos de "Medicina Estetica" cuando el perfil del paciente justifique mayor eficacia (arrugas, flacidez marcada, perdida de volumen, papada, pigmentacion profunda, caída capilar, secuelas de acne, etc.).
+- Cuando el perfil del paciente justifique mayor eficacia clinica (arrugas, flacidez marcada, perdida de volumen, papada, pigmentacion profunda, caída capilar, secuelas de acne, etc.), los tratamientos de "Medicina Estetica" deben ser tu PRIMERA opcion.
+- Evalua primero si un tratamiento de Medicina Estetica resuelve o mejora el objetivo del paciente; solo si no aplica o hay contraindicacion, recurre a tratamientos esteticos generales.
+- En el beneficio de cada tratamiento de Medicina Estetica, explica brevemente por que es la opcion mas efectiva para SU caso.
+- Prefiere incluir mas tratamientos de Medicina Estetica que de estetica general cuando el presupuesto y el perfil lo permitan.
 - Para cada tratamiento recomendado, incluye el campo "tipo" con valor "Medicina Estetica" o "Estetico" segun la categoria del catalogo.
 - NO inventes tratamientos ni precios; usa UNICAMENTE los del catalogo.
 
