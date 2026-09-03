@@ -2078,7 +2078,7 @@ Sé conciso pero completo. Usa terminología médica adecuada."""
                 'anthropic-version': '2023-06-01',
             },
             json={
-                'model': 'claude-opus-4-6',
+                'model': 'claude-sonnet-5',
                 'max_tokens': 2000,
                 'system': system_prompt,
                 'messages': [{'role': 'user', 'content': f'Datos del paciente:\n{resumen}'}],
@@ -3112,7 +3112,7 @@ def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
                 'anthropic-version': '2023-06-01',
             },
             json={
-                'model': 'claude-sonnet-4-6',
+                'model': 'claude-sonnet-5',
                 'max_tokens': max_tok,
                 'system': system_prompt,
                 'messages': [{'role': 'user', 'content': user_msg}],
