@@ -118,12 +118,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);m
 </div>
 
 <script>
-// ── Auth — sesión por cookie httpOnly, sin localStorage ─────────────────
+// ── Auth — sesión JWT en cookie httpOnly + header X-Token fallback ─────
 let currentUser = null;
+let cvToken = '';
+
+function authHeaders(contentType) {
+  const h = {};
+  if (contentType) h['Content-Type'] = contentType;
+  if (cvToken) h['X-Token'] = cvToken;
+  return h;
+}
 
 async function initAuth() {
   try {
-    const r = await fetch('/api/check-token');
+    cvToken = localStorage.getItem('cv_token') || '';
+    const r = await fetch('/api/check-token', {headers: authHeaders()});
     if (r.ok) {
       const d = await r.json();
       currentUser = d;
@@ -132,9 +141,15 @@ async function initAuth() {
       if (next && next.startsWith('/')) { window.location.href = next; return; }
       showPanel();
     } else {
+      cvToken = '';
+      localStorage.removeItem('cv_token');
       showLogin();
     }
-  } catch(e) { showLogin(); }
+  } catch(e) {
+    cvToken = '';
+    localStorage.removeItem('cv_token');
+    showLogin();
+  }
 }
 
 function showLogin() {
@@ -167,6 +182,8 @@ async function doLogin() {
     });
     const d = await r.json();
     if (d.ok) {
+      cvToken = d.token || '';
+      if (cvToken) localStorage.setItem('cv_token', cvToken);
       currentUser = {email, rol: d.rol};
       const next = window._cv_next || new URLSearchParams(window.location.search).get('next');
       if (next && next.startsWith('/')) { window.location.href = next; return; }
@@ -183,7 +200,9 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  await fetch('/api/logout', {method:'POST'});
+  await fetch('/api/logout', {method:'POST', headers: authHeaders()});
+  cvToken = '';
+  localStorage.removeItem('cv_token');
   currentUser = null;
   showLogin();
   document.getElementById('pwd').value = '';

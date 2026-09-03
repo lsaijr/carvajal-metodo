@@ -2,9 +2,10 @@ import os, json, uuid, threading, calendar, secrets, hashlib, time as _time
 import cloudinary
 import cloudinary.uploader
 import bcrypt
+import jwt
 WEASYPRINT_OK = False
 WeasyprintHTML = None
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 from flask import Flask, request, jsonify, render_template_string, send_from_directory
 import requests as req
 import zipfile, re, html as htmllib
@@ -36,10 +37,42 @@ def _init_on_first_request():
         except Exception as e:
             print(f'[startup] Error inicializando usuarios: {e}')
 
-# ── Auth — sesiones en memoria con expiración 8h ─────────────────────────
-# {token: {'email': str, 'expires': timestamp}}
-auth_sessions = {}
-SESSION_DURATION = 8 * 3600  # 8 horas en segundos
+# ── Auth — sesiones JWT firmadas (persistentes entre reinicios) ───────
+# Fallback: si existe un token antiguo en memoria, se sigue aceptando brevemente.
+auth_sessions = {}  # legacy; será depurado gradualmente
+SESSION_DURATION = 8 * 3600  # 8 horas
+_dev_secret_fallback = 'carvajal-jwt-dev-secret-2026-do-not-use-in-production'
+JWT_SECRET = os.environ.get('JWT_SECRET') or os.environ.get('ADMIN_PASSWORD') or _dev_secret_fallback
+# Asegurar longitud mínima para HMAC-SHA256 recomendada (32 bytes)
+if len(JWT_SECRET) < 32:
+    JWT_SECRET = hashlib.sha256(JWT_SECRET.encode()).hexdigest()
+
+def _jwt_encode(email, rol):
+    """Genera un token JWT firmado para la sesión."""
+    now = datetime.now(timezone.utc)
+    payload = {
+        'sub': email,
+        'rol': rol,
+        'iat': now,
+        'exp': now + timedelta(seconds=SESSION_DURATION),
+        'type': 'cv_session',
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+
+def _jwt_decode(tok):
+    """Decodifica y valida un JWT. Devuelve dict {email, rol} o None."""
+    if not tok:
+        return None
+    try:
+        payload = jwt.decode(tok, JWT_SECRET, algorithms=['HS256'], options={'require': ['exp']})
+        if payload.get('type') != 'cv_session':
+            return None
+        return {'email': payload['sub'], 'rol': payload.get('rol', 'staff')}
+    except jwt.ExpiredSignatureError:
+        return None
+    except Exception as e:
+        print(f'[auth] JWT inválido: {e}')
+        return None
 
 # ── Reset tokens temporales — {token: {'email': str, 'expires': timestamp}}
 reset_tokens = {}
@@ -158,7 +191,7 @@ button{{width:100%;padding:14px;background:#1a1410;color:#b8935a;border:none;bor
 def panel():
     from flask import redirect
     # Si ya tiene sesión válida y viene con ?next=, redirigir directo
-    tok = request.cookies.get('cv_session', '')
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '').strip()
     sesion = _verificar_sesion(tok)
     next_url = request.args.get('next', '').strip()
     if sesion and next_url and next_url.startswith('/'):
@@ -416,6 +449,11 @@ def api_formulario_seleccion_enviar():
 @app.route('/planes_generados/<path:filename>')
 def serve_plan(filename):
     return send_from_directory(PLANES_DIR, filename)
+
+@app.route('/health')
+def health():
+    """Endpoint ligero para health checks. No requiere auth ni carga catálogo."""
+    return jsonify({'ok': True, 'status': 'healthy'}), 200
 
 @app.route('/status')
 def status():
@@ -1238,12 +1276,21 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:v
 </div>
 <script>
 
-// ── Auth — sesión por cookie httpOnly ───────────────────────
+// ── Auth — sesión JWT en cookie httpOnly + header X-Token fallback ─
 let currentUser = null;
+let cvToken = '';
+
+function authHeaders() {
+  const h = {};
+  if (cvToken) h['X-Token'] = cvToken;
+  return h;
+}
 
 async function initAuth() {
   try {
-    const r = await fetch('/api/check-token');
+    // Preferir token devuelto por login almacenado en localStorage (sobrevive reinicios)
+    cvToken = localStorage.getItem('cv_token') || '';
+    const r = await fetch('/api/check-token', {headers: authHeaders()});
     if (r.ok) {
       const d = await r.json();
       currentUser = d;
@@ -1255,9 +1302,13 @@ async function initAuth() {
       }
       mostrarApp();
     } else {
+      cvToken = '';
+      localStorage.removeItem('cv_token');
       mostrarLogin();
     }
   } catch(e) {
+    cvToken = '';
+    localStorage.removeItem('cv_token');
     mostrarLogin();
   }
 }
@@ -1302,6 +1353,8 @@ async function doLogin() {
     });
     const d = await r.json();
     if (d.ok) {
+      cvToken = d.token || '';
+      if (cvToken) localStorage.setItem('cv_token', cvToken);
       currentUser = {email: d.email || 'admin@centrocarvajal.com', rol: d.rol};
       const next = window._cv_next || new URLSearchParams(window.location.search).get('next');
       if (next && next.startsWith('/')) { window.location.href = next; return; }
@@ -1317,7 +1370,9 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  await fetch('/api/logout', {method:'POST'});
+  await fetch('/api/logout', {method:'POST', headers: authHeaders()});
+  cvToken = '';
+  localStorage.removeItem('cv_token');
   currentUser = null;
   mostrarLogin();
 }
@@ -1346,7 +1401,7 @@ async function cargarPlanes() {
   btn.classList.add('spinning');
 
   try {
-    const r    = await fetch('/api/planes');
+    const r    = await fetch('/api/planes', {headers: authHeaders()});
     const data = await r.json();
     todosLosPlanes = data.planes || [];
     actualizarStats();
@@ -1653,7 +1708,7 @@ def _inicializar_usuarios():
 
 
 def _limpiar_sesiones():
-    """Elimina sesiones expiradas del dict en memoria."""
+    """Elimina sesiones expiradas del dict en memoria (legacy)."""
     now = _time.time()
     expiradas = [t for t, s in auth_sessions.items() if s['expires'] < now]
     for t in expiradas:
@@ -1661,7 +1716,13 @@ def _limpiar_sesiones():
 
 
 def _verificar_sesion(token):
-    """Verifica si un token de sesión es válido y no expiró."""
+    """Verifica si un token de sesión es válido y no expiró.
+    Acepta tokens JWT firmados (nueva versión persistente) o tokens legacy en memoria."""
+    # 1. Intentar JWT primero
+    jwt_session = _jwt_decode(token)
+    if jwt_session:
+        return jwt_session
+    # 2. Fallback legacy (memoria) — se eliminará en una futura actualización
     _limpiar_sesiones()
     sesion = auth_sessions.get(token)
     if not sesion:
@@ -1716,14 +1777,10 @@ def api_login():
                 continue
     if not user:
         return jsonify({'ok': False, 'error': 'Credenciales incorrectas'}), 401
-    tok = secrets.token_hex(32)
-    auth_sessions[tok] = {
-        'email':   email,
-        'rol':     user.get('rol', 'staff'),
-        'expires': _time.time() + SESSION_DURATION,
-    }
+    rol = user.get('rol', 'staff')
+    tok = _jwt_encode(email, rol)
     from flask import make_response
-    resp = make_response(jsonify({'ok': True, 'rol': user.get('rol', 'staff'), 'token': tok, 'email': email}))
+    resp = make_response(jsonify({'ok': True, 'rol': rol, 'token': tok, 'email': email}))
     resp.set_cookie('cv_session', tok, max_age=SESSION_DURATION, httponly=True, samesite='Lax')
     print(f'[auth] Login: {email}')
     return resp
@@ -1732,9 +1789,7 @@ def api_login():
 @app.route('/api/logout', methods=['POST'])
 def api_logout():
     from flask import make_response
-    tok = request.cookies.get('cv_session', '')
-    if tok and tok in auth_sessions:
-        del auth_sessions[tok]
+    # JWT no se invalida en el servidor (stateless); borramos la cookie del cliente.
     resp = make_response(jsonify({'ok': True}))
     resp.delete_cookie('cv_session')
     return resp
@@ -1742,7 +1797,7 @@ def api_logout():
 
 @app.route('/api/check-token', methods=['GET'])
 def api_check_token():
-    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '')
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '').strip()
     sesion = _verificar_sesion(tok)
     if sesion:
         return jsonify({'ok': True, 'email': sesion['email'], 'rol': sesion['rol']})
@@ -1751,7 +1806,7 @@ def api_check_token():
 
 @app.route('/api/cambiar-password', methods=['POST'])
 def api_cambiar_password():
-    tok = request.cookies.get('cv_session', '')
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '').strip()
     sesion = _verificar_sesion(tok)
     if not sesion:
         return jsonify({'ok': False, 'error': 'No autenticado'}), 401
@@ -1877,7 +1932,7 @@ function doReset(){{
 @app.route('/api/crear-usuario', methods=['POST'])
 def api_crear_usuario():
     """Solo el admin puede crear usuarios."""
-    tok = request.cookies.get('cv_session', '')
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '').strip()
     sesion = _verificar_sesion(tok)
     if not sesion or sesion.get('rol') != 'admin':
         return jsonify({'ok': False, 'error': 'Solo el administrador puede crear usuarios'}), 403
@@ -4610,7 +4665,7 @@ def _enviar_correo_error_plan(nombre, session_id, error_msg=''):
 def panel_regenerar(session_id):
     """Página de regeneración — requiere login, redirige con next si no está autenticado."""
     from flask import make_response, redirect, url_for
-    tok = request.cookies.get('cv_session', '')
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '').strip()
     sesion = _verificar_sesion(tok)
     if not sesion:
         # Guardar destino en cookie temporal y redirigir a login
@@ -4627,7 +4682,7 @@ def panel_regenerar(session_id):
 @app.route('/api/regenerar/<session_id>', methods=['POST'])
 def api_regenerar(session_id):
     """Lanza la regeneración del plan desde el panel."""
-    tok = request.cookies.get('cv_session', '')
+    tok = request.cookies.get('cv_session', '') or request.headers.get('X-Token', '').strip()
     sesion = _verificar_sesion(tok)
     if not sesion:
         return jsonify({'ok': False, 'error': 'No autenticado'}), 401
@@ -4770,6 +4825,13 @@ const TIENE_DATOS = {{TIENE_DATOS}};
 let jobId = null;
 let pollInterval = null;
 let tickerInterval = null;
+let cvToken = localStorage.getItem('cv_token') || '';
+
+function authHeaders() {
+  const h = {'Content-Type': 'application/json'};
+  if (cvToken) h['X-Token'] = cvToken;
+  return h;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   if (!TIENE_DATOS) {
@@ -4797,7 +4859,7 @@ function iniciarGeneracion() {
 
   fetch('/api/regenerar/' + SESSION_ID, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: authHeaders(),
     body: JSON.stringify({modelo: 'claude'})
   })
   .then(r => r.json())
