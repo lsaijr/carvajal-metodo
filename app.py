@@ -3352,7 +3352,8 @@ def _descargar_catalogo_cloudinary():
         return None
     url = f'https://res.cloudinary.com/{CLOUDINARY_CLOUD_NAME}/raw/upload/carvajal/catalogo_tratamientos.json'
     try:
-        r = req.get(url, timeout=15)
+        # Timeout corto para no bloquear el arranque del servidor
+        r = req.get(url, timeout=5)
         if r.status_code == 200:
             return r.json()
         print(f'[catalogo] Cloudinary status {r.status_code}')
@@ -5037,11 +5038,10 @@ tr:last-child td{border-bottom:none}
 </body>
 </html>""")
 
-# Sincronizar catálogo de tratamientos al arrancar (local y producción)
-try:
-    _sincronizar_catalogo_inicial()
-except Exception as e:
-    print(f'[startup] Error sincronizando catálogo: {e}')
+# Sincronizar catálogo en background para no bloquear el arranque del servidor.
+# En producción Railway puede matar el contenedor si /health no responde rápido.
+_catalogo_sync_thread = threading.Thread(target=_sincronizar_catalogo_inicial, daemon=True, name='catalogo-sync')
+_catalogo_sync_thread.start()
 
 if __name__ == '__main__':
     # Inicializar usuarios al arrancar si no existen
