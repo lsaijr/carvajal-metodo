@@ -220,8 +220,13 @@ def demo_recomendar():
                       'system':sys_prompt,'messages':[{'role':'user','content':user_msg}]},
                 timeout=30)
             j = r.json()
-            if 'content' in j and j['content']:
-                return jsonify({'html': j['content'][0]['text']})
+            content_blocks = j.get('content', [])
+            text_block = next((b for b in content_blocks if isinstance(b, dict) and b.get('type') == 'text'), None)
+            if text_block is not None:
+                html = text_block.get('text', '')
+                if html:
+                    return jsonify({'html': html})
+            print(f'[demo/claude] Respuesta Claude sin bloque de texto: {json.dumps(j)[:500]}')
             return jsonify({'error': 'Sin respuesta de Claude', 'detail': j}), 500
 
         # ── Gemini ──────────────────────────────────────────
@@ -2116,7 +2121,16 @@ Sé conciso pero completo. Usa terminología médica adecuada."""
                 except Exception as eg:
                     print(f'[analisis_medico] Groq fallback excepción: {eg}')
             return None
-        txt = resp.json()['content'][0]['text'].strip()
+        rj = resp.json()
+        content_blocks = rj.get('content', [])
+        text_block = next((b for b in content_blocks if isinstance(b, dict) and b.get('type') == 'text'), None)
+        if text_block is None:
+            print(f'[analisis_medico] Respuesta Claude sin bloque de texto: {json.dumps(rj)[:500]}')
+            return None
+        txt = text_block.get('text', '').strip()
+        if not txt:
+            print('[analisis_medico] Respuesta Claude con bloque de texto vacío')
+            return None
         print(f'[analisis_medico] OK — {elapsed}s ({len(txt)} chars)')
         return txt
     except Exception as e:
@@ -3137,7 +3151,18 @@ def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
             return None, f'Error API Claude ({resp.status_code}): {error_text[:300]}'
 
         rj = resp.json()
-        txt = rj['content'][0]['text']
+
+        # Extraer texto del primer bloque de tipo 'text'; manejar respuestas inesperadas
+        content_blocks = rj.get('content', [])
+        text_block = next((b for b in content_blocks if isinstance(b, dict) and b.get('type') == 'text'), None)
+        if text_block is None:
+            print(f"[{num}/{total}] Respuesta Claude sin bloque de texto: {json.dumps(rj)[:500]}")
+            return None, f'Respuesta Claude inesperada (sin bloque de texto) en llamada {num}'
+        txt = text_block.get('text', '')
+        if not txt:
+            print(f"[{num}/{total}] Respuesta Claude con bloque de texto vacío")
+            return None, f'Respuesta Claude vacía en llamada {num}'
+
         stop_reason = rj.get('stop_reason', '')
         usage = rj.get('usage', {})
         tok_in  = usage.get('input_tokens', '?')
