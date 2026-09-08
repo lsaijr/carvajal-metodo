@@ -962,18 +962,19 @@ textarea:focus{border-color:var(--gold)}
       <div class="field full" style="display:none"><label class="field-label">¿Qué expectativas tiene del tratamiento? <span class="req">*</span></label><textarea id="f-expectativas" placeholder="Describe qué resultado esperas..." maxlength="500" oninput="updateCounter('f-expectativas', 500)"></textarea><span class="char-counter" id="cnt-f-expectativas">500</span></div>
       <div class="field full">
         <label class="field-label">Satisfacción actual con el área a tratar <span class="req">*</span> <span style="font-size:10px;color:var(--muted)">(1 = Muy insatisfecho · 10 = Muy satisfecho)</span></label>
-        <div class="scale-group" id="scale-satisfaccion">
-          <button class="scale-btn" onclick="toggleScale(this,1)">1</button>
-          <button class="scale-btn" onclick="toggleScale(this,2)">2</button>
-          <button class="scale-btn" onclick="toggleScale(this,3)">3</button>
-          <button class="scale-btn" onclick="toggleScale(this,4)">4</button>
-          <button class="scale-btn" onclick="toggleScale(this,5)">5</button>
-          <button class="scale-btn" onclick="toggleScale(this,6)">6</button>
-          <button class="scale-btn" onclick="toggleScale(this,7)">7</button>
-          <button class="scale-btn" onclick="toggleScale(this,8)">8</button>
-          <button class="scale-btn" onclick="toggleScale(this,9)">9</button>
-          <button class="scale-btn" onclick="toggleScale(this,10)">10</button>
-        </div>
+        <select id="f-satisfaccion" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
       </div>
     </div>
     <div class="yn-row" style="margin-top:4px"><span class="yn-label">¿Entiende que pueden necesitarse múltiples sesiones? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
@@ -1455,7 +1456,7 @@ function collectData(){
     areasFaciales:    areasFaciales,
     areasCorporales:  areasCorporales,
     prioridad:        document.getElementById('f-prioridad').value||'',
-    satisfaccion:     getScaleValue('scale-satisfaccion'),
+    satisfaccion:     document.getElementById('f-satisfaccion').value||'',
     historialEstetico: historialEstetico,
     historialDetalle:  historialDetalle,
     entiendeSesiones: getYNValue(s9, 'necesitarse múltiples sesiones'),
