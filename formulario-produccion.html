@@ -309,10 +309,27 @@ textarea:focus{border-color:var(--gold)}
 
   <div class="subsection">
     <div class="subsection-title">Hábitos</div>
-    <div class="yn-row"><span class="yn-label">Fuma <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="form-grid" style="margin:10px 0 16px"><div class="field full"><label class="field-label">Si fuma, frecuencia</label><div class="radio-group"><label class="radio-item"><input type="radio" name="fuma_frec"><div class="radio-dot"></div>Diario</label><label class="radio-item"><input type="radio" name="fuma_frec"><div class="radio-dot"></div>Ocasional</label></div></div></div>
-    <div class="yn-row"><span class="yn-label">Consume alcohol <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="form-grid" style="margin:10px 0 16px"><div class="field full"><label class="field-label">Si consume alcohol, frecuencia</label><div class="radio-group"><label class="radio-item"><input type="radio" name="alcohol_frec"><div class="radio-dot"></div>Diario</label><label class="radio-item"><input type="radio" name="alcohol_frec"><div class="radio-dot"></div>Semanal</label><label class="radio-item"><input type="radio" name="alcohol_frec"><div class="radio-dot"></div>Ocasional</label></div></div></div>
+    <div class="yn-row"><span class="yn-label">Fuma <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleFrec(this,'yes','f-fuma-frec')">Sí</button><button class="yn-btn" onclick="toggleFrec(this,'no','f-fuma-frec')">No</button></div></div>
+    <div id="f-fuma-frec-wrap" style="display:none;margin:10px 0 16px">
+      <div class="field"><label class="field-label">Frecuencia</label>
+        <select id="f-fuma-frec">
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="Diario">Diario</option>
+          <option value="Ocasional">Ocasional</option>
+        </select>
+      </div>
+    </div>
+    <div class="yn-row"><span class="yn-label">Consume alcohol <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleFrec(this,'yes','f-alcohol-frec')">Sí</button><button class="yn-btn" onclick="toggleFrec(this,'no','f-alcohol-frec')">No</button></div></div>
+    <div id="f-alcohol-frec-wrap" style="display:none;margin:10px 0 16px">
+      <div class="field"><label class="field-label">Frecuencia</label>
+        <select id="f-alcohol-frec">
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="Diario">Diario</option>
+          <option value="Semanal">Semanal</option>
+          <option value="Ocasional">Ocasional</option>
+        </select>
+      </div>
+    </div>
     <div class="yn-row"><span class="yn-label">¿Toma medicamentos, vitaminas o suplementos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="form-grid" style="margin:10px 0 0"><div class="field full"><label class="field-label">Si es Sí, especifique</label><textarea id="f-medicamentos" placeholder="Nombre del medicamento, dosis, frecuencia..." maxlength="300" oninput="updateCounter('f-medicamentos', 300)"></textarea><span class="char-counter" id="cnt-f-medicamentos">300</span></div></div>
   </div>
@@ -334,34 +351,47 @@ textarea:focus{border-color:var(--gold)}
   <div class="subsection">
     <div class="subsection-title">Hábitos de sueño</div>
     <div class="form-grid">
-      <div class="field full"><label class="field-label">Promedio de horas por noche <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="horas_sueno"><div class="radio-dot"></div>Menos de 5h</label><label class="radio-item"><input type="radio" name="horas_sueno"><div class="radio-dot"></div>5–7h</label><label class="radio-item"><input type="radio" name="horas_sueno"><div class="radio-dot"></div>7–9h</label><label class="radio-item"><input type="radio" name="horas_sueno"><div class="radio-dot"></div>Más de 9h</label></div></div>
-      <div class="field full"><label class="field-label">Calidad del sueño <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="calidad_sueno"><div class="radio-dot"></div>Profundo y reparador</label><label class="radio-item"><input type="radio" name="calidad_sueno"><div class="radio-dot"></div>Interrumpido o ligero</label><label class="radio-item"><input type="radio" name="calidad_sueno"><div class="radio-dot"></div>Dificultad para conciliar</label><label class="radio-item"><input type="radio" name="calidad_sueno"><div class="radio-dot"></div>Insomnio frecuente</label></div></div>
+      <div class="field"><label class="field-label">Promedio de horas por noche <span class="req">*</span></label>
+        <select id="f-horas-sueno" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="Menos de 5h">Menos de 5h</option>
+          <option value="5–7h">5–7h</option>
+          <option value="7–9h">7–9h</option>
+          <option value="Más de 9h">Más de 9h</option>
+        </select>
+      </div>
+      <div class="field"><label class="field-label">Calidad del sueño <span class="req">*</span></label>
+        <select id="f-calidad-sueno" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="Profundo y reparador">Profundo y reparador</option>
+          <option value="Interrumpido o ligero">Interrumpido o ligero</option>
+          <option value="Dificultad para conciliar">Dificultad para conciliar</option>
+          <option value="Insomnio frecuente">Insomnio frecuente</option>
+        </select>
+      </div>
       <div class="field"><label class="field-label">Hora que se acuesta</label><input id="f-hora-duerme" type="time"></div>
       <div class="field"><label class="field-label">Hora que se levanta</label><input id="f-hora-despierta" type="time"></div>
+      <div class="field"><label class="field-label">Nivel de estrés diario <span class="req">*</span> <span style="font-size:10px;color:var(--muted)">(1 = Muy bajo · 10 = Muy alto)</span></label>
+        <select id="f-estres" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+      </div>
     </div>
     <div class="yn-row" style="margin-top:12px"><span class="yn-label">¿Siente cansancio o somnolencia durante el día? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="yn-row" style="display:none"><span class="yn-label">¿Utiliza medicamento o suplemento para dormir? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="yn-row" style="display:none"><span class="yn-label">¿Trabaja en turnos nocturnos o con cambios de horario? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   </div>
 
-  <div class="subsection">
-    <div class="subsection-title">Nivel de estrés</div>
-    <div class="field">
-      <label class="field-label">¿Cómo calificarías tu nivel de estrés diario? <span class="req">*</span> <span style="font-size:10px;color:var(--muted)">(1 = Muy bajo · 10 = Muy alto)</span></label>
-      <div class="scale-group" id="scale-estres">
-        <button class="scale-btn" onclick="toggleScale(this,1)">1</button>
-        <button class="scale-btn" onclick="toggleScale(this,2)">2</button>
-        <button class="scale-btn" onclick="toggleScale(this,3)">3</button>
-        <button class="scale-btn" onclick="toggleScale(this,4)">4</button>
-        <button class="scale-btn" onclick="toggleScale(this,5)">5</button>
-        <button class="scale-btn" onclick="toggleScale(this,6)">6</button>
-        <button class="scale-btn" onclick="toggleScale(this,7)">7</button>
-        <button class="scale-btn" onclick="toggleScale(this,8)">8</button>
-        <button class="scale-btn" onclick="toggleScale(this,9)">9</button>
-        <button class="scale-btn" onclick="toggleScale(this,10)">10</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- STEP 4: Intolerancias Alimentarias -->
@@ -1321,10 +1351,9 @@ function collectData(){
   const areasCorporales=areasCorporalesEl?[...areasCorporalesEl.querySelectorAll('.check-item.checked')].map(i=>i.textContent.trim()):[];
 
   // Sueño
-  const horasSueno=document.querySelector('input[name="horas_sueno"]:checked');
-  const calidadSueno=document.querySelector('input[name="calidad_sueno"]:checked');
-  const sueno=(horasSueno?horasSueno.closest('.radio-item').textContent.trim():'')
-    +' '+(calidadSueno?calidadSueno.closest('.radio-item').textContent.trim():'');
+  const horasSueno=document.getElementById('f-horas-sueno').value||'';
+  const calidadSueno=document.getElementById('f-calidad-sueno').value||'';
+  const sueno=(horasSueno+' '+calidadSueno).trim();
 
   // IMC
   const est=document.getElementById('f-estatura').value||'';
@@ -1385,8 +1414,8 @@ function collectData(){
     contraindications: contra,
 
     // Hábitos
-    fuma:    (()=>{ const f=getYNValue(s3,'fuma'); const frec=document.querySelector('input[name="fuma_frec"]:checked'); return f==='Sí'?('Sí'+(frec?' - '+frec.closest('.radio-item').textContent.trim():'')):'No'; })(),
-    alcohol: (()=>{ const a=getYNValue(document.getElementById('step-4'),'alcohol'); const afrec=document.querySelector('input[name="alcohol_frec"]:checked'); return a==='Sí'?('Sí'+(afrec?' - '+afrec.closest('.radio-item').textContent.trim():'')):'No'; })(),
+    fuma:    (()=>{ const f=getYNValue(s3,'fuma'); const frec=document.getElementById('f-fuma-frec').value||''; return f==='Sí'?('Sí'+(frec?' - '+frec:'')):'No'; })(),
+    alcohol: (()=>{ const a=getYNValue(s3,'alcohol'); const afrec=document.getElementById('f-alcohol-frec').value||''; return a==='Sí'?('Sí'+(afrec?' - '+afrec:'')):'No'; })(),
 
     // Sueño
     sueno:          sueno.trim(),
@@ -1418,7 +1447,7 @@ function collectData(){
     notasAlimentacion:   document.getElementById('f-nota-alim').value||'',
 
     // Nuevos campos
-    nivelEstres:        getScaleValue('scale-estres'),
+    nivelEstres:        document.getElementById('f-estres').value||'',
     numHijosVal:        document.getElementById('f-num-hijos').value||'',
 
     // Condiciones ginecológicas / contraindicaciones detalladas
@@ -1519,6 +1548,18 @@ function toggleSolar(btn, val) {
   btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
   const wrap = document.getElementById('solar-det-wrap');
   if (wrap) wrap.style.display = val === 'yes' ? 'block' : 'none';
+}
+
+// Toggle select de frecuencia (fuma / alcohol)
+function toggleFrec(btn, val, selectId) {
+  const row = btn.closest('.yn-btns');
+  row.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active','active-yes','active-no'));
+  btn.classList.add(val === 'yes' ? 'active-yes' : 'active-no');
+  const wrap = document.getElementById(selectId + '-wrap');
+  if (wrap) {
+    wrap.style.display = val === 'yes' ? 'block' : 'none';
+    if (val !== 'yes') document.getElementById(selectId).value = '';
+  }
 }
 
 // Toggle rutina diaria
