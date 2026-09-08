@@ -712,14 +712,15 @@ textarea:focus{border-color:var(--gold)}
   <div class="subsection">
     <div class="subsection-title">Tipo de Piel</div>
     <div class="field"><label class="field-label">¿Cómo describiría su piel? <span class="req">*</span></label>
-      <div class="radio-group">
-        <label class="radio-item"><input type="radio" name="tipo_piel"><div class="radio-dot"></div>Normal</label>
-        <label class="radio-item"><input type="radio" name="tipo_piel"><div class="radio-dot"></div>Seca</label>
-        <label class="radio-item"><input type="radio" name="tipo_piel"><div class="radio-dot"></div>Grasa</label>
-        <label class="radio-item"><input type="radio" name="tipo_piel"><div class="radio-dot"></div>Mixta</label>
-        <label class="radio-item"><input type="radio" name="tipo_piel"><div class="radio-dot"></div>Sensible</label>
-        <label class="radio-item"><input type="radio" name="tipo_piel"><div class="radio-dot"></div>No lo sé</label>
-      </div>
+      <select id="f-tipo-piel" required>
+        <option value="" disabled selected>Selecciona…</option>
+        <option value="Normal">Normal</option>
+        <option value="Seca">Seca</option>
+        <option value="Grasa">Grasa</option>
+        <option value="Mixta">Mixta</option>
+        <option value="Sensible">Sensible</option>
+        <option value="No lo sé">No lo sé</option>
+      </select>
     </div>
   </div>
 
@@ -1027,12 +1028,13 @@ textarea:focus{border-color:var(--gold)}
   <div class="subsection">
     <div class="subsection-title">Actividad Física</div>
     <div class="field"><label class="field-label">Nivel de actividad física <span class="req">*</span></label>
-      <div class="radio-group">
-        <label class="radio-item"><input type="radio" name="act_fisica"><div class="radio-dot"></div>Sedentario</label>
-        <label class="radio-item"><input type="radio" name="act_fisica"><div class="radio-dot"></div>Ligero (1–2/sem)</label>
-        <label class="radio-item"><input type="radio" name="act_fisica"><div class="radio-dot"></div>Moderado (3–4/sem)</label>
-        <label class="radio-item"><input type="radio" name="act_fisica"><div class="radio-dot"></div>Intenso (5+/sem)</label>
-      </div>
+      <select id="f-act-fisica" required>
+        <option value="" disabled selected>Selecciona…</option>
+        <option value="Sedentario">Sedentario</option>
+        <option value="Ligero (1–2/sem)">Ligero (1–2/sem)</option>
+        <option value="Moderado (3–4/sem)">Moderado (3–4/sem)</option>
+        <option value="Intenso (5+/sem)">Intenso (5+/sem)</option>
+      </select>
     </div>
   </div>
 
@@ -1440,14 +1442,14 @@ function collectData(){
     cansancioDia:   getYNValue(s3,'cansancio o somnolencia durante el día'),
 
     // Piel
-    pielTipo:            (document.querySelector('input[name="tipo_piel"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    pielTipo:            document.getElementById('f-tipo-piel').value||'',
     pielProblemas:       problemasPiel,
     rutinaManana:        rutinaManana,
     rutinaNoche:         rutinaNoche,
     rutinaFacial:        rutinaManana||rutinaNoche?(rutinaManana+' | '+rutinaNoche):'No tiene rutina facial',
 
     // Actividad física
-    actFisica: (document.querySelector('input[name="act_fisica"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    actFisica: document.getElementById('f-act-fisica').value||'',
 
     // Objetivos
     areasFaciales:    areasFaciales,
