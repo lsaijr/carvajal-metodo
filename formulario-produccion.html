@@ -516,14 +516,30 @@ textarea:focus{border-color:var(--gold)}
     <div class="subsection-title">Postres y dulces</div>
     <div class="form-grid">
       <div class="field full"><label class="field-label">Postres preferidos o dulces que suele consumir</label><input id="f-postres" type="text" placeholder="Ej. chocolate, helado..." maxlength="150"></div>
-      <div class="field full"><label class="field-label">Frecuencia de consumo <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>Diario</label><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>2–3 veces/semana</label><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>1 vez/semana</label><label class="radio-item"><input type="radio" name="dulces_frec"><div class="radio-dot"></div>Ocasionalmente</label></div></div>
+      <div class="field"><label class="field-label">Frecuencia de consumo <span class="req">*</span></label>
+        <select id="f-dulces-frec" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="Diario">Diario</option>
+          <option value="2–3 veces/semana">2–3 veces/semana</option>
+          <option value="1 vez/semana">1 vez/semana</option>
+          <option value="Ocasionalmente">Ocasionalmente</option>
+        </select>
+      </div>
     </div>
   </div>
 
   <div class="subsection">
     <div class="subsection-title">Otros hábitos alimentarios</div>
     <div class="form-grid">
-      <div class="field"><label class="field-label">¿Cuántas comidas al día? <span class="req">*</span></label><div class="radio-group"><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>1</label><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>2</label><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>3</label><label class="radio-item"><input type="radio" name="comidas"><div class="radio-dot"></div>4+</label></div></div>
+      <div class="field"><label class="field-label">¿Cuántas comidas al día? <span class="req">*</span></label>
+        <select id="f-comidas" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4+">4+</option>
+        </select>
+      </div>
     </div>
     <div class="yn-row" style="display:none"><span class="yn-label">¿Consume bebidas azucaradas? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
     <div class="form-grid" style="margin-top:10px;display:none"><div class="field full"><label class="field-label">Si es Sí, ¿cuáles?</label><input id="f-bebidas-cuales" maxlength="150" type="text" placeholder="Ej. refrescos, jugos industriales..."></div></div>
