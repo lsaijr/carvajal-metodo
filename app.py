@@ -2507,6 +2507,7 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('anticonceptivos',   _yn_c('Anticonceptivos'))
     _fila('menopausia',        _yn_c('Menopausia'))
     _fila('perimenopausia',    _g('perimenopausia') or 'NO')
+    _fila('andropausia',       _g('andropausia') or 'NO')
     _fila('fuma',              'SÍ' if fuma_v.lower() not in ['no',''] else 'NO')
     _fila('fuma_frecuencia',   fuma_v.replace('Si - ','').replace('Sí - ','') if ' - ' in fuma_v else '')
     _fila('alcohol',           _g('alcohol'))
@@ -2871,6 +2872,7 @@ def _mapear_formulario(f):
         'sop':                 s('sop'),
         'menopausia':          s('menopausia'),
         'perimenopausia':      s('perimenopausia'),
+        'andropausia':         s('andropausia'),
         'antecedentesFam':     s('antecedentesFam'),
         'antecedentesFamDet':  s('antecedentesFamDet'),
         'comoConociste':       s('comoConociste'),
