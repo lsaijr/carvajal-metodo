@@ -180,10 +180,11 @@ textarea:focus{border-color:var(--gold)}
 
     <div class="field" style="display:none"><label class="field-label">Edad</label><input id="f-edad" type="number" placeholder="Ej. 32" min="1" max="120"></div>
     <div class="field"><label class="field-label">Sexo <span class="req">*</span></label>
-      <div class="radio-group">
-        <label class="radio-item"><input type="radio" name="sexo"><div class="radio-dot"></div>Femenino</label>
-        <label class="radio-item"><input type="radio" name="sexo"><div class="radio-dot"></div>Masculino</label>
-      </div>
+      <select id="f-sexo" required>
+        <option value="" disabled selected>Selecciona…</option>
+        <option value="Femenino">Femenino</option>
+        <option value="Masculino">Masculino</option>
+      </select>
     </div>
     <div class="field"><label class="field-label">Fecha de nacimiento <span class="req">*</span></label><input id="f-fechanac" type="date"></div>
     <div class="field"><label class="field-label">Celular <span class="req">*</span></label><input id="f-celular" type="tel" placeholder="+506 0000 0000"></div>
@@ -195,15 +196,16 @@ textarea:focus{border-color:var(--gold)}
         <label class="radio-item"><input type="radio" name="trabaja"><div class="radio-dot"></div>No</label>
       </div>
     </div>
-    <div class="field full"><label class="field-label">Horario laboral <span class="req">*</span></label>
-      <div class="radio-group" id="horario-options">
-        <label class="radio-item"><input type="radio" name="horario_laboral" value="Mañana"><div class="radio-dot"></div>Mañana</label>
-        <label class="radio-item"><input type="radio" name="horario_laboral" value="Tarde"><div class="radio-dot"></div>Tarde</label>
-        <label class="radio-item"><input type="radio" name="horario_laboral" value="Noche"><div class="radio-dot"></div>Noche</label>
-        <label class="radio-item"><input type="radio" name="horario_laboral" value="Variable"><div class="radio-dot"></div>Variable</label>
-        <label class="radio-item" id="horario-otro-label"><input type="radio" name="horario_laboral" value="Otro"><div class="radio-dot"></div>Otro</label>
-      </div>
-      <div class="horario-otro" id="horario-otro-input">
+    <div class="field"><label class="field-label">Horario laboral <span class="req">*</span></label>
+      <select id="f-horario" required>
+        <option value="" disabled selected>Selecciona…</option>
+        <option value="Mañana">Mañana</option>
+        <option value="Tarde">Tarde</option>
+        <option value="Noche">Noche</option>
+        <option value="Variable">Variable</option>
+        <option value="Otro">Otro</option>
+      </select>
+      <div class="horario-otro" id="horario-otro-input" style="display:none;margin-top:8px">
         <input id="f-horario-otro" type="text" placeholder="Describe tu horario habitual..." maxlength="150">
       </div>
     </div>
@@ -214,14 +216,15 @@ textarea:focus{border-color:var(--gold)}
         <label class="radio-item"><input type="radio" name="act_laboral"><div class="radio-dot"></div>Activo</label>
       </div>
     </div>
-    <div class="field full"><label class="field-label">Número de hijos <span class="req">*</span></label>
-      <div class="radio-group">
-        <label class="radio-item"><input type="radio" name="num_hijos"><div class="radio-dot"></div>0</label>
-        <label class="radio-item"><input type="radio" name="num_hijos"><div class="radio-dot"></div>1</label>
-        <label class="radio-item"><input type="radio" name="num_hijos"><div class="radio-dot"></div>2</label>
-        <label class="radio-item"><input type="radio" name="num_hijos"><div class="radio-dot"></div>3</label>
-        <label class="radio-item"><input type="radio" name="num_hijos"><div class="radio-dot"></div>4+</label>
-      </div>
+    <div class="field"><label class="field-label">Número de hijos <span class="req">*</span></label>
+      <select id="f-num-hijos" required>
+        <option value="" disabled selected>Selecciona…</option>
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4+">4+</option>
+      </select>
     </div>
     <div class="field full" style="display:none"><label class="field-label">¿Con quién vive? <span class="req">*</span></label>
       <div class="check-grid">
@@ -254,14 +257,15 @@ textarea:focus{border-color:var(--gold)}
   
 
   <div class="form-grid" style="margin-top:8px">
-    <div class="field full"><label class="field-label">¿Cómo nos conociste?</label>
-      <div class="radio-group">
-        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Internet / Google</label>
-        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Redes sociales</label>
-        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Recomendación de amigo/a</label>
-        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Paciente anterior</label>
-        <label class="radio-item"><input type="radio" name="como_conociste"><div class="radio-dot"></div>Otro</label>
-      </div>
+    <div class="field"><label class="field-label">¿Cómo nos conociste?</label>
+      <select id="f-como-conociste">
+        <option value="" disabled selected>Selecciona…</option>
+        <option value="Internet / Google">Internet / Google</option>
+        <option value="Redes sociales">Redes sociales</option>
+        <option value="Recomendación de amigo/a">Recomendación de amigo/a</option>
+        <option value="Paciente anterior">Paciente anterior</option>
+        <option value="Otro">Otro</option>
+      </select>
     </div>
   </div>
 
@@ -1164,12 +1168,11 @@ function getScaleValue(groupId){
 }
 
 // Horario "Otro" toggle
-document.querySelectorAll('input[name="horario_laboral"]').forEach(radio=>{
-  radio.addEventListener('change',function(){
-    const otroDiv=document.getElementById('horario-otro-input');
-    otroDiv.style.display=this.value==='Otro'?'block':'none';
-    otroDiv.classList.toggle('visible',this.value==='Otro');
-  });
+document.getElementById('f-horario').addEventListener('change',function(){
+  const otroDiv=document.getElementById('horario-otro-input');
+  const isOtro=this.value==='Otro';
+  otroDiv.style.display=isOtro?'block':'none';
+  if(!isOtro)document.getElementById('f-horario-otro').value='';
 });
 
 function initCheckboxes(){
@@ -1232,13 +1235,13 @@ function collectData(){
   const s9=document.getElementById('step-9');
   const s10=document.getElementById('step-10');
 
-  // Horario laboral: radio o campo libre
-  const horarioRadio=document.querySelector('input[name="horario_laboral"]:checked');
+  // Horario laboral: select o campo libre
+  const horarioSel=document.getElementById('f-horario').value||'';
   let horarioLaboral='';
-  if(horarioRadio){
-    horarioLaboral=horarioRadio.value==='Otro'
+  if(horarioSel){
+    horarioLaboral=horarioSel==='Otro'
       ?(document.getElementById('f-horario-otro').value||'Otro')
-      :horarioRadio.value;
+      :horarioSel;
   }
 
   // Síntomas digestivos desde step-3
@@ -1335,13 +1338,13 @@ function collectData(){
                       return(a>0&&a<130)?String(a):'';
                     })(),
     fechaNacimiento: document.getElementById('f-fechanac')?document.getElementById('f-fechanac').value||'':'',
-    sexo:           (document.querySelector('input[name="sexo"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    sexo:           document.getElementById('f-sexo').value||'',
     email:          document.getElementById('f-email').value||'',
     celular:        document.getElementById('f-celular').value||'',
     ocupacion:      document.getElementById('f-ocupacion').value||'',
     horarioLaboral: horarioLaboral,
-    numHijos:       (document.querySelector('input[name="num_hijos"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
-    comoConociste:  (document.querySelector('input[name="como_conociste"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    numHijos:       document.getElementById('f-num-hijos').value||'',
+    comoConociste:  document.getElementById('f-como-conociste').value||'',
     fecha:          new Date().toLocaleDateString('es-CR',{day:'numeric',month:'long',year:'numeric'}),
 
     // Contacto emergencia
@@ -1406,7 +1409,7 @@ function collectData(){
 
     // Nuevos campos
     nivelEstres:        getScaleValue('scale-estres'),
-    numHijosVal:        (document.querySelector('input[name="num_hijos"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
+    numHijosVal:        document.getElementById('f-num-hijos').value||'',
 
     // Condiciones ginecológicas / contraindicaciones detalladas
     embarazo:           getYNValue(s3,'embarazada'),
