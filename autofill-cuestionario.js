@@ -28,6 +28,13 @@
       }
     }
   }
+  function setSelect(id, text) {
+    const el = document.getElementById(id);
+    if (!el) { console.warn('[autofill] select no encontrado:', id); return; }
+    const opt = [...el.options].find(o => o.value === text || o.textContent.trim() === text);
+    if (opt) { el.value = opt.value; el.dispatchEvent(new Event('change', {bubbles:true})); }
+    else console.warn('[autofill] opción no encontrada:', id, text);
+  }
   function clickCheckbox(text) {
     for (const item of $$('.check-item')) {
       if (item.textContent.trim().toLowerCase().includes(text.toLowerCase())) {
@@ -158,17 +165,10 @@
     setVal('f-familiares', data.familiares);
     setVal('f-horario-otro', data.horarioOtro);
 
-    clickRadio('sexo', 'Femenino');
-    clickRadio('trabaja', 'Sí');
-    clickRadio('horario_laboral', 'Mañana');
-    clickRadio('act_laboral', 'Sedentario');
-    clickRadio('num_hijos', '1');
-    clickCheckbox('Con pareja');
-    clickCheckbox('Con hijos');
-    clickCheckbox('Solo/a');          // marca también para que no quede vacío
-    clickYN('Cuenta con ayuda en casa', 'No');
-    clickCheckbox('Limpieza del hogar');
-    clickRadio('como_conociste', 'Internet');
+    setSelect('f-sexo', 'Femenino');
+    setSelect('f-horario', 'Mañana');
+    setSelect('f-num-hijos', '1');
+    setSelect('f-como-conociste', 'Internet / Google');
 
     // === PASO 2 ===
     setVal('f-estatura', data.estatura);
@@ -187,27 +187,24 @@
 
     // Hábitos
     clickYN('Fuma', 'No');
-    clickYN('Consume alcohol', 'Ocasionalmente');
+    clickYN('Consume alcohol', 'Sí');
+    setSelect('f-alcohol-frec', 'Ocasional');
     clickYN('Toma medicamentos', 'Sí');
     setVal('f-medicamentos', data.medicamentos);
     setVal('f-otras-condiciones', data.otrasCondiciones);
 
     // Intestinal
     clickYN('Vas al baño todos los días', 'Sí');
-    clickRadio('banio_hora', 'Mañana');
-    clickRadio('evacuacion', 'Normal');
 
     // Sueño
-    clickRadio('horas_sueno', '7–9h');
-    clickRadio('calidad_sueno', 'Profundo');
+    setSelect('f-horas-sueno', '7–9h');
+    setSelect('f-calidad-sueno', 'Profundo y reparador');
     setVal('f-hora-duerme', data.horaDuerme);
     setVal('f-hora-despierta', data.horaDespierta);
+    setSelect('f-estres', '4');
     clickYN('cansancio o somnolencia durante', 'No');
     clickYN('Utiliza medicamento o suplemento para dormir', 'No');
     clickYN('Trabaja en turnos nocturnos', 'No');
-
-    // Estrés
-    clickScale('scale-estres', 4);
 
     // === PASO 3 (Intolerancias) ===
     clickYN('hinchazón abdominal', 'Sí');
@@ -255,8 +252,8 @@
     setVal('f-grasas-evitar-porque', data.fGrasasEvitarPorque);
 
     setVal('f-postres', data.fPostres);
-    clickRadio('dulces_frec', 'Ocasionalmente');
-    clickRadio('comidas', '3');
+    setSelect('f-dulces-frec', 'Ocasionalmente');
+    setSelect('f-comidas', '3');
     clickYN('Consume bebidas azucaradas', 'Sí');
     setVal('f-bebidas-cuales', data.fBebidasCuales);
     setVal('f-nota-alim', data.fNotaAlim);
@@ -278,7 +275,7 @@
     // === PASO 6 (Piel) ===
     clickYN('Se ha realizado alguna cirugía', 'Sí');
     setVal('f-cirugias-det', data.fCirugiasDet);
-    clickRadio('tipo_piel', 'Mixta');
+    setSelect('f-tipo-piel', 'Mixta');
     clickCheckbox('Poros dilatados');
     clickCheckbox('Brillo excesivo');
     clickCheckbox('Manchas solares');
@@ -289,22 +286,7 @@
     clickCheckbox('Ardor');         // sensibilidad
     setVal('f-otros-piel', data.fOtrosPiel);
 
-    // === PASO 8 (Capilar) ===
-    clickRadio('caida_tiempo', 'No tengo caída');
-    clickRadio('caida_tipo', 'No aplica');
-    clickCheckbox('Ninguno');       // síntomas capilares
-    clickCheckbox('Ninguno');       // factores recientes (puede marcar varios)
-    clickYN('Antecedentes familiares de alopecia', 'No');
-    clickYN('Has usado tratamientos para la caída', 'No');
-    clickYN('Deseas reducir o eliminar vello', 'Sí');
-    clickCheckbox('Axilas');
-    clickCheckbox('Piernas');
-    clickCheckbox('Facial');
-    clickCheckbox('Cera');
-    clickCheckbox('Afeitado');
-    clickYN('Has notado aumento reciente de vello', 'No');
-    clickYN('Cambios hormonales recientes', 'No');
-    clickCheckbox('Ninguna');       // reacciones depilación
+    // === PASO 8 (Capilar) — oculto, se deja por si se reactiva ===
 
     // === PASO 9 (Objetivos) ===
     clickYN('Ha recibido tratamientos estéticos anteriormente', 'No');
@@ -328,25 +310,17 @@
     clickCheckbox('Celulitis');
     setVal('f-prioridad', data.fPrioridad);
     setVal('f-expectativas', data.fExpectativas);
-    clickScale('scale-satisfaccion', 5);
+    setSelect('f-satisfaccion', '5');
     clickYN('Entiende que pueden necesitarse múltiples sesiones', 'Sí');
 
     // === PASO 10 (Estilo de vida) ===
-    clickRadio('sol', 'Moderada');
-    clickYN('Usa protector solar diariamente', 'Sí');
-    setVal('f-protector-marca', data.fProtectorMarca);
-    setVal('f-spf', data.fSpf);
-    setVal('f-protector-hora', data.fProtectorHora);
-    clickRadio('reaplica_solar', 'No');
     clickYN('Realiza rutina diaria de cuidado facial', 'Sí');
     setVal('f-rutina-manana', data.fRutinaManana);
     setVal('f-rutina-noche', data.fRutinaNoche);
     clickCheckbox('Limpieza facial diaria');
     clickCheckbox('Hidratación');
     clickCheckbox('Retinol o ácidos');
-    setVal('f-productos', data.fProductos);
-    clickRadio('act_fisica', 'Ligero');
-    clickYN('En su familia hay historia de alguna enfermedad', 'No');
+    setSelect('f-act-fisica', 'Ligero (1–2/sem)');
     clickYN('Tienes alergias a medicamentos o productos tópicos', 'No');
     clickYN('Has tenido infecciones cutáneas', 'No');
     clickYN('Tienes marcapasos, implantes', 'No');
