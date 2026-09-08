@@ -172,17 +172,17 @@ textarea:focus{border-color:var(--gold)}
   <div class="divider"></div>
   <div class="form-grid">
     <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-nombre" type="text" placeholder="Tu nombre y apellidos" maxlength="100"></div>
-    <div class="field"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" maxlength="20" type="text" placeholder="Ej. 8-123-456"></div>
-    <div class="field full"><label class="field-label">Dirección de residencia</label><input id="f-direccion" maxlength="150" type="text" placeholder="Ej. Calle 50, Miraflores, Panamá"></div>
-    
-    <div class="field"><label class="field-label">Edad <span class="req">*</span></label><input id="f-edad" type="number" placeholder="Ej. 32" min="1" max="120"></div>
+    <div class="field" style="display:none"><label class="field-label">Cédula / Pasaporte</label><input id="f-cedula" maxlength="20" type="text" placeholder="Ej. 8-123-456"></div>
+    <div class="field full" style="display:none"><label class="field-label">Dirección de residencia</label><input id="f-direccion" maxlength="150" type="text" placeholder="Ej. Calle 50, Miraflores, Panamá"></div>
+
+    <div class="field" style="display:none"><label class="field-label">Edad</label><input id="f-edad" type="number" placeholder="Ej. 32" min="1" max="120"></div>
     <div class="field"><label class="field-label">Sexo <span class="req">*</span></label>
       <div class="radio-group">
         <label class="radio-item"><input type="radio" name="sexo"><div class="radio-dot"></div>Femenino</label>
         <label class="radio-item"><input type="radio" name="sexo"><div class="radio-dot"></div>Masculino</label>
       </div>
     </div>
-    <div class="field"><label class="field-label">Fecha de nacimiento</label><input id="f-fechanac" type="date"></div>
+    <div class="field"><label class="field-label">Fecha de nacimiento <span class="req">*</span></label><input id="f-fechanac" type="date"></div>
     <div class="field"><label class="field-label">Celular <span class="req">*</span></label><input id="f-celular" type="tel" placeholder="+506 0000 0000"></div>
     <div class="field"><label class="field-label">Correo electrónico <span class="req">*</span></label><input id="f-email" type="email" placeholder="tu@correo.com"></div>
     <div class="field"><label class="field-label">Ocupación</label><input id="f-ocupacion" type="text" placeholder="Ej. Docente, Enfermera, Músico..." maxlength="150"></div>
@@ -262,12 +262,12 @@ textarea:focus{border-color:var(--gold)}
     </div>
   </div>
 
-  <div class="subsection" style="margin-top:8px">
+  <div class="subsection" style="margin-top:8px;display:none">
     <div class="subsection-title">Contacto de Emergencia</div>
     <div class="form-grid">
-      <div class="field full"><label class="field-label">Nombre completo <span class="req">*</span></label><input id="f-cont-nombre" maxlength="100" type="text" placeholder="Nombre y apellidos"></div>
-      <div class="field"><label class="field-label">Relación <span class="req">*</span></label><input id="f-cont-relacion" maxlength="50" type="text" placeholder="Ej. Madre, Esposo..."></div>
-      <div class="field"><label class="field-label">Teléfono <span class="req">*</span></label><input id="f-cont-tel" type="tel" placeholder="+506 0000 0000"></div>
+      <div class="field full"><label class="field-label">Nombre completo</label><input id="f-cont-nombre" maxlength="100" type="text" placeholder="Nombre y apellidos"></div>
+      <div class="field"><label class="field-label">Relación</label><input id="f-cont-relacion" maxlength="50" type="text" placeholder="Ej. Madre, Esposo..."></div>
+      <div class="field"><label class="field-label">Teléfono</label><input id="f-cont-tel" type="tel" placeholder="+506 0000 0000"></div>
     </div>
   </div>
 </div>
@@ -1321,7 +1321,16 @@ function collectData(){
     nombre:         document.getElementById('f-nombre').value||'',
     cedula:         document.getElementById('f-cedula')?document.getElementById('f-cedula').value||'':'',
     direccion:      document.getElementById('f-direccion')?document.getElementById('f-direccion').value||'':'',
-    edad:           document.getElementById('f-edad').value||'',
+    edad:           (function(){
+                      const manual=document.getElementById('f-edad').value||'';
+                      if(manual)return manual;
+                      const fn=document.getElementById('f-fechanac').value||'';
+                      if(!fn)return'';
+                      const b=new Date(fn),t=new Date();
+                      let a=t.getFullYear()-b.getFullYear();
+                      if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))a--;
+                      return(a>0&&a<130)?String(a):'';
+                    })(),
     fechaNacimiento: document.getElementById('f-fechanac')?document.getElementById('f-fechanac').value||'':'',
     sexo:           (document.querySelector('input[name="sexo"]:checked')||{closest:()=>({textContent:''})}).closest('.radio-item').textContent.trim(),
     email:          document.getElementById('f-email').value||'',
@@ -1428,6 +1437,12 @@ function collectData(){
 function submitForm(){
   // Producción: Claude hardcodeado
   window._modeloSel = 'claude';
+  if(!document.getElementById('f-fechanac').value){
+    alert('Por favor indica tu fecha de nacimiento.');
+    goToStep(1);
+    document.getElementById('f-fechanac').focus();
+    return;
+  }
   const consents=document.querySelectorAll('#step-11 .consent-item input[type="checkbox"]');
   if(![...consents].every(c=>c.checked)){
     alert('Por favor acepta todas las declaraciones de consentimiento para continuar.');
