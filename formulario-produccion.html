@@ -393,8 +393,8 @@ textarea:focus{border-color:var(--gold)}
 
 <!-- STEP 4: Intolerancias Alimentarias -->
 <div class="step-panel" id="step-3">
-  <div class="step-title">Intolerancias Alimentarias</div>
-  <div class="step-subtitle">Responde Sí o No a cada síntoma para detectar posibles intolerancias.</div>
+  <div class="step-title">Alimentación y Digestión</div>
+  <div class="step-subtitle">Responde Sí o No a cada síntoma e indícanos tus hábitos alimentarios.</div>
   <div class="divider"></div>
   <div class="yn-row"><span class="yn-label">¿Sientes hinchazón abdominal después de comer? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   <div class="yn-row"><span class="yn-label">¿Tienes gases o flatulencias frecuentes? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
@@ -409,6 +409,24 @@ textarea:focus{border-color:var(--gold)}
   <div class="yn-row"><span class="yn-label">¿Dificultad para bajar de peso a pesar de comer bien? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   <div class="yn-row"><span class="yn-label">¿Náuseas o malestar general con algunos alimentos? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   <div class="yn-row" style="display:none"><span class="yn-label">¿Antecedentes familiares de intolerancias o alergias? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
+
+  <div class="subsection" style="margin-top:24px">
+    <div class="subsection-title">Hábitos alimentarios</div>
+    <div class="form-grid">
+      <div class="field"><label class="field-label">¿Cuántas comidas al día? <span class="req">*</span></label>
+        <select id="f-comidas" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4+">4+</option>
+        </select>
+      </div>
+    </div>
+    <div class="yn-row" style="display:none"><span class="yn-label">¿Consume bebidas azucaradas? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
+    <div class="form-grid" style="margin-top:10px;display:none"><div class="field full"><label class="field-label">Si es Sí, ¿cuáles?</label><input id="f-bebidas-cuales" maxlength="150" type="text" placeholder="Ej. refrescos, jugos industriales..."></div></div>
+    <div class="field" style="margin-top:16px"><label class="field-label">Observaciones adicionales sobre hábitos u objetivos</label><textarea id="f-nota-alim" placeholder="Información adicional relevante..." maxlength="300" oninput="updateCounter('f-nota-alim', 300)"></textarea><span class="char-counter" id="cnt-f-nota-alim">300</span></div>
+  </div>
 
   <div class="subsection" style="margin-top:24px;display:none">
     <div class="subsection-title">Síntomas por grupo de alimento</div>
@@ -430,119 +448,6 @@ textarea:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- STEP 5: Preferencias Alimentarias -->
-<div class="step-panel" id="step-4">
-  <div class="step-title">Preferencias Alimentarias</div>
-  <div class="step-subtitle">Indícanos tus gustos y hábitos de alimentación.</div>
-  <div class="divider"></div>
-
-  <div class="subsection" style="display:none">
-    <div class="subsection-title">Proteínas favoritas</div>
-    <div class="check-grid" id="chk-proteinas">
-      <label class="check-item"><input type="checkbox" value="Pollo"><div class="check-box"></div>Pollo</label>
-      <label class="check-item"><input type="checkbox" value="Pavo"><div class="check-box"></div>Pavo</label>
-      <label class="check-item"><input type="checkbox" value="Pescado"><div class="check-box"></div>Pescado</label>
-      <label class="check-item"><input type="checkbox" value="Mariscos"><div class="check-box"></div>Mariscos</label>
-      <label class="check-item"><input type="checkbox" value="Carne de res"><div class="check-box"></div>Carne de res</label>
-      <label class="check-item"><input type="checkbox" value="Cerdo"><div class="check-box"></div>Cerdo</label>
-      <label class="check-item"><input type="checkbox" value="Huevos"><div class="check-box"></div>Huevos</label>
-      <label class="check-item"><input type="checkbox" value="Legumbres"><div class="check-box"></div>Legumbres</label>
-      <label class="check-item"><input type="checkbox" value="Tofu/Tempeh"><div class="check-box"></div>Tofu / Tempeh</label>
-    </div>
-    <div class="field" style="margin-top:14px"><label class="field-label">Proteínas que NO le gustan o desea evitar</label><input id="f-proteinas-evitar" maxlength="150" type="text" placeholder="Ej. cerdo, mariscos..."></div>
-  </div>
-
-  <div class="subsection" style="display:none">
-    <div class="subsection-title">Carbohidratos favoritos</div>
-    <div class="check-grid" id="chk-carbos">
-      <label class="check-item"><input type="checkbox" value="Arroz blanco"><div class="check-box"></div>Arroz blanco</label>
-      <label class="check-item"><input type="checkbox" value="Arroz integral"><div class="check-box"></div>Arroz integral</label>
-      <label class="check-item"><input type="checkbox" value="Pasta"><div class="check-box"></div>Pasta</label>
-      <label class="check-item"><input type="checkbox" value="Avena"><div class="check-box"></div>Avena</label>
-      <label class="check-item"><input type="checkbox" value="Pan"><div class="check-box"></div>Pan</label>
-      <label class="check-item"><input type="checkbox" value="Tortillas"><div class="check-box"></div>Tortillas</label>
-      <label class="check-item"><input type="checkbox" value="Yuca"><div class="check-box"></div>Yuca</label>
-      <label class="check-item"><input type="checkbox" value="Papa"><div class="check-box"></div>Papa</label>
-      <label class="check-item"><input type="checkbox" value="Batata/Camote"><div class="check-box"></div>Batata / Camote</label>
-    </div>
-    <div class="field" style="margin-top:14px"><label class="field-label">Carbohidratos que NO le gustan o desea evitar</label><input id="f-carbos-evitar" maxlength="150" type="text" placeholder="Ej. pan blanco, arroz..."></div>
-  </div>
-
-  <div class="subsection" style="display:none">
-    <div class="subsection-title">Verduras y Hortalizas</div>
-    <div class="form-grid">
-      <div class="field"><label class="field-label">Verduras que más consume</label><textarea id="f-verduras" placeholder="Ej. espinaca, zanahoria, brócoli..." maxlength="200" oninput="updateCounter('f-verduras', 200)"></textarea><span class="char-counter" id="cnt-f-verduras">200</span></div>
-      <div class="field"><label class="field-label">Verduras que no consume o no tolera</label><textarea id="f-verduras-evitar" placeholder="Ej. coliflor, cebolla..." maxlength="200" oninput="updateCounter('f-verduras-evitar', 200)"></textarea><span class="char-counter" id="cnt-f-verduras-evitar">200</span></div>
-    </div>
-  </div>
-
-  <div class="subsection" style="display:none">
-    <div class="subsection-title">Frutas</div>
-    <div class="form-grid">
-      <div class="field full"><label class="field-label">Frutas que consume habitualmente</label><textarea id="f-frutas" placeholder="Ej. banano, mango, piña..." maxlength="200" oninput="updateCounter('f-frutas', 200)"></textarea><span class="char-counter" id="cnt-f-frutas">200</span></div>
-    </div>
-  </div>
-
-  <div class="subsection" style="display:none">
-    <div class="subsection-title">Grasas saludables que consume</div>
-    <div class="check-grid">
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Aguacate</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Aceite de oliva</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Aceite de coco</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Nueces / Almendras</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Semillas (chía, linaza)</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Mantequilla de maní</label>
-    </div>
-  </div>
-
-  <div class="subsection" style="display:none">
-    <div class="subsection-title">Grasas o frituras que prefiere evitar</div>
-    <div class="check-grid">
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Alimentos fritos</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Manteca / Margarina</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Aceites vegetales procesados</label>
-      <label class="check-item"><input type="checkbox"><div class="check-box"></div>Grasas trans</label>
-    </div>
-    <div class="field" style="margin-top:12px">
-      <label class="field-label">¿Por qué deseas evitarlas?</label>
-      <input id="f-grasas-evitar-porque" maxlength="150" type="text" placeholder="Ej. digestión, salud cardiovascular, recomendación médica...">
-    </div>
-  </div>
-
-  <div class="subsection" style="display:none">
-    <div class="subsection-title">Postres y dulces</div>
-    <div class="form-grid">
-      <div class="field full"><label class="field-label">Postres preferidos o dulces que suele consumir</label><input id="f-postres" type="text" placeholder="Ej. chocolate, helado..." maxlength="150"></div>
-      <div class="field"><label class="field-label">Frecuencia de consumo <span class="req">*</span></label>
-        <select id="f-dulces-frec" required>
-          <option value="" disabled selected>Selecciona…</option>
-          <option value="Diario">Diario</option>
-          <option value="2–3 veces/semana">2–3 veces/semana</option>
-          <option value="1 vez/semana">1 vez/semana</option>
-          <option value="Ocasionalmente">Ocasionalmente</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <div class="subsection">
-    <div class="subsection-title">Otros hábitos alimentarios</div>
-    <div class="form-grid">
-      <div class="field"><label class="field-label">¿Cuántas comidas al día? <span class="req">*</span></label>
-        <select id="f-comidas" required>
-          <option value="" disabled selected>Selecciona…</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4+">4+</option>
-        </select>
-      </div>
-    </div>
-    <div class="yn-row" style="display:none"><span class="yn-label">¿Consume bebidas azucaradas? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
-    <div class="form-grid" style="margin-top:10px;display:none"><div class="field full"><label class="field-label">Si es Sí, ¿cuáles?</label><input id="f-bebidas-cuales" maxlength="150" type="text" placeholder="Ej. refrescos, jugos industriales..."></div></div>
-    <div class="field" style="margin-top:16px"><label class="field-label">Observaciones adicionales sobre hábitos u objetivos</label><textarea id="f-nota-alim" placeholder="Información adicional relevante..." maxlength="300" oninput="updateCounter('f-nota-alim', 300)"></textarea><span class="char-counter" id="cnt-f-nota-alim">300</span></div>
-  </div>
-</div>
 
 <!-- STEP 6: Alergias y Sensibilidades -->
 <div class="step-panel" id="step-5">
@@ -1104,7 +1009,7 @@ textarea:focus{border-color:var(--gold)}
 
 
 <div class="nav" id="nav-bar">
-  <span class="step-counter" id="step-counter">Paso 1 de 10</span>
+  <span class="step-counter" id="step-counter">Paso 1 de 8</span>
   <div style="display:flex;gap:12px">
     <button class="btn btn-outline" id="btn-prev" onclick="changeStep(-1)" style="display:none">Anterior</button>
     <button class="btn btn-primary" id="btn-next" onclick="changeStep(1)">Continuar</button>
@@ -1115,8 +1020,8 @@ textarea:focus{border-color:var(--gold)}
 
 <script>
 let current = 1;
-const total = 9;
-const stepIds = ['step-1','step-2','step-3','step-4','step-5','step-6','step-9','step-10','step-11'];
+const total = 8;
+const stepIds = ['step-1','step-2','step-3','step-5','step-6','step-9','step-10','step-11'];
 
 // ── Sesión — guardado progresivo en Cloudinary ──────────────
 // Se genera una vez al cargar, se reutiliza en cada paso

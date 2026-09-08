@@ -23,6 +23,11 @@ piel (Paso 6); satisfacción (Paso 9); actividad física (Paso 10).
   subsección pasó a llamarse "Contraindicaciones".
 - Layout de 2 columnas en el Paso 1 aprovechando el espacio liberado
   ("¿Cómo nos conociste?" movido al grid principal).
+- Pasos "Intolerancias Alimentarias" y "Preferencias Alimentarias" unificados
+  en un solo paso "Alimentación y Digestión". El paso de Preferencias había
+  quedado con casi todo oculto (solo comidas/día + observaciones visibles).
+  El formulario pasó de 9 a 8 pasos (`stepIds` y `total` actualizados). El
+  panel `step-4` se eliminó del HTML.
 - Ronda previa (mismo día): ocultados Cédula/Pasaporte, Dirección de
   residencia, Contacto de Emergencia y Edad; Fecha de nacimiento pasó a
   obligatoria; la edad se calcula de la fecha de nacimiento.
