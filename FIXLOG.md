@@ -1,5 +1,79 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-09-08: Rediseño de eficiencia del formulario clínico
+
+### Cambio
+
+14 campos de opción única convertidos de grupos de botones/escalas a listas
+desplegables `<select>`: Sexo, Horario laboral, Nº de hijos, ¿Cómo nos
+conociste? (Paso 1); frecuencia de fuma/alcohol, horas y calidad de sueño,
+nivel de estrés (Paso 2); frecuencia de dulces, comidas/día (Paso 4); tipo de
+piel (Paso 6); satisfacción (Paso 9); actividad física (Paso 10).
+
+- Sección "Condiciones hormonales" ahora se muestra según el sexo elegido
+  (Femenino → 6 preguntas; Masculino → solo Andropausia; sin sexo elegido →
+  oculta). Campo `andropausia` conectado de cero (collectData →
+  `_mapear_formulario` → docx).
+- Frecuencia de fuma/alcohol: el `<select>` aparece solo si se responde "Sí"
+  (función `toggleFrec`).
+- "Nivel de estrés" dejó de tener subsección propia; el campo vive dentro de
+  "Hábitos de sueño".
+- Eliminada la pregunta duplicada "¿En su familia hay historia de alguna
+  enfermedad relevante?" (Paso 10) — estaba huérfana (no se recolectaba). La
+  subsección pasó a llamarse "Contraindicaciones".
+- Layout de 2 columnas en el Paso 1 aprovechando el espacio liberado
+  ("¿Cómo nos conociste?" movido al grid principal).
+- Ronda previa (mismo día): ocultados Cédula/Pasaporte, Dirección de
+  residencia, Contacto de Emergencia y Edad; Fecha de nacimiento pasó a
+  obligatoria; la edad se calcula de la fecha de nacimiento.
+
+### Archivos modificados
+
+- `formulario-produccion.html`: CSS `select:required:invalid`, HTML de los 14
+  campos, `collectData()`, listeners de sexo/fuma/alcohol/horario, función
+  `toggleFrec`, eliminada subsección "Nivel de estrés" y yn-row duplicado.
+- `app.py`: campo `andropausia` en `_mapear_formulario` (~línea 2874) y en
+  `generar_docx_cuestionario` (`_fila('andropausia', ...)` tras perimenopausia).
+- `autofill-cuestionario.js` / `bookmarklet-cuestionario.js`: helper
+  `setSelect()` + reemplazo de `clickRadio`/`clickScale` por los 14 campos;
+  quitadas llamadas a campos ya ocultos.
+
+### Reversión
+
+- Backup: `formulario-produccion.html.bak` (commit `cb52373`).
+- Tag: `pre-rediseno-formulario`.
+- Revertir HTML: `git checkout pre-rediseno-formulario -- formulario-produccion.html`
+  (el `.bak` ya incluye los 5 campos ocultos de la ronda previa).
+- Revertir `app.py`: quitar manualmente las 2 líneas de `andropausia`.
+- Borrar `formulario-produccion.html.bak` una vez validado en producción.
+
+### Detalle técnico
+
+- El backend recibe los mismos strings que antes: un `<select>` con `<option>`
+  de texto idéntico al label del radio produce el mismo valor. Solo
+  `andropausia` es nuevo.
+- Bug preexistente corregido de paso: `collectData().alcohol` leía la pregunta
+  "Consume alcohol" del panel `step-4` (Preferencias Alimentarias), donde no
+  existe → siempre devolvía "No". Ahora la lee de `step-2` (Condición Actual).
+- Funciones `toggleScale`/`getScaleValue` y CSS `.scale-*` quedan inertes (sin
+  uso) pero no se eliminan.
+
+### Validación
+
+- Server local + agent-browser: los 14 selects renderizan con las opciones
+  correctas; Sexo condiciona la sección hormonal en ambas direcciones;
+  Fuma/Alcohol muestran el select de frecuencia solo al responder "Sí";
+  Horario = Otro muestra el campo libre.
+- Pipeline backend con el payload real de `collectData()`:
+  `_mapear_formulario` (64 claves), `_datos_paciente` (1373 chars) y
+  `generar_docx_cuestionario` corren sin `KeyError`. La fila `andropausia`
+  aparece en el `.docx` con el valor elegido.
+- `sexo`, `numHijos`, `pielTipo`, `nivelEstres`, `satisfaccion`, `actFisica`,
+  `comoConociste`, `horarioLaboral`, `sueno` producen los mismos strings que
+  la versión anterior.
+
+---
+
 ## 2026-08-31: Costo mensual estimado y prioridad a Medicina Estética
 
 ### Cambio
