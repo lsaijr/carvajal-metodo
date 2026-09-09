@@ -389,6 +389,153 @@ textarea:focus{border-color:var(--gold)}
     <div class="yn-row" style="display:none"><span class="yn-label">¿Trabaja en turnos nocturnos o con cambios de horario? <span style="color:var(--gold)">*</span></span><div class="yn-btns"><button class="yn-btn" onclick="toggleYN(this,'yes')">Sí</button><button class="yn-btn" onclick="toggleYN(this,'no')">No</button></div></div>
   </div>
 
+
+  <div class="subsection" style="margin-top:24px">
+    <div class="subsection-title">Alergias y Sensibilidades</div>
+    <div class="yn-row" id="arow-alg_medicamentos">
+      <span class="yn-label">Medicamentos en general</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_medicamentos')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_medicamentos')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_medicamentos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_medicamentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_lidocaina" style="display:none">
+      <span class="yn-label">Lidocaína o anestésicos locales</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_lidocaina')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_lidocaina')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_lidocaina" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_lidocaina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_penicilina" style="display:none">
+      <span class="yn-label">Penicilina u otros antibióticos</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_penicilina')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_penicilina')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_penicilina" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_penicilina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_yodo" style="display:none">
+      <span class="yn-label">Yodopovidona (Isodine)</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_yodo')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_yodo')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_yodo" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_yodo" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_aines" style="display:none">
+      <span class="yn-label">Antiinflamatorios (ibuprofeno, naproxeno, etc.)</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_aines')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_aines')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_aines" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_aines" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_alimentos">
+      <span class="yn-label">Alimentos en general</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_alimentos')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_alimentos')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_alimentos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_alimentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_mariscos" style="display:none">
+      <span class="yn-label">Mariscos o algas</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_mariscos')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_mariscos')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_mariscos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_mariscos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_latex" style="display:none">
+      <span class="yn-label">Látex</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_latex')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_latex')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_latex" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_latex" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_aloe" style="display:none">
+      <span class="yn-label">Aloe vera</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_aloe')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_aloe')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_aloe" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_aloe" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_fragancias" style="display:none">
+      <span class="yn-label">Fragancias o perfumes</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_fragancias')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_fragancias')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_fragancias" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_fragancias" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+    <div class="yn-row" id="arow-alg_otro">
+      <span class="yn-label">Otro</span>
+      <div class="yn-btns">
+        <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_otro')">Sí</button>
+        <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_otro')">No</button>
+      </div>
+    </div>
+    <div id="adet-alg_otro" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
+      <div class="field" style="margin:0">
+        <label class="field-label">¿Qué síntomas o reacción presenta?</label>
+        <input type="text" id="asint-alg_otro" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- STEP 4: Intolerancias Alimentarias -->
@@ -449,155 +596,6 @@ textarea:focus{border-color:var(--gold)}
 </div>
 
 
-<!-- STEP 6: Alergias y Sensibilidades -->
-<div class="step-panel" id="step-5">
-  <div class="step-title">Alergias y Sensibilidades</div>
-  <div class="step-subtitle">Indica si presentas alergia o sensibilidad a alguno de los siguientes.</div>
-  <div class="divider"></div>
-  <div class="yn-row" id="arow-alg_medicamentos">
-    <span class="yn-label">Medicamentos en general</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_medicamentos')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_medicamentos')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_medicamentos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_medicamentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_lidocaina" style="display:none">
-    <span class="yn-label">Lidocaína o anestésicos locales</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_lidocaina')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_lidocaina')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_lidocaina" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_lidocaina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_penicilina" style="display:none">
-    <span class="yn-label">Penicilina u otros antibióticos</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_penicilina')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_penicilina')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_penicilina" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_penicilina" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_yodo" style="display:none">
-    <span class="yn-label">Yodopovidona (Isodine)</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_yodo')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_yodo')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_yodo" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_yodo" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_aines" style="display:none">
-    <span class="yn-label">Antiinflamatorios (ibuprofeno, naproxeno, etc.)</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_aines')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_aines')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_aines" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_aines" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_alimentos">
-    <span class="yn-label">Alimentos en general</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_alimentos')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_alimentos')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_alimentos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_alimentos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_mariscos" style="display:none">
-    <span class="yn-label">Mariscos o algas</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_mariscos')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_mariscos')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_mariscos" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_mariscos" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_latex" style="display:none">
-    <span class="yn-label">Látex</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_latex')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_latex')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_latex" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_latex" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_aloe" style="display:none">
-    <span class="yn-label">Aloe vera</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_aloe')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_aloe')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_aloe" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_aloe" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_fragancias" style="display:none">
-    <span class="yn-label">Fragancias o perfumes</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_fragancias')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_fragancias')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_fragancias" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_fragancias" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-  <div class="yn-row" id="arow-alg_otro">
-    <span class="yn-label">Otro</span>
-    <div class="yn-btns">
-      <button class="yn-btn" onclick="toggleAlergia(this,'yes','alg_otro')">Sí</button>
-      <button class="yn-btn" onclick="toggleAlergia(this,'no','alg_otro')">No</button>
-    </div>
-  </div>
-  <div id="adet-alg_otro" style="display:none;padding:6px 0 12px 16px;border-bottom:1px solid var(--border)">
-    <div class="field" style="margin:0">
-      <label class="field-label">¿Qué síntomas o reacción presenta?</label>
-      <input type="text" id="asint-alg_otro" maxlength="150" placeholder="Ej. urticaria, edema, dificultad respiratoria...">
-    </div>
-  </div>
-</div>
 
 <!-- STEP 7: Historial Quirúrgico y Piel -->
 <div class="step-panel" id="step-6">
@@ -1009,7 +1007,7 @@ textarea:focus{border-color:var(--gold)}
 
 
 <div class="nav" id="nav-bar">
-  <span class="step-counter" id="step-counter">Paso 1 de 8</span>
+  <span class="step-counter" id="step-counter">Paso 1 de 7</span>
   <div style="display:flex;gap:12px">
     <button class="btn btn-outline" id="btn-prev" onclick="changeStep(-1)" style="display:none">Anterior</button>
     <button class="btn btn-primary" id="btn-next" onclick="changeStep(1)">Continuar</button>
@@ -1020,8 +1018,8 @@ textarea:focus{border-color:var(--gold)}
 
 <script>
 let current = 1;
-const total = 8;
-const stepIds = ['step-1','step-2','step-3','step-5','step-6','step-9','step-10','step-11'];
+const total = 7;
+const stepIds = ['step-1','step-2','step-3','step-6','step-9','step-10','step-11'];
 
 // ── Sesión — guardado progresivo en Cloudinary ──────────────
 // Se genera una vez al cargar, se reutiliza en cada paso
@@ -1191,7 +1189,6 @@ function getCheckedValues(containerId){
 function collectData(){
   const s3=document.getElementById('step-2');
   const s4=document.getElementById('step-3');
-  const s6=document.getElementById('step-5');
   const s9=document.getElementById('step-9');
   const s10=document.getElementById('step-10');
 

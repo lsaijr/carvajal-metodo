@@ -26,8 +26,13 @@ piel (Paso 6); satisfacción (Paso 9); actividad física (Paso 10).
 - Pasos "Intolerancias Alimentarias" y "Preferencias Alimentarias" unificados
   en un solo paso "Alimentación y Digestión". El paso de Preferencias había
   quedado con casi todo oculto (solo comidas/día + observaciones visibles).
-  El formulario pasó de 9 a 8 pasos (`stepIds` y `total` actualizados). El
-  panel `step-4` se eliminó del HTML.
+  El panel `step-4` se eliminó del HTML.
+- Paso "Alergias y Sensibilidades" (solo 3 preguntas visibles) movido como
+  subsección al final del paso "Condición Actual" (`step-2`). El panel
+  `step-5` se eliminó del HTML.
+- Con ambas fusiones el formulario pasó de 9 a 7 pasos navegables (`stepIds`,
+  `total` y contador actualizados). `collectData()` lee alergias por id, no
+  por panel, así que el movimiento no afectó el pipeline.
 - Ronda previa (mismo día): ocultados Cédula/Pasaporte, Dirección de
   residencia, Contacto de Emergencia y Edad; Fecha de nacimiento pasó a
   obligatoria; la edad se calcula de la fecha de nacimiento.
