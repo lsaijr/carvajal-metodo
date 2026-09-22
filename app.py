@@ -4248,8 +4248,12 @@ def render_plan(j, d, job_id=''):
     cond = d.get('condicionSistemica','') or ''
     cond_corta = cond[:20] + '…' if len(cond) > 20 else cond
 
-    # Recalcular IMC de forma robusta; si falla, usar el valor almacenado
-    imc_final = _calcular_imc_robusto(d.get('peso'), d.get('estatura')) or d.get('imc', 'N/A')
+    # Recalcular IMC de forma robusta; si falla, usar el valor almacenado.
+    # _calcular_imc_robusto() nunca devuelve un valor falsy (su ruta de error
+    # es el string 'No registrado', que es truthy) — comparar explícitamente
+    # en vez de usar "or", que nunca activaba el fallback.
+    _imc_recalc = _calcular_imc_robusto(d.get('peso'), d.get('estatura'))
+    imc_final = _imc_recalc if _imc_recalc != 'No registrado' else d.get('imc', 'N/A')
 
     replacements = {
         '{{JOB_ID}}': job_id,
