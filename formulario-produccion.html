@@ -1499,7 +1499,7 @@ function validarCamposObligatorios(){
     return err('Por favor indica tu estatura.', 'step-2', document.getElementById('f-estatura'));
   if(!document.getElementById('f-peso').value.trim())
     return err('Por favor indica tu peso.', 'step-2', document.getElementById('f-peso'));
-  if(!ynRespondida(s2, 'sufre de alguna enfermedad'))
+  if(!radioRespondido('enfermedad'))
     return err('Por favor indica si sufres de alguna enfermedad.', 'step-2', null);
   {
     const enf = document.querySelector('input[name="enfermedad"]:checked');
