@@ -881,7 +881,7 @@ textarea:focus{border-color:var(--gold)}
   <div class="subsection">
     <div class="subsection-title">Área de Interés y Expectativas</div>
     <div class="field"><label class="field-label">Áreas FACIALES a tratar <span class="req">*</span></label>
-      <div class="check-grid">
+      <div class="check-grid" id="areas-faciales-grid">
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Arrugas / líneas</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Manchas</label>
         <label class="check-item"><input type="checkbox"><div class="check-box"></div>Flacidez facial</label>
@@ -1461,6 +1461,174 @@ function collectData(){
 
     notasStaff: '',
   };
+}
+
+// ── Validación de campos obligatorios antes de enviar ──
+function validarCamposObligatorios(){
+  const err = (mensaje, stepId, focusEl) => ({ok:false, mensaje, stepId, focusEl:focusEl||null});
+
+  const s2 = document.getElementById('step-2');  // Condición Actual
+  const s3 = document.getElementById('step-3');  // Intolerancias Alimentarias
+  const s5 = document.getElementById('step-5');  // Alergias
+  const s6 = document.getElementById('step-6');  // Historial Quirúrgico y Piel
+  const s9 = document.getElementById('step-9');  // Objetivos
+  const s10 = document.getElementById('step-10'); // Estilo de Vida
+
+  // Paso 1: Datos Personales
+  if(!document.getElementById('f-nombre').value.trim())
+    return err('Por favor indica tu nombre completo.', 'step-1', document.getElementById('f-nombre'));
+  if(!radioRespondido('sexo'))
+    return err('Por favor indica tu sexo.', 'step-1', null);
+  // Fecha de nacimiento ya se valida más abajo en submitForm() con su propio check.
+  if(!document.getElementById('f-celular').value.trim())
+    return err('Por favor indica tu número de celular.', 'step-1', document.getElementById('f-celular'));
+  if(!document.getElementById('f-email').value.trim())
+    return err('Por favor indica tu correo electrónico.', 'step-1', document.getElementById('f-email'));
+  if(!radioRespondido('horario_laboral'))
+    return err('Por favor indica tu horario laboral.', 'step-1', null);
+  {
+    const horarioSelRadio = document.querySelector('input[name="horario_laboral"]:checked');
+    if(horarioSelRadio && horarioSelRadio.value === 'Otro' && !document.getElementById('f-horario-otro').value.trim())
+      return err('Por favor describe tu horario laboral.', 'step-1', document.getElementById('f-horario-otro'));
+  }
+  if(!radioRespondido('num_hijos'))
+    return err('Por favor indica tu número de hijos.', 'step-1', null);
+
+  // Paso 2: Condición Actual
+  if(!document.getElementById('f-estatura').value.trim())
+    return err('Por favor indica tu estatura.', 'step-2', document.getElementById('f-estatura'));
+  if(!document.getElementById('f-peso').value.trim())
+    return err('Por favor indica tu peso.', 'step-2', document.getElementById('f-peso'));
+  if(!ynRespondida(s2, 'sufre de alguna enfermedad'))
+    return err('Por favor indica si sufres de alguna enfermedad.', 'step-2', null);
+  {
+    const enf = document.querySelector('input[name="enfermedad"]:checked');
+    if(enf && enf.closest('.radio-item').textContent.trim()==='Sí' && !document.getElementById('f-enfermedad-det').value.trim())
+      return err('Por favor describe tu enfermedad.', 'step-2', document.getElementById('f-enfermedad-det'));
+  }
+  if(!ynRespondida(s2, 'fuma'))
+    return err('Por favor indica si fumas.', 'step-2', null);
+  if(getYNValue(s2,'fuma')==='Sí' && !radioRespondido('fuma_frec'))
+    return err('Por favor indica con qué frecuencia fumas.', 'step-2', null);
+  if(!ynRespondida(s2, 'consume alcohol'))
+    return err('Por favor indica si consumes alcohol.', 'step-2', null);
+  if(getYNValue(s2,'alcohol')==='Sí' && !radioRespondido('alcohol_frec'))
+    return err('Por favor indica con qué frecuencia consumes alcohol.', 'step-2', null);
+  if(!ynRespondida(s2, 'toma medicamentos'))
+    return err('Por favor indica si tomas medicamentos, vitaminas o suplementos.', 'step-2', null);
+  {
+    const tomaMed = getYNValue(s2, 'toma medicamentos');
+    if(tomaMed==='Sí' && !document.getElementById('f-medicamentos').value.trim())
+      return err('Por favor especifica qué medicamentos tomas.', 'step-2', document.getElementById('f-medicamentos'));
+  }
+  if(!ynRespondida(s2, 'vas al baño todos los días'))
+    return err('Por favor indica si vas al baño todos los días.', 'step-2', null);
+  if(!radioRespondido('horas_sueno'))
+    return err('Por favor indica tu promedio de horas de sueño.', 'step-2', null);
+  if(!radioRespondido('calidad_sueno'))
+    return err('Por favor indica la calidad de tu sueño.', 'step-2', null);
+  if(!ynRespondida(s2, 'cansancio o somnolencia durante el día'))
+    return err('Por favor indica si sientes cansancio durante el día.', 'step-2', null);
+  if(!scaleRespondida('scale-estres'))
+    return err('Por favor indica tu nivel de estrés diario.', 'step-2', null);
+
+  // Paso 3: Intolerancias Alimentarias
+  if(!ynRespondida(s3, 'hinchazón abdominal'))
+    return err('Por favor responde sobre hinchazón abdominal.', 'step-3', null);
+  if(!ynRespondida(s3, 'gases o flatulencias'))
+    return err('Por favor responde sobre gases o flatulencias.', 'step-3', null);
+  if(!ynRespondida(s3, 'dolor de cabeza o migrañas'))
+    return err('Por favor responde sobre dolor de cabeza o migrañas.', 'step-3', null);
+  if(!ynRespondida(s3, 'inflamación en articulaciones'))
+    return err('Por favor responde sobre inflamación en articulaciones.', 'step-3', null);
+  if(!ynRespondida(s3, 'dificultad para bajar de peso'))
+    return err('Por favor responde sobre dificultad para bajar de peso.', 'step-3', null);
+  if(!ynRespondida(s3, 'náuseas o malestar'))
+    return err('Por favor responde sobre náuseas o malestar.', 'step-3', null);
+
+  // Paso 4: Preferencias Alimentarias
+  if(!radioRespondido('comidas'))
+    return err('Por favor indica cuántas comidas haces al día.', 'step-4', null);
+
+  // Paso 5: Alergias
+  if(!ynRespondida(s5, 'medicamentos en general'))
+    return err('Por favor indica si tienes alergia a medicamentos.', 'step-5', null);
+  {
+    const detMed = document.getElementById('adet-alg_medicamentos');
+    if(detMed && detMed.style.display!=='none' && !document.getElementById('asint-alg_medicamentos').value.trim())
+      return err('Por favor describe tu reacción alérgica a medicamentos.', 'step-5', document.getElementById('asint-alg_medicamentos'));
+  }
+  if(!ynRespondida(s5, 'alimentos en general'))
+    return err('Por favor indica si tienes alergia a alimentos.', 'step-5', null);
+  {
+    const detAlim = document.getElementById('adet-alg_alimentos');
+    if(detAlim && detAlim.style.display!=='none' && !document.getElementById('asint-alg_alimentos').value.trim())
+      return err('Por favor describe tu reacción alérgica a alimentos.', 'step-5', document.getElementById('asint-alg_alimentos'));
+  }
+  if(!ynRespondida(s5, 'otro'))
+    return err('Por favor indica si tienes otra alergia.', 'step-5', null);
+  {
+    const detOtro = document.getElementById('adet-alg_otro');
+    if(detOtro && detOtro.style.display!=='none' && !document.getElementById('asint-alg_otro').value.trim())
+      return err('Por favor describe tu otra reacción alérgica.', 'step-5', document.getElementById('asint-alg_otro'));
+  }
+
+  // Paso 6: Historial Quirúrgico y Piel
+  if(!ynRespondida(s6, 'se ha realizado alguna cirugía'))
+    return err('Por favor indica si te has realizado alguna cirugía.', 'step-6', null);
+  {
+    const cir = getYNValue(s6, 'cirugía');
+    if(cir==='Sí' && !document.getElementById('f-cirugias-det').value.trim())
+      return err('Por favor describe tu cirugía.', 'step-6', document.getElementById('f-cirugias-det'));
+  }
+  if(!radioRespondido('tipo_piel'))
+    return err('Por favor indica cómo describirías tu piel.', 'step-6', null);
+
+  // Paso 9: Objetivos y Estética Previa
+  if(!ynRespondida(s9, 'recibido tratamientos estéticos anteriormente'))
+    return err('Por favor indica si has recibido tratamientos estéticos anteriormente.', 'step-9', null);
+  if(!ynRespondida(s9, 'ha tenido complicaciones con algún tratamiento'))
+    return err('Por favor indica si has tenido complicaciones con algún tratamiento.', 'step-9', null);
+  {
+    const complic = getYNValue(s9, 'complicaciones con algún tratamiento');
+    const wrap = document.getElementById('complic-det-wrap');
+    if(complic==='Sí' && wrap && !document.getElementById('f-complic-det').value.trim())
+      return err('Por favor describe las complicaciones que tuviste.', 'step-9', document.getElementById('f-complic-det'));
+  }
+  if(!checkGrupoRespondido('#areas-faciales-grid'))
+    return err('Por favor marca al menos un área facial a tratar.', 'step-9', null);
+  if(!document.getElementById('f-prioridad').value.trim())
+    return err('Por favor indica cuál es tu prioridad principal.', 'step-9', document.getElementById('f-prioridad'));
+  if(!scaleRespondida('scale-satisfaccion'))
+    return err('Por favor indica tu satisfacción actual con el área a tratar.', 'step-9', null);
+  if(!ynRespondida(s9, 'necesitarse múltiples sesiones'))
+    return err('Por favor confirma que entiendes que pueden necesitarse múltiples sesiones.', 'step-9', null);
+
+  // Paso 10: Estilo de Vida y Antecedentes
+  if(!ynRespondida(s10, 'realiza rutina diaria de cuidado facial'))
+    return err('Por favor indica si realizas una rutina diaria de cuidado facial.', 'step-10', null);
+  {
+    const tieneRutina = getYNValue(s10, 'rutina diaria de cuidado facial');
+    if(tieneRutina==='Sí' && !checkGrupoRespondido('#rutina-det-wrap .check-grid'))
+      return err('Por favor marca qué incluye tu rutina actual.', 'step-10', null);
+  }
+  if(!radioRespondido('act_fisica'))
+    return err('Por favor indica tu nivel de actividad física.', 'step-10', null);
+  if(!ynRespondida(s10, 'en su familia hay historia de alguna enfermedad'))
+    return err('Por favor indica si hay antecedentes familiares de enfermedad.', 'step-10', null);
+  if(!ynRespondida(s10, 'alergias a medicamentos o productos tópicos'))
+    return err('Por favor indica si tienes alergias a medicamentos o productos tópicos.', 'step-10', null);
+  if(!ynRespondida(s10, 'marcapasos, implantes metálicos o dispositivos'))
+    return err('Por favor indica si tienes marcapasos o dispositivos médicos.', 'step-10', null);
+  if(!radioRespondido('antecedentes_fam'))
+    return err('Por favor indica si algún familiar directo tiene enfermedades relevantes.', 'step-10', null);
+  {
+    const fam = document.querySelector('input[name="antecedentes_fam"]:checked');
+    if(fam && fam.closest('.radio-item').textContent.trim()==='Sí' && !document.getElementById('f-antecedentes-det').value.trim())
+      return err('Por favor indica cuáles enfermedades tienen tus familiares.', 'step-10', document.getElementById('f-antecedentes-det'));
+  }
+
+  return {ok:true};
 }
 
 function submitForm(){
