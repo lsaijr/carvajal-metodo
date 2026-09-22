@@ -1221,6 +1221,35 @@ function getCheckedValues(containerId){
   });
 }
 
+// ── Helpers de validación de campos obligatorios ──
+function ynRespondida(container, labelText){
+  if(!container) return false;
+  let found = false;
+  container.querySelectorAll('.yn-row').forEach(row=>{
+    if(found) return;
+    const lbl = row.querySelector('.yn-label');
+    if(!lbl) return;
+    const txt = lbl.textContent.replace(/\*/g,'').trim().toLowerCase();
+    if(txt.includes(labelText.toLowerCase())){
+      const ay = row.querySelector('.active-yes');
+      const an = row.querySelector('.active-no');
+      found = !!(ay || an);
+    }
+  });
+  return found;
+}
+function radioRespondido(name){
+  return !!document.querySelector('input[name="'+name+'"]:checked');
+}
+function scaleRespondida(groupId){
+  const group = document.getElementById(groupId);
+  return !!(group && group.querySelector('.scale-btn.active'));
+}
+function checkGrupoRespondido(selector){
+  const cont = document.querySelector(selector);
+  return !!(cont && cont.querySelector('.check-item.checked'));
+}
+
 // ── collectData — mapea exactamente lo que app.py necesita ──
 function collectData(){
   const s3=document.getElementById('step-2');
