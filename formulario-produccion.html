@@ -1640,6 +1640,14 @@ function submitForm(){
     document.getElementById('f-fechanac').focus();
     return;
   }
+  const val = validarCamposObligatorios();
+  if(!val.ok){
+    alert(val.mensaje);
+    const idx = stepIds.indexOf(val.stepId);
+    if(idx >= 0) goToStep(idx + 1);
+    if(val.focusEl) val.focusEl.focus();
+    return;
+  }
   const consents=document.querySelectorAll('#step-11 .consent-item input[type="checkbox"]');
   if(![...consents].every(c=>c.checked)){
     alert('Por favor acepta todas las declaraciones de consentimiento para continuar.');
