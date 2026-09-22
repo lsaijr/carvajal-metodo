@@ -1,5 +1,88 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-09-22 (tarde): Fix de priorización de Medicina Estética en el plan
+
+### Cambio
+
+La dueña de la clínica reportó que los planes generados traían pocos
+tratamientos de "Medicina Estética" y demasiados de "estético general"
+(Remodelación Corporal, Masajes, Rejuvenecimiento con Tecnología).
+
+### Causa raíz
+
+El prompt de `generar_plan_ia()` ya traía instrucciones fuertes para
+priorizar Medicina Estética, y afirmaba literalmente: *"El catálogo
+incluye el campo 'categoria' para cada tratamiento"* — pero
+`_catalogo_a_texto()` (`app.py`) nunca incluía ese campo en el texto real
+que recibe la IA. Cada línea del catálogo solo traía nombre, precios,
+problemas, zonas, etc. La IA debía **adivinar** la categoría de cada
+tratamiento por su nombre, sin ninguna señal explícita — la instrucción
+de priorizar dependía de un dato que nunca llegaba.
+
+Contexto agravante: el catálogo real tiene solo 8 de 34 tratamientos
+(24%) en categoría "Medicina Estética"; el resto es Remodelación
+Corporal, Rejuvenecimiento Facial, Masajes, Rejuvenecimiento con
+Tecnología y Depilación IPL.
+
+### Archivos modificados
+
+- `app.py`, `_catalogo_a_texto()`: agrega `Categoria: {t.get('categoria','')}`
+  a cada línea del catálogo que ve la IA.
+- `app.py`, prompt `generar_plan_ia()`: refuerza la regla existente con una
+  meta orientativa cuantitativa — "al menos la mitad de los tratamientos
+  del plan deben ser categoría Medicina Estetica" — y aclara que el campo
+  `"tipo"` de cada tratamiento recomendado debe basarse en el nuevo campo
+  `Categoria:` visible en el catálogo, no en inferencia por nombre.
+
+### Validación end-to-end (2 envíos reales a producción)
+
+Se reenviaron dos formularios reales vía `agent-browser` directo sobre
+`https://metodo.centrocarvajal.com/formulario` (no local), replicando
+datos de pacientes reales ya existentes, para medir el efecto del fix
+sobre planes generados de verdad con la API de Claude:
+
+| Paciente | Tratamientos totales | Con badge "Medicina Estética" | % |
+|---|---|---|---|
+| Yasmina Carvajal | 13 | 7 | 54% |
+| Glenda Amaya | 12 | 6 | 50% |
+
+Antes del fix, la proporción dependía de que la IA acertara la categoría
+por nombre sin ninguna guía explícita — con el catálogo sesgado 24%/76%
+hacia estético general, el resultado tendía a reflejar ese sesgo del
+catálogo en vez de la prioridad clínica pedida. Con el fix, ambos planes
+superan el 50% pedido en el prompt, muy por encima del 24% base del
+catálogo.
+
+### Nota — mismo envío también confirmó dos fixes anteriores del mismo día
+
+- **IMC en el plan (commit `cdcf229`, ver entrada propia abajo):** Yasmina
+  llegó con estatura agregada (165 cm, antes vacía) → IMC 23.1 mostrado
+  correctamente en el plan HTML. Glenda con sus datos originales
+  (estatura 1.67, formato metros) → IMC 22.6, detectado y calculado bien
+  por `_calcular_imc_robusto()`.
+- **Análisis clínico médico (commit `4042dd0`, ver entrada de validación
+  de campos abajo):** ambos planes trajeron el análisis clínico completo
+  en el correo 2 y en el `.docx` adjunto, generado sin `TypeError`.
+
+### Cómo se verificó (para referencia de próximas veces)
+
+1. `railway link` con el CLI de Railway (ya autenticado como
+   `isai.josue@gmail.com`) para leer `railway logs` en tiempo real y
+   `railway status --json` para confirmar qué commit está realmente
+   desplegado (el dashboard web también sirve para esto, pestaña
+   "Deployments").
+2. Envío real vía `agent-browser` (no local, no simulado) contra el
+   dominio de producción, con nombre de prueba claramente marcado cuando
+   aplica (`"PRUEBA TEST - no es paciente real"`), o datos reales cuando
+   el usuario lo pidió explícitamente (Yasmina, Glenda).
+3. Descarga del `.html` del plan final directo desde la URL de Cloudinary
+   que aparece en los logs del worker (`[worker] Cloudinary plan: ...`),
+   sin depender de que el correo ya haya llegado al cliente de mail local.
+4. Conteo de `<span class="bim-badge-med">` en el HTML descargado para
+   medir la proporción real de tratamientos Medicina Estética vs total.
+
+---
+
 ## 2026-09-22: Validación de campos críticos + fix de análisis médico
 
 ### Cambio
@@ -73,6 +156,61 @@ por sexo) sigue en una rama separada sin pushear — al fusionarse, esta
 validación debe revisarse contra la nueva estructura de pasos (los
 `stepId` de `goToStep()` cambian, y Alergias pasa a vivir dentro de
 "Condición Actual" en vez de tener panel propio).
+
+---
+
+## 2026-09-22 (mañana): IMC mostraba "No registrado" en el plan generado
+
+### Cambio
+
+`render_plan()` (`app.py`) recalcula el IMC al momento de armar el plan
+HTML final, con un fallback pensado para usar el IMC ya calculado antes
+en `_mapear_formulario()` si el recálculo fallara:
+
+```python
+imc_final = _calcular_imc_robusto(d.get('peso'), d.get('estatura')) or d.get('imc', 'N/A')
+```
+
+### Causa raíz
+
+`_calcular_imc_robusto()` **nunca devuelve un valor falsy**: su ruta de
+error es el string `'No registrado'`, que Python evalúa como `True`. El
+`or` de la línea de arriba nunca se activaba — sin importar si el
+recálculo fallaba, `imc_final` quedaba literalmente en el string
+`'No registrado'`, ignorando el fallback a `d.get('imc', 'N/A')` que sí
+podía tener el valor correcto.
+
+Esto pasaba en la práctica cuando `render_plan()` recibía
+`d['estatura']`/`d['peso']` como `None` — lo cual ocurre porque
+`_mapear_formulario()` los guarda como `est or None` / `pes or None`
+cuando el campo llega vacío del formulario (y, antes del fix de
+validación de campos de esa misma tarde, no había ningún bloqueo que
+impidiera enviar el formulario sin estatura).
+
+### Archivos modificados
+
+- `app.py`, `render_plan()`: reemplaza el `or` implícito por una
+  comparación explícita contra el string `'No registrado'`:
+  ```python
+  _imc_recalc = _calcular_imc_robusto(d.get('peso'), d.get('estatura'))
+  imc_final = _imc_recalc if _imc_recalc != 'No registrado' else d.get('imc', 'N/A')
+  ```
+
+### Caso real que motivó el fix
+
+Paciente Yasmina Carvajal (22-sep-2026, envío original): dejó "Estatura"
+vacía → el plan mostraba "No registrado" en vez de un número. Ver
+también la entrada "Validación de campos críticos" (abajo) para el bug
+relacionado que además hacía perder el análisis clínico completo en el
+mismo caso.
+
+### Validación
+
+Reproducción directa en consola con los 3 casos relevantes
+(estatura/peso `None` con IMC ya guardado, estatura/peso válidos,
+estatura/peso `None` sin IMC guardado) — los 3 dieron el resultado
+esperado tras el fix. Confirmado en producción real el mismo día con el
+reenvío de Yasmina (ver arriba): IMC 23.1 mostrado correctamente.
 
 ---
 
