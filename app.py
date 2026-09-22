@@ -3420,7 +3420,8 @@ def _catalogo_a_texto(catalogo):
         combinar = ', '.join(t.get('combinar_con', [])) or '—'
         no_combinar = ', '.join(t.get('no_combinar', [])) or '—'
         lineas.append(
-            f"[{t['nombre']}] Precios: {precios} | "
+            f"[{t['nombre']}] Categoria: {t.get('categoria','')} | "
+            f"Precios: {precios} | "
             f"Problemas: {','.join(t.get('problemas', []))} | "
             f"Zonas: {','.join(t.get('zonas', []))} | "
             f"Grado: {','.join(t.get('grado', []))} | "
@@ -3538,7 +3539,8 @@ REGLAS DE MEDICINA ESTETICA:
 - Evalua primero si un tratamiento de Medicina Estetica resuelve o mejora el objetivo del paciente; solo si no aplica o hay contraindicacion, recurre a tratamientos esteticos generales.
 - En el beneficio de cada tratamiento de Medicina Estetica, explica brevemente por que es la opcion mas efectiva para SU caso.
 - Prefiere incluir mas tratamientos de Medicina Estetica que de estetica general cuando el presupuesto y el perfil lo permitan.
-- Para cada tratamiento recomendado, incluye el campo "tipo" con valor "Medicina Estetica" o "Estetico" segun la categoria del catalogo.
+- Meta orientativa: al menos la mitad de los tratamientos del plan (idealmente mas) deben ser categoria "Medicina Estetica". El catalogo tiene menos tratamientos de Medicina Estetica que de otras categorias, asi que no te limites a incluir solo 1 o 2 — revisa la lista completa marcada "Categoria: Medicina Estetica" antes de recurrir a Remodelacion Corporal, Masajes o Rejuvenecimiento con Tecnologia.
+- Para cada tratamiento recomendado, incluye el campo "tipo" con valor "Medicina Estetica" o "Estetico" segun el campo "Categoria:" que aparece en cada linea del catalogo (usa "Medicina Estetica" solo si dice exactamente esa categoria).
 - NO inventes tratamientos ni precios; usa UNICAMENTE los del catalogo.
 
 {"pilar4":{"titulo":"Optimizacion del Sueno","objetivo":"objetivo personalizado 2-3 lineas","frase_motivacional":"frase corta","frase_posicion":"inicio","protocolo":["paso1","paso2","paso3","paso4","paso5"],"reglas":["regla higiene sueno 1","regla2","regla3"],"tips":[{"texto":"tip especifico con nombre"}]},"pilar5":{"titulo":"Tratamientos Esteticos","objetivo":"objetivo personalizado","frase_motivacional":"frase","frase_posicion":"medio","costo_mensual_estimado":000,"bimestres":[{"periodo":"Bimestre 1","titulo":"titulo enfoque","tratamientos":[{"nombre":"Nombre tratamiento","tipo":"Medicina Estetica","sesiones":"N sesiones","inversion":"$XXX","beneficio":"beneficio concreto"}],"total":000},{"periodo":"Bimestre 2","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"Estetico","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 3","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 4","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 5","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000},{"periodo":"Bimestre 6","titulo":"titulo","tratamientos":[{"nombre":"...","tipo":"...","sesiones":"...","inversion":"$XXX","beneficio":"..."}],"total":000}],"total_anual":0000,"notas_criticas":["nota importante si aplica"],"rutina_am":[{"paso":1,"producto":"producto AM","descripcion":"como y cuando"}],"rutina_pm":[{"paso":1,"producto":"producto PM","descripcion":"como y cuando"}],"tips":[{"texto":"tip"}]},"compromiso":{"parrafo":"parrafo motivacional de cierre 3-4 lineas","resultados":[{"texto":"resultado esperable 1"},{"texto":"resultado esperable 2"},{"texto":"resultado esperable 3"}],"proximos_pasos":["paso concreto 1","paso concreto 2","paso concreto 3"]}}
