@@ -1,5 +1,81 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-09-22: Validación de campos críticos + fix de análisis médico
+
+### Cambio
+
+El formulario ahora bloquea el envío (`submitForm()`) si falta alguno de 42
+campos visibles marcados como críticos para el análisis clínico y la
+generación del plan: datos personales básicos, estatura/peso, condición
+médica general, hábitos (fuma/alcohol/medicamentos), síntomas digestivos
+visibles, alergias (medicamentos/alimentos/otro), tipo de piel, historial
+estético, áreas a tratar, prioridad, satisfacción, actividad física y
+antecedentes familiares — con sus detalles condicionales (ej. "si Sí,
+describa") también obligatorios cuando aplica.
+
+Antes de esto, casi ningún asterisco (`*`) del formulario bloqueaba nada —
+solo era decorativo. Esto permitía enviar el formulario con campos vacíos
+que rompían el pipeline en silencio.
+
+### Caso real que motivó el fix
+
+Paciente Yasmina Carvajal (22-sep-2026): dejó "Estatura" vacía. Efecto:
+- El IMC no pudo calcularse en ningún punto del pipeline (correcto, sin
+  estatura no hay IMC posible — no era el bug, era dato faltante).
+- **Bug real:** `generar_analisis_medico()` (`app.py` línea 2066) hacía
+  `data.get('estatura','') + ' cm'`. Como `_mapear_formulario` guarda
+  `estatura: est or None` cuando el campo llega vacío, y `.get(key,'')`
+  NO aplica el default cuando la clave existe con valor `None` (solo
+  cuando la clave falta), esto era `None + ' cm'` → `TypeError`. El
+  worker capturaba la excepción en silencio (línea 2662,
+  `except Exception as e: print(...)`) y el análisis clínico completo
+  se perdía sin que nadie se enterara.
+
+### Archivos modificados
+
+- `app.py`: `(data.get('estatura') or '') + ' cm'` y análogo para peso —
+  cubre `None`, `''` y clave ausente.
+- `formulario-produccion.html`: helpers `ynRespondida`, `radioRespondido`,
+  `scaleRespondida`, `checkGrupoRespondido`; función
+  `validarCamposObligatorios()` con 42 checks explícitos; enganchada en
+  `submitForm()` antes del check de consentimientos. Id nuevo
+  `areas-faciales-grid` para localizar el check-grid de áreas faciales
+  sin depender del orden del DOM.
+
+### Bug encontrado durante verificación
+
+El check de "¿Sufre de alguna enfermedad?" usaba `ynRespondida()`
+(pensado para `.yn-row`/`toggleYN`), pero ese campo específico es un
+`radio-item` con `name="enfermedad"` — patrón distinto al resto de
+preguntas Sí/No del formulario. Corregido a `radioRespondido('enfermedad')`.
+
+También se confirmó (no corregido, fuera de alcance) un bug preexistente
+en `autofill-cuestionario.js`: `clickYN('Consume alcohol', 'Ocasionalmente')`
+nunca marca nada porque `clickYN` busca un botón con ese texto exacto, pero
+los botones del yn-row son solo "Sí"/"No" — la frecuencia es un campo
+separado. El autofill deja "Consume alcohol" sin responder.
+
+### Validación
+
+- Envío vacío bloquea en el Paso 1 con mensaje del primer campo faltante.
+- Autofill completo + 1 corrección manual (por el bug de alcohol arriba)
+  pasa la validación (`{"ok":true}`).
+- Detalle condicional (enfermedad=Sí sin descripción) bloquea correctamente.
+- Campos en bloques ocultos (Cédula, Dirección, etc.) no bloquean.
+- Pipeline backend (`_mapear_formulario`, concatenación de
+  `generar_analisis_medico`) sin excepción con estatura/peso presentes.
+
+### Nota sobre alcance
+
+Esta validación se aplicó sobre la estructura de 9 pasos que está en
+producción. El rediseño de eficiencia (14 selects, 7 pasos, condiciones
+por sexo) sigue en una rama separada sin pushear — al fusionarse, esta
+validación debe revisarse contra la nueva estructura de pasos (los
+`stepId` de `goToStep()` cambian, y Alergias pasa a vivir dentro de
+"Condición Actual" en vez de tener panel propio).
+
+---
+
 ## 2026-08-31: Costo mensual estimado y prioridad a Medicina Estética
 
 ### Cambio
