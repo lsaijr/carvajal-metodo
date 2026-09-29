@@ -1,5 +1,68 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-09-27: Menú semanal (desayuno/almuerzo/cena) no siempre venía completo
+
+### Cambio
+
+La dueña de la clínica pidió que el plan generado siempre traiga el menú
+semanal con desayuno, almuerzo y cena forzados para los 7 días — no debía
+depender de que la IA "decidiera" incluirlos.
+
+### Causa raíz
+
+El prompt real que usa Claude en producción (`SYS2`, dentro de
+`generar_plan_ia()`) ya traía el ejemplo JSON con la estructura correcta
+(7 días × desayuno/almuerzo/cena/snack), pero **la sección `REGLAS:` no
+decía nada sobre que el menú fuera obligatorio** — la IA solo tenía el
+formato del ejemplo como guía implícita, sin instrucción textual que lo
+exigiera.
+
+Existía una frase que sí lo exigía — *"El menú semanal debe tener
+comidas COMPLETAS y VARIADAS para cada día"* — pero vivía **únicamente
+dentro de `_llamar_groq()`**, un prefijo que solo se antepone cuando se
+usa el modelo Groq (testing). Claude, el modelo real de producción
+(`window._modeloSel = 'claude'` hardcodeado), nunca veía esa instrucción.
+Mismo patrón de bug que el de "Medicina Estética" del 22-sep: una regla
+que existía en un lugar del código pero no en el prompt que realmente
+corre en producción.
+
+### Archivos modificados
+
+- `app.py`, `SYS2` (prompt real de Claude): agrega a la sección `REGLAS:`
+  ```
+  El menu semanal es OBLIGATORIO: los 7 dias (Lunes a Domingo) deben
+  tener desayuno, almuerzo y cena completos y especificos, nunca vacios
+  ni genericos ("ver arriba", "igual que ayer", etc.), y variados entre
+  si dia a dia. El snack es opcional segun el perfil.
+  ```
+
+### Validación end-to-end (envío real a producción)
+
+Formulario de prueba enviado vía `agent-browser` directo contra
+`https://metodo.centrocarvajal.com/formulario`, nombre marcado
+`"PRUEBA MENU TEST - no es paciente real"`. Plan generado y descargado
+directo desde la URL de Cloudinary que aparece en los logs del worker.
+
+| Día | Desayuno | Almuerzo | Cena | Snack |
+|---|---|---|---|---|
+| Lunes a Domingo (7/7) | ✅ | ✅ | ✅ | ✅ (incluido igual, opcional) |
+
+- 7 desayunos únicos, sin repetir entre días.
+- Contenido específico y personalizado (ej. el desayuno del lunes
+  considera el horario de la levotiroxina del perfil clínico simulado).
+- Análisis clínico médico (`generar_analisis_medico`) y correo 2
+  confirmados sin error — el análisis es una sección aparte del menú
+  (diagnóstico/hallazgos/contraindicaciones), no repite las comidas.
+- Confirmado por el usuario: el correo con el `.docx` llegó bien.
+
+### Nota sobre alcance
+
+El menú vive en `pilar1` del plan principal (`generar_plan_ia`, sección
+`SYS2`), no en `generar_analisis_medico()` — son dos generaciones
+separadas de Claude dentro del mismo worker.
+
+---
+
 ## 2026-09-22 (tarde): Fix de priorización de Medicina Estética en el plan
 
 ### Cambio
