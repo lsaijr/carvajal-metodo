@@ -475,7 +475,7 @@
       "nombre": "Presoterapia",
       "categoria": "Remodelación Corporal",
       "ticket": "Medio",
-      "activo": true,
+      "activo": false,
       "precios": [],
       "problemas": [
         "Retención de líquidos/Edema",
@@ -783,7 +783,7 @@
       "nombre": "Tratamientos Despigmentantes (Cosmelan / Melas Peel)",
       "categoria": "Medicina Estética",
       "ticket": "Medio-Alto",
-      "activo": true,
+      "activo": false,
       "precios": [
         {
           "nombre": "Melas Peel 1 sesión",
