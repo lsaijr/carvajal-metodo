@@ -4973,6 +4973,7 @@ tr:last-child td{border-bottom:none}
 .price{font-weight:600;color:var(--dark);white-space:nowrap}
 .sessions{color:var(--gray);font-size:12px}
 .note{font-size:12px;color:var(--gray);padding:16px 20px;border-top:1px solid rgba(0,0,0,.04)}
+.note-row td{font-size:11.5px;color:var(--gray);background:rgba(0,0,0,.015);padding-top:4px;padding-bottom:10px}
 .footer{text-align:center;padding:30px 0;font-size:12px;color:var(--gray)}
 .footer a{color:var(--olive);text-decoration:none}
 @media(max-width:640px){.container{padding:20px 12px}th,td{padding:10px 12px;font-size:12px}}
@@ -4986,80 +4987,218 @@ tr:last-child td{border-bottom:none}
 </header>
 
 <div class="section">
-  <div class="section-header"><h2>Faciales / Despigmentantes</h2><span class="badge">Rostro</span></div>
+  <div class="section-header"><h2>Rostro</h2><span class="badge">Facial</span></div>
   <table>
     <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
-    <tr><td>Cosmelan Kit</td><td class="sessions">Completo</td><td class="price">$600.00</td></tr>
-    <tr><td>Cosmelan Mantenimiento</td><td class="sessions">Kit</td><td class="price">$300.00</td></tr>
-    <tr><td>Melas Peel</td><td class="sessions">3 ses</td><td class="price">$200.00</td></tr>
-    <tr><td>Regenerador Facial</td><td class="sessions">3 ses</td><td class="price">$613.00</td></tr>
-    <tr><td>Regenerador Facial</td><td class="sessions">1 ses</td><td class="price">$313.00</td></tr>
+    <tr><td>Acthyderm Rostro</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Acthyderm Rostro</td><td class="sessions">10 sesiones + kit</td><td class="price">$557.00</td></tr>
+    <tr><td>Beauty Light</td><td class="sessions">1 sesión</td><td class="price">$150.00</td></tr>
+    <tr><td>Beauty Light</td><td class="sessions">6 sesiones + kit</td><td class="price">$650.00</td></tr>
+    <tr><td>Bright Eyes</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Bright Eyes</td><td class="sessions">6 sesiones + kit</td><td class="price">$241.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Rostro, 1 sesión</td><td class="price">$70.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Rostro, 6 sesiones</td><td class="price">$395.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Párpados, 1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Párpados, 6 sesiones</td><td class="price">$258.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Cuello, 1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Cuello, 6 sesiones</td><td class="price">$295.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Cuerpo, 1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Críoradiofrecuencia</td><td class="sessions">Cuerpo, 6 sesiones</td><td class="price">$558.00</td></tr>
+    <tr class="note-row"><td colspan="3">Cada zona incluye su kit de cuidado.</td></tr>
+    <tr><td>Facial</td><td class="sessions">1 sesión</td><td class="price">$40.00</td></tr>
+    <tr class="note-row"><td colspan="3">Se recomienda al menos una vez al mes.</td></tr>
+    <tr><td>Flash Rostro</td><td class="sessions">1 sesión</td><td class="price">$394.00</td></tr>
+    <tr class="note-row"><td colspan="3">Precio con descuento aplicado (precio regular: $563, con kit incluido).</td></tr>
+    <tr><td>Foto Facial</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Foto Facial</td><td class="sessions">3 sesiones + kit</td><td class="price">$367.00</td></tr>
+    <tr><td>Gleaming Skin</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Gleaming Skin</td><td class="sessions">6 sesiones + kit</td><td class="price">$616.00</td></tr>
+    <tr><td>Hidratación piel Sensible</td><td class="sessions">1 sesión</td><td class="price">$80.00</td></tr>
+    <tr><td>Hidratación piel Sensible</td><td class="sessions">3 sesiones + kit</td><td class="price">$236.00</td></tr>
+    <tr><td>Hidrofacial</td><td class="sessions">1 sesión</td><td class="price">$90.00</td></tr>
+    <tr><td>Hidrorenovador</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Hidrorenovador</td><td class="sessions">3 sesiones + kit</td><td class="price">$305.00</td></tr>
+    <tr><td>HIFU Párpados</td><td class="sessions">Párpados (1 sesión)</td><td class="price">$233.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye kit: Cicastim y Bio Oil.</td></tr>
+    <tr><td>HIFU Rostro y Cuello</td><td class="sessions">Rostro</td><td class="price">$463.00</td></tr>
+    <tr><td>HIFU Rostro y Cuello</td><td class="sessions">Cuello</td><td class="price">$313.00</td></tr>
+    <tr><td>HIFU Rostro y Cuello</td><td class="sessions">Rostro y cuello</td><td class="price">$633.00</td></tr>
+    <tr class="note-row"><td colspan="3">Precio por sesión. Cada área incluye su kit: banda tensora, Teatrical y Cicastim ACM; rostro y rostro y cuello incluyen además suero Academie.</td></tr>
+    <tr><td>Línea Sup/Inf de Párpados</td><td class="sessions">Línea superior o inferior (por área)</td><td class="price">$100.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
+    <tr><td>Luz Anti-Acné</td><td class="sessions">1 sesión</td><td class="price">$140.00</td></tr>
+    <tr><td>Luz Anti-Acné</td><td class="sessions">3 sesiones + kit</td><td class="price">$290.00</td></tr>
+    <tr><td>Maquillaje Semi-Permanente</td><td class="sessions">Sombreado de cejas</td><td class="price">$150.00</td></tr>
+    <tr><td>Maquillaje Semi-Permanente</td><td class="sessions">Microblading</td><td class="price">$200.00</td></tr>
+    <tr><td>Maquillaje Semi-Permanente</td><td class="sessions">Línea de párpado superior o inferior (por área)</td><td class="price">$100.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
+    <tr><td>Microblading de Cejas</td><td class="sessions">Microblading</td><td class="price">$200.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
+    <tr><td>Microdermoabrasión</td><td class="sessions">1 sesión</td><td class="price">$45.00</td></tr>
+    <tr><td>Péptidos de Párpados</td><td class="sessions">1 sesión</td><td class="price">$70.00</td></tr>
+    <tr><td>Péptidos de Párpados</td><td class="sessions">3 sesiones + kit</td><td class="price">$187.00</td></tr>
+    <tr><td>Péptidos Rejuvenecedores</td><td class="sessions">1 sesión</td><td class="price">$200.00</td></tr>
+    <tr><td>Péptidos Rejuvenecedores</td><td class="sessions">3 sesiones + kit</td><td class="price">$544.00</td></tr>
+    <tr><td>Sombreado de Cejas</td><td class="sessions">Sombreado de cejas</td><td class="price">$150.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
+    <tr><td>Tratamiento de Novia</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Tratamiento de Novia</td><td class="sessions">3 sesiones + kit</td><td class="price">$354.00</td></tr>
+    <tr><td>Velo de Colágeno</td><td class="sessions">1 sesión</td><td class="price">$40.00</td></tr>
+    <tr><td>Vita C Peel</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Vita C Peel</td><td class="sessions">3 sesiones + kit</td><td class="price">$286.00</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-header"><h2>Medicina Estética</h2><span class="badge">Inyectables y paquetes</span></div>
+  <table>
+    <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
+    <tr><td>Evaluación médica</td><td class="sessions">Primera de cortesía</td><td class="price">$45.00</td></tr>
+    <tr class="note-row"><td colspan="3">La primera evaluación es de cortesía; $45.00 es su valor regular.</td></tr>
+    <tr><td>Capilar Plus</td><td class="sessions">Paquete</td><td class="price">$499.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: plasma capilar (2 sesiones) + kit de uso en casa. Valor de los tratamientos por separado: $555.</td></tr>
+    <tr><td>De age Treatment</td><td class="sessions">Paquete</td><td class="price">$975.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: 20 hilos Screw + 20 hilos Mono + toxina botulínica (30 unidades). Valor de los tratamientos por separado: $1,950.</td></tr>
     <tr><td>Fine Lift</td><td class="sessions">Paquete</td><td class="price">$999.00</td></tr>
-    <tr><td>Skin Lift Pro</td><td class="sessions">1 ses</td><td class="price">$600.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: toxina botulínica (15 unidades) + relleno Deep (1 cc) + 10 hilos Screw + 10 hilos Mono. Valor de los tratamientos por separado: $1,375.</td></tr>
+    <tr><td>Hilo Monofilamento</td><td class="sessions">1 hilo</td><td class="price">$25.00</td></tr>
+    <tr><td>Hilo Monofilamento</td><td class="sessions">Paquete de 20 hilos (promoción especial)</td><td class="price">$250.00</td></tr>
+    <tr><td>Hilos Screw</td><td class="sessions">1 hilo</td><td class="price">$50.00</td></tr>
+    <tr><td>Hilos Screw</td><td class="sessions">Paquete de 20 hilos (promoción especial)</td><td class="price">$500.00</td></tr>
+    <tr><td>Melas Peel</td><td class="sessions">1 sesión</td><td class="price">$80.00</td></tr>
+    <tr><td>Melas Peel</td><td class="sessions">3 sesiones sin kit</td><td class="price">$200.00</td></tr>
+    <tr><td>Melas Peel</td><td class="sessions">3 sesiones con kit</td><td class="price">$270.00</td></tr>
+    <tr><td>Melas Peel J2 Espalda</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Melas Peel J2 Espalda</td><td class="sessions">3 sesiones sin kit</td><td class="price">$301.00</td></tr>
+    <tr><td>Peeling Periocular Mesoestetic</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Peeling Periocular Mesoestetic</td><td class="sessions">3 sesiones + kit</td><td class="price">$176.70</td></tr>
+    <tr><td>Plasma</td><td class="sessions">1 sesión</td><td class="price">$200.00</td></tr>
+    <tr class="note-row"><td colspan="3">Zona adicional: $50 más por sesión.</td></tr>
+    <tr><td>Plasma Gel</td><td class="sessions">1 sesión</td><td class="price">$250.00</td></tr>
+    <tr><td>Regenerador Facial</td><td class="sessions">1 sesión</td><td class="price">$313.00</td></tr>
+    <tr><td>Regenerador Facial</td><td class="sessions">3 sesiones</td><td class="price">$550.00</td></tr>
+    <tr class="note-row"><td colspan="3">Plasma rico en plaquetas + microagujas. Incluye Cicastim.</td></tr>
+    <tr><td>Relleno Deep</td><td class="sessions">1 blister</td><td class="price">$400.00</td></tr>
+    <tr class="note-row"><td colspan="3">50% de descuento en el 2.º blister. El descuento aplica si los blisters se aplican el mismo día.</td></tr>
+    <tr><td>Relleno Derm</td><td class="sessions">1 blister</td><td class="price">$300.00</td></tr>
+    <tr class="note-row"><td colspan="3">50% de descuento en el 2.º blister. El descuento aplica si los blisters se aplican el mismo día.</td></tr>
+    <tr><td>Relleno Face Shape</td><td class="sessions">1 blister</td><td class="price">$500.00</td></tr>
+    <tr class="note-row"><td colspan="3">50% de descuento en el 2.º blister y 25% en el 3.º. El descuento aplica si los blisters se aplican el mismo día.</td></tr>
+    <tr><td>Skin Lift Pro</td><td class="sessions">1 sesión</td><td class="price">$600.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye, a la semana, una sesión de péptidos (PDRN, Hylagen o Hyladerm) y un kit de uso en casa: limpiador y crema Garnier vitamina C e iluminador Uresim.</td></tr>
     <tr><td>Total Lift</td><td class="sessions">Paquete</td><td class="price">$1,300.00</td></tr>
-    <tr><td>De Age Treatment</td><td class="sessions">Paquete</td><td class="price">$975.00</td></tr>
-    <tr><td>Blanqueamiento Facial</td><td class="sessions">6 ses</td><td class="price">$266.00</td></tr>
-    <tr><td>Plasma Facial</td><td class="sessions">1 ses</td><td class="price">$200.00</td></tr>
-    <tr><td>Plasma Gel</td><td class="sessions">1 ses</td><td class="price">$250.00</td></tr>
-    <tr><td>Peeling Periocular</td><td class="sessions">3 ses</td><td class="price">$151.00</td></tr>
-    <tr><td>Acthyderm Rostro</td><td class="sessions">3 ses</td><td class="price">$334.00</td></tr>
-    <tr><td>Péptidos Rejuvenecedores Rostro</td><td class="sessions">3 ses</td><td class="price">$544.00</td></tr>
-    <tr><td>Péptidos Párpados</td><td class="sessions">3 ses</td><td class="price">$187.00</td></tr>
-    <tr><td>Foto Facial</td><td class="sessions">3 ses</td><td class="price">$367.00</td></tr>
-    <tr><td>Gleaming Skin</td><td class="sessions">6 ses</td><td class="price">$616.00</td></tr>
-    <tr><td>Beauty Light</td><td class="sessions">2 ses</td><td class="price">$300.00</td></tr>
-    <tr><td>Bright Eyes</td><td class="sessions">6 ses</td><td class="price">$241.00</td></tr>
-    <tr><td>Hidratación Piel</td><td class="sessions">3 ses</td><td class="price">$236.00</td></tr>
-    <tr><td>Vita C Peel</td><td class="sessions">3 ses</td><td class="price">$286.00</td></tr>
-    <tr><td>Hidrofacial</td><td class="sessions">Por sesión</td><td class="price">$90.00</td></tr>
-    <tr><td>Microdermoabrasión</td><td class="sessions">Por sesión</td><td class="price">$45.00</td></tr>
-    <tr><td>Luz Anti-Acné</td><td class="sessions">3 ses</td><td class="price">$290.00</td></tr>
-    <tr><td>Toxina Botulínica</td><td class="sessions">30 u</td><td class="price">$450.00</td></tr>
-    <tr><td>Toxina Botulínica</td><td class="sessions">50 u</td><td class="price">$750.00</td></tr>
-    <tr><td>Hilos PDO</td><td class="sessions">1 ses</td><td class="price">$800.00</td></tr>
-    <tr><td>Rellenos / Ácido Hialurónico</td><td class="sessions">Criterio médico</td><td class="price">—</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: 10 hilos Screw + 10 hilos Mono + toxina botulínica (30 unidades) + plasma gel (1 sesión) + plasma rico en plaquetas. Valor de los tratamientos por separado: $1,450.</td></tr>
+    <tr><td>Toxina Botulínica</td><td class="sessions">1 unidad</td><td class="price">$12.50</td></tr>
+    <tr class="note-row"><td colspan="3">La cantidad de unidades depende de las zonas a tratar y se define en la evaluación médica.</td></tr>
+    <tr><td>Urban Treatment</td><td class="sessions">Paquete</td><td class="price">$613.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: plasma rico en plaquetas (1 sesión) + relleno Face Shape (1 cc). Valor de los tratamientos por separado: $713.</td></tr>
   </table>
 </div>
 
 <div class="section">
-  <div class="section-header"><h2>Corporales</h2><span class="badge">Cuerpo</span></div>
+  <div class="section-header"><h2>Cuerpo</h2><span class="badge">Corporal</span></div>
   <table>
     <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
-    <tr><td>EXILIS Abdomen</td><td class="sessions">8 ses</td><td class="price">$1,000.00</td></tr>
-    <tr><td>Lipoláser</td><td class="sessions">10 ses</td><td class="price">$558.00</td></tr>
-    <tr><td>Sculped Body</td><td class="sessions">12 ses</td><td class="price">$458.00</td></tr>
-    <tr><td>Cellulite Shock / BTL X-Wave</td><td class="sessions">10 ses</td><td class="price">$790.00</td></tr>
-    <tr><td>Electro Fit / Gimnasia Pasiva</td><td class="sessions">12 ses</td><td class="price">$408.00</td></tr>
-    <tr><td>Tensor Cuerpo RF</td><td class="sessions">8 ses</td><td class="price">$808.00</td></tr>
-    <tr><td>Acthyderm Cuerpo</td><td class="sessions">12 ses</td><td class="price">$783.00</td></tr>
-    <tr><td>Post Parto</td><td class="sessions">10 ses</td><td class="price">$218.00</td></tr>
-    <tr><td>Blanqueamiento Corporal</td><td class="sessions">6 ses</td><td class="price">$266.00</td></tr>
+    <tr><td>Acthyderm Brazos</td><td class="sessions">1 sesión</td><td class="price">$60.00</td></tr>
+    <tr><td>Acthyderm Brazos</td><td class="sessions">12 sesiones</td><td class="price">$533.00</td></tr>
+    <tr><td>Acthyderm Cuerpo</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Acthyderm Cuerpo</td><td class="sessions">12 sesiones</td><td class="price">$783.00</td></tr>
+    <tr><td>Blanqueamiento por área</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Blanqueamiento por área</td><td class="sessions">5 sesiones + kit</td><td class="price">$293.60</td></tr>
+    <tr><td>Cellulite Shock</td><td class="sessions">1 sesión</td><td class="price">$79.00</td></tr>
+    <tr><td>Cellulite Shock</td><td class="sessions">10 sesiones + kit</td><td class="price">$790.00</td></tr>
+    <tr><td>Electro Fit</td><td class="sessions">1 sesión</td><td class="price">$40.00</td></tr>
+    <tr><td>Electro Fit</td><td class="sessions">12 sesiones</td><td class="price">$408.00</td></tr>
+    <tr><td>Exilis Cuerpo por Área</td><td class="sessions">1 sesión</td><td class="price">$200.00</td></tr>
+    <tr><td>Exilis Cuerpo por Área</td><td class="sessions">8 sesiones</td><td class="price">$1,000.00</td></tr>
+    <tr class="note-row"><td colspan="3">Áreas disponibles: abdomen alto, abdomen bajo, costados, espalda (línea del brassier), brazos, muslos internos, muslos externos, rodilla y pecho masculino.</td></tr>
+    <tr><td>FisioTape</td><td class="sessions">1 sesión</td><td class="price">$25.00</td></tr>
+    <tr><td>FisioTape</td><td class="sessions">10 sesiones</td><td class="price">$258.00</td></tr>
+    <tr><td>HIFU Cuerpo</td><td class="sessions">Escote</td><td class="price">$500.00</td></tr>
+    <tr><td>HIFU Cuerpo</td><td class="sessions">Brazos</td><td class="price">$600.00</td></tr>
+    <tr><td>HIFU Cuerpo</td><td class="sessions">Abdomen y flancos</td><td class="price">$750.00</td></tr>
+    <tr><td>HIFU Cuerpo</td><td class="sessions">Abdomen</td><td class="price">$500.00</td></tr>
+    <tr><td>HIFU Cuerpo</td><td class="sessions">Flancos</td><td class="price">$500.00</td></tr>
+    <tr><td>HIFU Cuerpo</td><td class="sessions">Muslos internos y externos</td><td class="price">$750.00</td></tr>
+    <tr><td>HIFU Cuerpo</td><td class="sessions">Muslos internos o externos</td><td class="price">$500.00</td></tr>
+    <tr class="note-row"><td colspan="3">Precio por sesión. Cada área incluye su kit de cuidado (gel lipolítico, Bio Oil, bandas o faja según la zona).</td></tr>
+    <tr><td>Lipolaser Contourning</td><td class="sessions">1 sesión</td><td class="price">$75.00</td></tr>
+    <tr><td>Lipolaser Contourning</td><td class="sessions">10 sesiones</td><td class="price">$558.00</td></tr>
+    <tr><td>Post Parto</td><td class="sessions">1 sesión</td><td class="price">$25.00</td></tr>
+    <tr><td>Post Parto</td><td class="sessions">10 sesiones</td><td class="price">$218.00</td></tr>
+    <tr><td>Sculpted Body</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Sculpted Body</td><td class="sessions">12 sesiones</td><td class="price">$458.00</td></tr>
+    <tr><td>Tensor de Cuerpo</td><td class="sessions">1 sesión</td><td class="price">$150.00</td></tr>
+    <tr><td>Tensor de Cuerpo</td><td class="sessions">8 sesiones</td><td class="price">$808.00</td></tr>
   </table>
 </div>
 
 <div class="section">
-  <div class="section-header"><h2>Capilares</h2><span class="badge">Cabello</span></div>
+  <div class="section-header"><h2>Masajes y Más</h2><span class="badge">Bienestar</span></div>
   <table>
     <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
-    <tr><td>Plasma Capilar</td><td class="sessions">2 ses</td><td class="price">$400.00</td></tr>
-    <tr><td>Capilar Plus</td><td class="sessions">2 ses</td><td class="price">$499.00</td></tr>
+    <tr><td>Exfoliación Corporal</td><td class="sessions">1 sesión</td><td class="price">$45.00</td></tr>
+    <tr><td>Exfoliación Corporal</td><td class="sessions">3 sesiones</td><td class="price">$90.00</td></tr>
+    <tr><td>Masaje con Piedras Volcánicas</td><td class="sessions">1 sesión</td><td class="price">$60.00</td></tr>
+    <tr><td>Masaje con Piedras Volcánicas</td><td class="sessions">3 sesiones</td><td class="price">$120.00</td></tr>
+    <tr><td>Masaje Facial con Péptidos</td><td class="sessions">1 sesión</td><td class="price">$70.00</td></tr>
+    <tr><td>Masaje Facial con Péptidos</td><td class="sessions">3 sesiones</td><td class="price">$140.00</td></tr>
+    <tr><td>Parafina en Espalda</td><td class="sessions">1 sesión</td><td class="price">$60.00</td></tr>
+    <tr><td>Parafina en Espalda</td><td class="sessions">3 sesiones</td><td class="price">$120.00</td></tr>
+    <tr><td>Parafina Manos / Pies</td><td class="sessions">1 sesión</td><td class="price">$15.00</td></tr>
+    <tr><td>Parafina Manos / Pies</td><td class="sessions">3 sesiones</td><td class="price">$30.00</td></tr>
+    <tr><td>Piernas Cansadas</td><td class="sessions">1 sesión</td><td class="price">$60.00</td></tr>
+    <tr><td>Piernas Cansadas</td><td class="sessions">3 sesiones</td><td class="price">$120.00</td></tr>
   </table>
 </div>
 
 <div class="section">
   <div class="section-header"><h2>Depilación IPL</h2><span class="badge">Luz pulsada</span></div>
   <table>
-    <tr><th>Zona</th><th>Sesiones</th><th>Precio</th></tr>
-    <tr><td>IPL Facial</td><td class="sessions">6 ses</td><td class="price">$350.00</td></tr>
-    <tr><td>IPL Axilas</td><td class="sessions">6 ses</td><td class="price">$350.00</td></tr>
-    <tr><td>IPL Piernas</td><td class="sessions">8 ses</td><td class="price">$650.00</td></tr>
-    <tr><td>IPL Brasileño</td><td class="sessions">8 ses</td><td class="price">$600.00</td></tr>
+    <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
+    <tr><td>Depilación IPL de Abdomen, Pecho y Espalda</td><td class="sessions">Línea del ombligo, 1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Depilación IPL de Abdomen, Pecho y Espalda</td><td class="sessions">Línea del ombligo, 6 sesiones</td><td class="price">$150.00</td></tr>
+    <tr><td>Depilación IPL de Abdomen, Pecho y Espalda</td><td class="sessions">Abdomen, 1 sesión</td><td class="price">$140.00</td></tr>
+    <tr><td>Depilación IPL de Abdomen, Pecho y Espalda</td><td class="sessions">Abdomen, 6 sesiones</td><td class="price">$500.00</td></tr>
+    <tr><td>Depilación IPL de Abdomen, Pecho y Espalda</td><td class="sessions">Pecho y espalda, 1 sesión</td><td class="price">$250.00</td></tr>
+    <tr><td>Depilación IPL de Abdomen, Pecho y Espalda</td><td class="sessions">Pecho y espalda, 6 sesiones</td><td class="price">$550.00</td></tr>
+    <tr class="note-row"><td colspan="3">Garantía: si al terminar las 6 sesiones no ves resultados, te damos 6 sesiones más de cortesía.</td></tr>
+    <tr><td>Depilación IPL de Axilas</td><td class="sessions">Axilas, 1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Depilación IPL de Axilas</td><td class="sessions">Axilas, 6 sesiones</td><td class="price">$300.00</td></tr>
+    <tr class="note-row"><td colspan="3">Garantía: si al terminar las 6 sesiones no ves resultados, te damos 6 sesiones más de cortesía.</td></tr>
+    <tr><td>Depilación IPL de Bikini y Glúteos</td><td class="sessions">Línea del bikini, 1 sesión</td><td class="price">$120.00</td></tr>
+    <tr><td>Depilación IPL de Bikini y Glúteos</td><td class="sessions">Línea del bikini, 6 sesiones</td><td class="price">$350.00</td></tr>
+    <tr><td>Depilación IPL de Bikini y Glúteos</td><td class="sessions">Bikini y pubis, 1 sesión</td><td class="price">$200.00</td></tr>
+    <tr><td>Depilación IPL de Bikini y Glúteos</td><td class="sessions">Bikini y pubis, 6 sesiones</td><td class="price">$450.00</td></tr>
+    <tr><td>Depilación IPL de Bikini y Glúteos</td><td class="sessions">Línea del glúteo, 1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Depilación IPL de Bikini y Glúteos</td><td class="sessions">Línea del glúteo, 6 sesiones</td><td class="price">$310.00</td></tr>
+    <tr class="note-row"><td colspan="3">Garantía: si al terminar las 6 sesiones no ves resultados, te damos 6 sesiones más de cortesía.</td></tr>
+    <tr><td>Depilación IPL de Brazos</td><td class="sessions">Medio brazo, 1 sesión</td><td class="price">$120.00</td></tr>
+    <tr><td>Depilación IPL de Brazos</td><td class="sessions">Medio brazo, 6 sesiones</td><td class="price">$350.00</td></tr>
+    <tr><td>Depilación IPL de Brazos</td><td class="sessions">Brazo completo, 1 sesión</td><td class="price">$250.00</td></tr>
+    <tr><td>Depilación IPL de Brazos</td><td class="sessions">Brazo completo, 6 sesiones</td><td class="price">$550.00</td></tr>
+    <tr class="note-row"><td colspan="3">Garantía: si al terminar las 6 sesiones no ves resultados, te damos 6 sesiones más de cortesía.</td></tr>
+    <tr><td>Depilación IPL de Piernas</td><td class="sessions">Media pierna, 1 sesión</td><td class="price">$120.00</td></tr>
+    <tr><td>Depilación IPL de Piernas</td><td class="sessions">Media pierna, 6 sesiones</td><td class="price">$350.00</td></tr>
+    <tr><td>Depilación IPL de Piernas</td><td class="sessions">Pierna completa, 1 sesión</td><td class="price">$250.00</td></tr>
+    <tr><td>Depilación IPL de Piernas</td><td class="sessions">Pierna completa, 6 sesiones</td><td class="price">$550.00</td></tr>
+    <tr class="note-row"><td colspan="3">Garantía: si al terminar las 6 sesiones no ves resultados, te damos 6 sesiones más de cortesía.</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Labio superior, 1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Labio superior, 6 sesiones</td><td class="price">$150.00</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Mentón, 1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Mentón, 6 sesiones</td><td class="price">$150.00</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Patillas, 1 sesión</td><td class="price">$50.00</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Patillas, 6 sesiones</td><td class="price">$150.00</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Labio superior, mentón y patillas, 1 sesión</td><td class="price">$150.00</td></tr>
+    <tr><td>Depilación IPL de Rostro</td><td class="sessions">Labio superior, mentón y patillas, 6 sesiones</td><td class="price">$400.00</td></tr>
+    <tr class="note-row"><td colspan="3">Garantía: si al terminar las 6 sesiones no ves resultados, te damos 6 sesiones más de cortesía.</td></tr>
   </table>
   <div class="note">Garantía: 6 sesiones garantizadas. Si al finalizar no hay resultados, 6 sesiones adicionales gratuitas.</div>
 </div>
 
 <div class="footer">
   <p>Centro Carvajal · <a href="https://centrocarvajal.com">centrocarvajal.com</a> · Tel: 263-8134 / 209-4284</p>
+  <p style="margin-top:4px;font-size:11px">Los paquetes marcados “+ kit” incluyen los productos para continuar el cuidado en casa.</p>
   <p style="margin-top:4px;font-size:11px">Precios en USD/Balboas · Sujetos a cambio sin previo aviso · Consulte con nuestro equipo médico</p>
 </div>
 </div>
