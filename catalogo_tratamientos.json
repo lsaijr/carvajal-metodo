@@ -1,7 +1,7 @@
 {
   "version": "2026-06-24",
-  "ultima_actualizacion": "2026-06-24T00:00:00",
-  "notas": "Catálogo inicial extraído de app.py",
+  "ultima_actualizacion": "2026-10-05T00:00:00",
+  "notas": "Precios actualizados al 05/10/2026 con la lista final de centrocarvajal.com (Excel médico y PDF estético del 24/09/26).",
   "tratamientos": [
     {
       "nombre": "Ultra Focus (HIFU)",
@@ -10,15 +10,35 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Fine Lift paquete",
+          "nombre": "HIFU Rostro y Cuello Rostro",
+          "valor": 463
+        },
+        {
+          "nombre": "HIFU Rostro y Cuello Cuello",
+          "valor": 313
+        },
+        {
+          "nombre": "HIFU Rostro y Cuello Rostro y cuello",
+          "valor": 633
+        },
+        {
+          "nombre": "HIFU Párpados Párpados (1 sesión)",
+          "valor": 233
+        },
+        {
+          "nombre": "Flash Rostro 1 sesión",
+          "valor": 394
+        },
+        {
+          "nombre": "Fine Lift Paquete",
           "valor": 999
         },
         {
-          "nombre": "Skin Lift Pro 1ses",
+          "nombre": "Skin Lift Pro 1 sesión",
           "valor": 600
         },
         {
-          "nombre": "Total Lift paquete",
+          "nombre": "Total Lift Paquete",
           "valor": 1300
         }
       ],
@@ -66,7 +86,11 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "EXILIS Abdomen 8ses",
+          "nombre": "Exilis Cuerpo por Área 1 sesión",
+          "valor": 200
+        },
+        {
+          "nombre": "Exilis Cuerpo por Área 8 sesiones",
           "valor": 1000
         }
       ],
@@ -114,7 +138,11 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Cellulite Shock 10ses",
+          "nombre": "Cellulite Shock 1 sesión",
+          "valor": 79
+        },
+        {
+          "nombre": "Cellulite Shock 10 sesiones + kit",
           "valor": 790
         }
       ],
@@ -158,11 +186,19 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Acthyderm Rostro 3ses",
-          "valor": 334
+          "nombre": "Acthyderm Rostro 1 sesión",
+          "valor": 100
         },
         {
-          "nombre": "Acthyderm Cuerpo 12ses",
+          "nombre": "Acthyderm Rostro 10 sesiones + kit",
+          "valor": 557
+        },
+        {
+          "nombre": "Acthyderm Cuerpo 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Acthyderm Cuerpo 12 sesiones",
           "valor": 783
         }
       ],
@@ -207,8 +243,40 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "De Age Treatment paquete",
+          "nombre": "De age Treatment Paquete",
           "valor": 975
+        },
+        {
+          "nombre": "Críoradiofrecuencia Rostro, 1 sesión",
+          "valor": 70
+        },
+        {
+          "nombre": "Críoradiofrecuencia Rostro, 6 sesiones",
+          "valor": 395
+        },
+        {
+          "nombre": "Críoradiofrecuencia Párpados, 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "Críoradiofrecuencia Párpados, 6 sesiones",
+          "valor": 258
+        },
+        {
+          "nombre": "Críoradiofrecuencia Cuello, 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "Críoradiofrecuencia Cuello, 6 sesiones",
+          "valor": 295
+        },
+        {
+          "nombre": "Críoradiofrecuencia Cuerpo, 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Críoradiofrecuencia Cuerpo, 6 sesiones",
+          "valor": 558
         }
       ],
       "problemas": [
@@ -255,20 +323,124 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "IPL Facial 6ses",
+          "nombre": "IPL Rostro – Labio superior, 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "IPL Rostro – Labio superior, 6 sesiones",
+          "valor": 150
+        },
+        {
+          "nombre": "IPL Rostro – Mentón, 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "IPL Rostro – Mentón, 6 sesiones",
+          "valor": 150
+        },
+        {
+          "nombre": "IPL Rostro – Patillas, 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "IPL Rostro – Patillas, 6 sesiones",
+          "valor": 150
+        },
+        {
+          "nombre": "IPL Rostro – Labio superior, mentón y patillas, 1 sesión",
+          "valor": 150
+        },
+        {
+          "nombre": "IPL Rostro – Labio superior, mentón y patillas, 6 sesiones",
+          "valor": 400
+        },
+        {
+          "nombre": "IPL Axilas, 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "IPL Axilas, 6 sesiones",
+          "valor": 300
+        },
+        {
+          "nombre": "IPL Bikini y Glúteos – Línea del bikini, 1 sesión",
+          "valor": 120
+        },
+        {
+          "nombre": "IPL Bikini y Glúteos – Línea del bikini, 6 sesiones",
           "valor": 350
         },
         {
-          "nombre": "IPL Axilas",
+          "nombre": "IPL Bikini y Glúteos – Bikini y pubis, 1 sesión",
+          "valor": 200
+        },
+        {
+          "nombre": "IPL Bikini y Glúteos – Bikini y pubis, 6 sesiones",
+          "valor": 450
+        },
+        {
+          "nombre": "IPL Bikini y Glúteos – Línea del glúteo, 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "IPL Bikini y Glúteos – Línea del glúteo, 6 sesiones",
+          "valor": 310
+        },
+        {
+          "nombre": "IPL Piernas – Media pierna, 1 sesión",
+          "valor": 120
+        },
+        {
+          "nombre": "IPL Piernas – Media pierna, 6 sesiones",
           "valor": 350
         },
         {
-          "nombre": "IPL Piernas 8ses",
-          "valor": 650
+          "nombre": "IPL Piernas – Pierna completa, 1 sesión",
+          "valor": 250
         },
         {
-          "nombre": "IPL Brasileno 8ses",
-          "valor": 600
+          "nombre": "IPL Piernas – Pierna completa, 6 sesiones",
+          "valor": 550
+        },
+        {
+          "nombre": "IPL Brazos – Medio brazo, 1 sesión",
+          "valor": 120
+        },
+        {
+          "nombre": "IPL Brazos – Medio brazo, 6 sesiones",
+          "valor": 350
+        },
+        {
+          "nombre": "IPL Brazos – Brazo completo, 1 sesión",
+          "valor": 250
+        },
+        {
+          "nombre": "IPL Brazos – Brazo completo, 6 sesiones",
+          "valor": 550
+        },
+        {
+          "nombre": "IPL Abdomen, Pecho y Espalda – Línea del ombligo, 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "IPL Abdomen, Pecho y Espalda – Línea del ombligo, 6 sesiones",
+          "valor": 150
+        },
+        {
+          "nombre": "IPL Abdomen, Pecho y Espalda – Abdomen, 1 sesión",
+          "valor": 140
+        },
+        {
+          "nombre": "IPL Abdomen, Pecho y Espalda – Abdomen, 6 sesiones",
+          "valor": 500
+        },
+        {
+          "nombre": "IPL Abdomen, Pecho y Espalda – Pecho y espalda, 1 sesión",
+          "valor": 250
+        },
+        {
+          "nombre": "IPL Abdomen, Pecho y Espalda – Pecho y espalda, 6 sesiones",
+          "valor": 550
         }
       ],
       "problemas": [
@@ -345,12 +517,8 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Toxina Botulinica 30u",
-          "valor": 450
-        },
-        {
-          "nombre": "50u",
-          "valor": 750
+          "nombre": "Toxina Botulínica 1 unidad",
+          "valor": 12.5
         }
       ],
       "problemas": [
@@ -389,7 +557,19 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Plasma Gel 1ses",
+          "nombre": "Relleno Derm 1 blister",
+          "valor": 300
+        },
+        {
+          "nombre": "Relleno Deep 1 blister",
+          "valor": 400
+        },
+        {
+          "nombre": "Relleno Face Shape 1 blister",
+          "valor": 500
+        },
+        {
+          "nombre": "Plasma Gel 1 sesión",
           "valor": 250
         }
       ],
@@ -430,8 +610,20 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Hilos PDO 1ses",
-          "valor": 800
+          "nombre": "Hilo Monofilamento 1 hilo",
+          "valor": 25
+        },
+        {
+          "nombre": "Hilo Monofilamento Paquete de 20 hilos (promoción especial)",
+          "valor": 250
+        },
+        {
+          "nombre": "Hilos Screw 1 hilo",
+          "valor": 50
+        },
+        {
+          "nombre": "Hilos Screw Paquete de 20 hilos (promoción especial)",
+          "valor": 500
         }
       ],
       "problemas": [
@@ -471,12 +663,16 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Plasma Facial 1ses",
+          "nombre": "Plasma 1 sesión",
           "valor": 200
         },
         {
-          "nombre": "Plasma Gel 1ses",
+          "nombre": "Plasma Gel 1 sesión",
           "valor": 250
+        },
+        {
+          "nombre": "Urban Treatment Paquete",
+          "valor": 613
         }
       ],
       "problemas": [
@@ -516,16 +712,40 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Melas Peel 3ses",
+          "nombre": "Melas Peel 1 sesión",
+          "valor": 80
+        },
+        {
+          "nombre": "Melas Peel 3 sesiones sin kit",
           "valor": 200
         },
         {
-          "nombre": "Vita C Peel 3ses",
+          "nombre": "Melas Peel 3 sesiones con kit",
+          "valor": 270
+        },
+        {
+          "nombre": "Vita C Peel 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Vita C Peel 3 sesiones + kit",
           "valor": 286
         },
         {
-          "nombre": "Peeling Periocular 3ses",
-          "valor": 151
+          "nombre": "Peeling Periocular Mesoestetic 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "Peeling Periocular Mesoestetic 3 sesiones + kit",
+          "valor": 176.7
+        },
+        {
+          "nombre": "Melas Peel J2 Espalda 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Melas Peel J2 Espalda 3 sesiones sin kit",
+          "valor": 301
         }
       ],
       "problemas": [
@@ -566,16 +786,16 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Cosmelan Kit",
-          "valor": 600
+          "nombre": "Melas Peel 1 sesión",
+          "valor": 80
         },
         {
-          "nombre": "Mantenimiento",
-          "valor": 300
-        },
-        {
-          "nombre": "Melas Peel 3ses",
+          "nombre": "Melas Peel 3 sesiones sin kit",
           "valor": 200
+        },
+        {
+          "nombre": "Melas Peel 3 sesiones con kit",
+          "valor": 270
         }
       ],
       "problemas": [
@@ -615,12 +835,8 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Capilar Plus 2ses",
+          "nombre": "Capilar Plus Paquete",
           "valor": 499
-        },
-        {
-          "nombre": "Plasma Capilar 2ses",
-          "valor": 400
         }
       ],
       "problemas": [
@@ -655,12 +871,12 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Regenerador Facial 3ses",
-          "valor": 613
+          "nombre": "Regenerador Facial 1 sesión",
+          "valor": 313
         },
         {
-          "nombre": "1ses",
-          "valor": 313
+          "nombre": "Regenerador Facial 3 sesiones",
+          "valor": 550
         }
       ],
       "problemas": [
@@ -703,8 +919,12 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Hidrofacial",
+          "nombre": "Hidrofacial 1 sesión",
           "valor": 90
+        },
+        {
+          "nombre": "Velo de Colágeno 1 sesión",
+          "valor": 40
         }
       ],
       "problemas": [
@@ -743,7 +963,7 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Microdermoabrasion",
+          "nombre": "Microdermoabrasión 1 sesión",
           "valor": 45
         }
       ],
@@ -782,11 +1002,23 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Melas Peel 3ses",
+          "nombre": "Melas Peel 1 sesión",
+          "valor": 80
+        },
+        {
+          "nombre": "Melas Peel 3 sesiones sin kit",
           "valor": 200
         },
         {
-          "nombre": "Vita C Peel 3ses",
+          "nombre": "Melas Peel 3 sesiones con kit",
+          "valor": 270
+        },
+        {
+          "nombre": "Vita C Peel 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Vita C Peel 3 sesiones + kit",
           "valor": 286
         }
       ],
@@ -826,11 +1058,19 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Peptidos Rejuvenecedores 3ses",
+          "nombre": "Péptidos Rejuvenecedores 1 sesión",
+          "valor": 200
+        },
+        {
+          "nombre": "Péptidos Rejuvenecedores 3 sesiones + kit",
           "valor": 544
         },
         {
-          "nombre": "Parpados 3ses",
+          "nombre": "Péptidos de Párpados 1 sesión",
+          "valor": 70
+        },
+        {
+          "nombre": "Péptidos de Párpados 3 sesiones + kit",
           "valor": 187
         }
       ],
@@ -867,16 +1107,36 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Beauty Light 2ses",
-          "valor": 300
+          "nombre": "Beauty Light 1 sesión",
+          "valor": 150
         },
         {
-          "nombre": "Foto Facial 3ses",
+          "nombre": "Beauty Light 6 sesiones + kit",
+          "valor": 650
+        },
+        {
+          "nombre": "Foto Facial 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Foto Facial 3 sesiones + kit",
           "valor": 367
         },
         {
-          "nombre": "Gleaming Skin 6ses",
+          "nombre": "Gleaming Skin 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Gleaming Skin 6 sesiones + kit",
           "valor": 616
+        },
+        {
+          "nombre": "Luz Anti-Acné 1 sesión",
+          "valor": 140
+        },
+        {
+          "nombre": "Luz Anti-Acné 3 sesiones + kit",
+          "valor": 290
         }
       ],
       "problemas": [
@@ -918,7 +1178,11 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Bright Eyes 6ses",
+          "nombre": "Bright Eyes 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "Bright Eyes 6 sesiones + kit",
           "valor": 241
         }
       ],
@@ -956,7 +1220,11 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Hidratacion Piel 3ses",
+          "nombre": "Hidratación piel Sensible 1 sesión",
+          "valor": 80
+        },
+        {
+          "nombre": "Hidratación piel Sensible 3 sesiones + kit",
           "valor": 236
         }
       ],
@@ -992,8 +1260,24 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Blanqueamiento Facial 6ses",
-          "valor": 266
+          "nombre": "Facial 1 sesión",
+          "valor": 40
+        },
+        {
+          "nombre": "Hidrorenovador 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Hidrorenovador 3 sesiones + kit",
+          "valor": 305
+        },
+        {
+          "nombre": "Tratamiento de Novia 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Tratamiento de Novia 3 sesiones + kit",
+          "valor": 354
         }
       ],
       "problemas": [
@@ -1030,7 +1314,11 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Lipolaser 10ses",
+          "nombre": "Lipolaser Contourning 1 sesión",
+          "valor": 75
+        },
+        {
+          "nombre": "Lipolaser Contourning 10 sesiones",
           "valor": 558
         }
       ],
@@ -1072,7 +1360,11 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Electro Fit 12ses",
+          "nombre": "Electro Fit 1 sesión",
+          "valor": 40
+        },
+        {
+          "nombre": "Electro Fit 12 sesiones",
           "valor": 408
         }
       ],
@@ -1114,7 +1406,11 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Post Parto 10ses",
+          "nombre": "Post Parto 1 sesión",
+          "valor": 25
+        },
+        {
+          "nombre": "Post Parto 10 sesiones",
           "valor": 218
         }
       ],
@@ -1155,11 +1451,19 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Sculped Body 12ses",
+          "nombre": "Sculpted Body 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "Sculpted Body 12 sesiones",
           "valor": 458
         },
         {
-          "nombre": "Tensor Cuerpo RF 8ses",
+          "nombre": "Tensor de Cuerpo 1 sesión",
+          "valor": 150
+        },
+        {
+          "nombre": "Tensor de Cuerpo 8 sesiones",
           "valor": 808
         }
       ],
@@ -1202,8 +1506,20 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Acthyderm Cuerpo 12ses",
+          "nombre": "Acthyderm Cuerpo 1 sesión",
+          "valor": 100
+        },
+        {
+          "nombre": "Acthyderm Cuerpo 12 sesiones",
           "valor": 783
+        },
+        {
+          "nombre": "Acthyderm Brazos 1 sesión",
+          "valor": 60
+        },
+        {
+          "nombre": "Acthyderm Brazos 12 sesiones",
+          "valor": 533
         }
       ],
       "problemas": [
@@ -1243,8 +1559,32 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Total Lift paquete",
-          "valor": 1300
+          "nombre": "HIFU Cuerpo Escote",
+          "valor": 500
+        },
+        {
+          "nombre": "HIFU Cuerpo Brazos",
+          "valor": 600
+        },
+        {
+          "nombre": "HIFU Cuerpo Abdomen y flancos",
+          "valor": 750
+        },
+        {
+          "nombre": "HIFU Cuerpo Abdomen",
+          "valor": 500
+        },
+        {
+          "nombre": "HIFU Cuerpo Flancos",
+          "valor": 500
+        },
+        {
+          "nombre": "HIFU Cuerpo Muslos internos y externos",
+          "valor": 750
+        },
+        {
+          "nombre": "HIFU Cuerpo Muslos internos o externos",
+          "valor": 500
         }
       ],
       "problemas": [
@@ -1285,7 +1625,24 @@
       "categoria": "Masajes & Relajación",
       "ticket": "Medio",
       "activo": true,
-      "precios": [],
+      "precios": [
+        {
+          "nombre": "Masaje con Piedras Volcánicas 1 sesión",
+          "valor": 60
+        },
+        {
+          "nombre": "Masaje con Piedras Volcánicas 3 sesiones",
+          "valor": 120
+        },
+        {
+          "nombre": "Masaje Facial con Péptidos 1 sesión",
+          "valor": 70
+        },
+        {
+          "nombre": "Masaje Facial con Péptidos 3 sesiones",
+          "valor": 140
+        }
+      ],
       "problemas": [
         "Estrés",
         "Tensión muscular",
@@ -1318,8 +1675,20 @@
       "activo": true,
       "precios": [
         {
-          "nombre": "Blanqueamiento Corporal 6ses",
-          "valor": 266
+          "nombre": "Exfoliación Corporal 1 sesión",
+          "valor": 45
+        },
+        {
+          "nombre": "Exfoliación Corporal 3 sesiones",
+          "valor": 90
+        },
+        {
+          "nombre": "Blanqueamiento por área 1 sesión",
+          "valor": 50
+        },
+        {
+          "nombre": "Blanqueamiento por área 5 sesiones + kit",
+          "valor": 293.6
         }
       ],
       "problemas": [
@@ -1352,7 +1721,24 @@
       "categoria": "Masajes & Relajación",
       "ticket": "Medio",
       "activo": true,
-      "precios": [],
+      "precios": [
+        {
+          "nombre": "Parafina Manos / Pies 1 sesión",
+          "valor": 15
+        },
+        {
+          "nombre": "Parafina Manos / Pies 3 sesiones",
+          "valor": 30
+        },
+        {
+          "nombre": "Parafina en Espalda 1 sesión",
+          "valor": 60
+        },
+        {
+          "nombre": "Parafina en Espalda 3 sesiones",
+          "valor": 120
+        }
+      ],
       "problemas": [
         "Hidratación/Opacidad",
         "Resequedad"
@@ -1385,7 +1771,16 @@
       "categoria": "Masajes & Relajación",
       "ticket": "Medio",
       "activo": true,
-      "precios": [],
+      "precios": [
+        {
+          "nombre": "Piernas Cansadas 1 sesión",
+          "valor": 60
+        },
+        {
+          "nombre": "Piernas Cansadas 3 sesiones",
+          "valor": 120
+        }
+      ],
       "problemas": [
         "Retención de líquidos/Edema",
         "Piernas cansadas"
@@ -1418,7 +1813,16 @@
       "categoria": "Masajes & Relajación",
       "ticket": "Medio",
       "activo": true,
-      "precios": [],
+      "precios": [
+        {
+          "nombre": "FisioTape 1 sesión",
+          "valor": 25
+        },
+        {
+          "nombre": "FisioTape 10 sesiones",
+          "valor": 258
+        }
+      ],
       "problemas": [
         "Dolor muscular",
         "Soporte postural",
