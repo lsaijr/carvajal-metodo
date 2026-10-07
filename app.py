@@ -2886,6 +2886,7 @@ def _mapear_formulario(f):
         'sintomasDigestivos':  sintomas,
         'notasAlimentacion':   s('notasAlimentacion'),
         'nivelEstres':         s('nivelEstres'),
+        'comidas':             s('comidas'),
         'numHijos':            s('numHijosVal') or s('numHijos'),
         # Contacto emergencia
         'contactoEmergencia':  s('contactoEmergencia'),
@@ -3134,7 +3135,7 @@ Estatura: {est}cm | Peso: {pes}kg | IMC: {imc}
 PIEL: {d['pielTipo']} | Problemas: {', '.join(d['pielProblemas'])}
 Rutina manana: {d['rutinaManana']} | Noche: {d['rutinaNoche']}
 
-HABITOS: Act.fisica: {d['actFisica']} | Sueno: {d['sueno']}
+HABITOS: Act.fisica: {d['actFisica']} | Sueno: {d['sueno']} | Comidas al dia: {d.get('comidas') or 'No especificado'}
 Fuma: {d['fuma']} | Alcohol: {d['alcohol']}
 
 SALUD: {contra_txt}
@@ -4551,6 +4552,7 @@ def email_formulario_inmediato(d, fotos=None):
 
         seccion('Hábitos y objetivos'),
         row('Act. física',         d.get('actFisica','')),
+        row('Comidas al día',      d.get('comidas','')),
         row('Sueño',               d.get('sueno','')),
         row('Hora se despierta',   d.get('horaDespierta','')),
         row('Hora se duerme',      d.get('horaDuerme','')),

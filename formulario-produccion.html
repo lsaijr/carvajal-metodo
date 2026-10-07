@@ -1309,7 +1309,7 @@ function collectData(){
   // Piel problemas (checkboxes step-6)
   const problemasPiel=getCheckedValues('step-6');
   // Áreas faciales y corporales step-9
-  const areasFacialesEl=s9?s9.querySelector('.subsection:nth-of-type(2) .check-grid'):null;
+  const areasFacialesEl=s9?s9.querySelector('#areas-faciales-grid'):null;
   const areasCorporalesEl=s9?s9.querySelectorAll('.check-grid')[1]:null;
   const areasFaciales=areasFacialesEl?[...areasFacialesEl.querySelectorAll('.check-item.checked')].map(i=>i.textContent.trim()):[];
   const areasCorporales=areasCorporalesEl?[...areasCorporalesEl.querySelectorAll('.check-item.checked')].map(i=>i.textContent.trim()):[];
@@ -1402,6 +1402,7 @@ function collectData(){
     areasCorporales:  areasCorporales,
     prioridad:        document.getElementById('f-prioridad').value||'',
     satisfaccion:     document.getElementById('f-satisfaccion').value||'',
+    comidas:          document.getElementById('f-comidas').value||'',
     historialEstetico: historialEstetico,
     historialDetalle:  historialDetalle,
     entiendeSesiones: getYNValue(s9, 'necesitarse múltiples sesiones'),
