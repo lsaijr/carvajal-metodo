@@ -3183,7 +3183,7 @@ def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
                 'system': system_prompt,
                 'messages': [{'role': 'user', 'content': user_msg}],
             },
-            timeout=300
+            timeout=max(300, max_tok // 30)
         )
         elapsed = round(time.time() - t0, 1)
 
@@ -3501,7 +3501,7 @@ El menu semanal es OBLIGATORIO: los 7 dias (Lunes a Domingo) deben tener desayun
         nombre_modelo = 'Groq (Llama)'
     else:
         _llamar = _llamar_claude
-        tok1, tok2, tok3 = 8000, 12000, 10000
+        tok1, tok2, tok3 = 8000, 12000, 16000  # la sección 3 se cortaba con pacientes de muchas contraindicaciones
         nombre_modelo = 'Claude'
 
     actualizar(f'Sección 1/3 — Portada, diagnóstico y rutina diaria... ({nombre_modelo})', 15)
@@ -3552,6 +3552,9 @@ REGLAS: Usar UNICAMENTE tratamientos del catalogo provisto. Verificar contraindi
 
     actualizar(f'Sección 3/3 — Sueño, tratamientos y plan de compromiso... ({nombre_modelo})', 75)
     r3, err = _llamar(3, 3, SYS3, datos, max_tok=tok3)
+    if err and 'truncada' in err:
+        print('[3/3] Respuesta cortada por tokens; reintentando con más espacio...')
+        r3, err = _llamar(3, 3, SYS3, datos, max_tok=tok3 + 6000)
     if err: return {'error': err}
 
     resultado = {}
