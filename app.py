@@ -2899,6 +2899,14 @@ def _mapear_formulario(f):
         'complicacionesDet':   s('complicacionesDet'),
         # Contraindicaciones clínicas adicionales
         'dispositivosMedicos': s('dispositivosMedicos'),
+        'banoDiario':          s('banoDiario'),
+        'dolorCabeza':         s('dolorCabeza'),
+        'inflamacionArticulaciones': s('inflamacionArticulaciones'),
+        'dificultadBajarPeso': s('dificultadBajarPeso'),
+        'tratamientosPrevios': s('tratamientosPrevios'),
+        'complicacionesPrevias': s('complicacionesPrevias'),
+        'alergiaTopicos':      s('alergiaTopicos'),
+        'rutinaIncluye':       lst('rutinaIncluye'),
         # Rutina tarde (campo opcional, puede estar vacío si el formulario no lo tiene)
         'rutinaTarde':         s('rutinaTarde'),
         'declaraciones':       f.get('declaraciones', []),
@@ -3124,8 +3132,46 @@ def _datos_paciente(d):
     est = d.get('estatura', '')
     pes = d.get('peso', '')
     imc = d.get('imc', 'No registrado')
+    def _si(x):
+        return str(x or '').strip().lower() in ('si', 'sí', 'yes')
+
     contra_activas = [k for k, v in d.get('contraindications', {}).items() if v == 'Si']
+    if _si(d.get('dispositivosMedicos')):
+        contra_activas.append('Marcapasos, implantes metalicos o dispositivos medicos')
+    if _si(d.get('alergiaTopicos')):
+        contra_activas.append('Alergia a medicamentos o productos topicos')
     contra_txt = 'CONTRAINDICACIONES ACTIVAS: ' + ', '.join(contra_activas) if contra_activas else 'Sin contraindicaciones activas.'
+
+    alerg_det = d.get('alergiasDetalle') or {}
+    if isinstance(alerg_det, dict) and alerg_det:
+        alerg_txt = ' | '.join(f"{k}: {v or 'sin detalle'}" for k, v in alerg_det.items())
+    else:
+        alerg_txt = ''
+    sintomas_dig = d.get('sintomasDigestivos') or []
+    sintomas_dig = ', '.join(sintomas_dig) if isinstance(sintomas_dig, list) else str(sintomas_dig)
+    otras = []
+    for etiqueta, clave in (
+        ('Dolor de cabeza o migranas recurrentes', 'dolorCabeza'),
+        ('Inflamacion en articulaciones', 'inflamacionArticulaciones'),
+        ('Dificultad para bajar de peso', 'dificultadBajarPeso'),
+        ('Cansancio o somnolencia durante el dia', 'cansancioDia'),
+        ('Va al bano todos los dias', 'banoDiario'),
+    ):
+        if str(d.get(clave, '')).strip():
+            otras.append(f"{etiqueta}: {d.get(clave)}")
+    previos = d.get('tratamientosPrevios', '')
+    compl = d.get('complicacionesPrevias', '')
+    rutina_inc = d.get('rutinaIncluye') or []
+    rutina_inc = ', '.join(rutina_inc) if isinstance(rutina_inc, list) else str(rutina_inc)
+    clinico_extra = f"""
+DETALLE CLINICO ADICIONAL:
+Detalle de alergias: {alerg_txt or 'No indicado'}
+Sintomas digestivos: {sintomas_dig or 'Ninguno'}
+Otros sintomas: {' | '.join(otras) or 'No indicado'}
+Antecedentes familiares: {d.get('antecedentesFam') or 'No indicado'} {d.get('antecedentesFamDet') or ''}
+Tratamientos esteticos previos: {previos or 'No indicado'} | Complicaciones previas: {compl or 'No indicado'} {d.get('complicacionesDet') or ''}
+Rutina facial incluye: {rutina_inc or 'No indicado'}
+"""
     return f"""DATOS DEL PACIENTE:
 Nombre: {d['nombre']} | Edad: {d['edad']} | Sexo: {d['sexo']}
 Ocupacion: {d['ocupacion']} | Horario: {d['horarioLaboral']}
@@ -3155,7 +3201,8 @@ Notas: {d['notasAlimentacion']}
 
 CONTEXTO PERSONAL ADICIONAL:
 Numero de hijos: {d.get('numHijos','No especificado')}
-Nivel de estres (1-10): {d.get('nivelEstres','No especificado')}"""
+Nivel de estres (1-10): {d.get('nivelEstres','No especificado')}
+{clinico_extra}"""
 
 
 def _llamar_claude(num, total, system_prompt, user_msg, max_tok=6000):
@@ -4547,10 +4594,18 @@ def email_formulario_inmediato(d, fotos=None):
         row('Rutina noche',        d.get('rutinaNoche','')),
         row('Detalle láser',       d.get('laserActualDet','')),
         row('Complicaciones prev.',d.get('complicacionesDet','')),
+        row('Rutina incluye',      d.get('rutinaIncluye','')),
+        row('Marcapasos/implantes',d.get('dispositivosMedicos','')),
+        row('Alergia tópicos',     d.get('alergiaTopicos','')),
+        row('Tratam. previos',     d.get('tratamientosPrevios','')),
         row('Historial estético',  hist_str or d.get('historialEstetico','')),
 
         seccion('Alimentación'),
         row('Síntomas digestivos', d.get('sintomasDigestivos','')),
+        row('Dolor de cabeza',     d.get('dolorCabeza','')),
+        row('Inflam. articulaciones', d.get('inflamacionArticulaciones','')),
+        row('Dificultad bajar peso',  d.get('dificultadBajarPeso','')),
+        row('Va al baño a diario', d.get('banoDiario','')),
         row('Notas alimentación',  d.get('notasAlimentacion','')),
 
         seccion('Hábitos y objetivos'),

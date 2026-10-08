@@ -1438,6 +1438,16 @@ function collectData(){
     // Contraindicaciones clínicas (step-10)
     dispositivosMedicos: getYNValue(document.getElementById('step-10'), 'dispositivos médicos'),
 
+    // Respuestas clínicas que antes no se enviaban
+    banoDiario:               getYNValue(s3,'vas al baño todos los días'),
+    dolorCabeza:              getYNValue(s4,'dolor de cabeza o migrañas'),
+    inflamacionArticulaciones:getYNValue(s4,'inflamación en articulaciones'),
+    dificultadBajarPeso:      getYNValue(s4,'dificultad para bajar de peso'),
+    tratamientosPrevios:      getYNValue(s9,'recibido tratamientos estéticos anteriormente'),
+    complicacionesPrevias:    getYNValue(s9,'complicaciones con algún tratamiento'),
+    alergiaTopicos:           getYNValue(s10,'alergias a medicamentos o productos tópicos'),
+    rutinaIncluye:            [...document.querySelectorAll('#rutina-det-wrap .check-item.checked')].map(i=>i.textContent.trim()),
+
     // Declaraciones y consentimiento (step-11)
     declaraciones: [...document.querySelectorAll('#step-11 .consent-item input[type="checkbox"]')].map(c=>c.checked),
 
