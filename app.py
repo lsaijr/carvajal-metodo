@@ -3130,6 +3130,37 @@ def parsear_cuestionario(texto):
 
 import time
 
+import unicodedata
+
+# Medicamentos que cambian qué tratamientos son seguros. Es una red de seguridad: la IA además debe
+# aplicar su criterio médico general con cualquier medicamento (ver SEGURIDAD en SYS3).
+_MEDICAMENTOS_RIESGO = (
+    ('Anticoagulante o antiagregante (riesgo de sangrado y hematomas en procedimientos con aguja)',
+     ('warfarina', 'warfarin', 'coumadin', 'sintrom', 'acenocumarol', 'rivaroxaban', 'xarelto', 'apixaban',
+      'eliquis', 'dabigatran', 'pradaxa', 'edoxaban', 'heparina', 'enoxaparina', 'clexane', 'clopidogrel',
+      'plavix', 'ticagrelor', 'brilinta', 'prasugrel', 'aspirina', 'acido acetilsalicilico', 'anticoagul')),
+    ('Isotretinoina (piel fragil, evitar peelings, laser y procedimientos agresivos)',
+     ('isotretinoina', 'accutane', 'roaccutane', 'roacutan')),
+    ('Inmunosupresor o corticoide sistemico (cicatrizacion e infeccion)',
+     ('metotrexato', 'ciclosporina', 'azatioprina', 'tacrolimus', 'micofenolato', 'prednisona', 'prednisolona',
+      'dexametasona', 'inmunosupres', 'adalimumab', 'humira', 'etanercept', 'infliximab')),
+    ('Quimioterapia o tratamiento oncologico activo',
+     ('quimioterapia', 'tamoxifeno', 'letrozol', 'anastrozol', 'radioterapia')),
+    ('Medicamento fotosensibilizante (riesgo con peelings, laser y luz)',
+     ('doxiciclina', 'minociclina', 'tetraciclina', 'amiodarona', 'hidroclorotiazida', 'metotrexato')),
+)
+
+
+def _sin_acentos(txt):
+    return ''.join(c for c in unicodedata.normalize('NFD', str(txt or '').lower()) if unicodedata.category(c) != 'Mn')
+
+
+def _banderas_medicamentos(*textos):
+    """Devuelve las alertas de riesgo detectadas en el texto libre de medicamentos/condiciones."""
+    base = _sin_acentos(' '.join(str(t or '') for t in textos))
+    return [etiqueta for etiqueta, claves in _MEDICAMENTOS_RIESGO if any(c in base for c in claves)]
+
+
 def _datos_paciente(d):
     est = d.get('estatura', '')
     pes = d.get('peso', '')
@@ -3142,6 +3173,7 @@ def _datos_paciente(d):
         contra_activas.append('Marcapasos, implantes metalicos o dispositivos medicos')
     if _si(d.get('alergiaTopicos')):
         contra_activas.append('Alergia a medicamentos o productos topicos')
+    contra_activas += _banderas_medicamentos(d.get('medicamentos', ''), d.get('condiciones', ''))
     contra_txt = 'CONTRAINDICACIONES ACTIVAS: ' + ', '.join(contra_activas) if contra_activas else 'Sin contraindicaciones activas.'
 
     alerg_det = d.get('alergiasDetalle') or {}
@@ -3534,7 +3566,7 @@ REGLA: Maximo 8 items en rutina. Tips hiperspecificos con nombre y profesion.'''
 Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
 Genera SOLO estas 3 claves: pilar1, pilar2, pilar3.
 {"pilar1":{"titulo":"Nutricion adaptada","objetivo":"2-3 lineas","frase_motivacional":"frase corta","frase_posicion":"inicio","permitidos":["item"],"evitar":["item"],"menu":[{"dia":"Lunes","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Martes","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Miercoles","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Jueves","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Viernes","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Sabado","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."},{"dia":"Domingo","desayuno":"...","almuerzo":"...","cena":"...","snack":"..."}],"compras":[{"categoria":"Proteinas","emoji":"\ud83e\udd69","items":["i1","i2","i3","i4","i5"]},{"categoria":"Carbohidratos","emoji":"\ud83c\udf3e","items":["i1","i2","i3","i4"]},{"categoria":"Vegetales","emoji":"\ud83e\udd66","items":["i1","i2","i3","i4","i5"]},{"categoria":"Frutas","emoji":"\ud83c\udf4e","items":["i1","i2","i3","i4"]},{"categoria":"Grasas","emoji":"\ud83e\udd51","items":["i1","i2","i3"]},{"categoria":"Otros","emoji":"\ud83e\uddf4","items":["i1","i2","i3","i4"]}],"suplementacion":["Sup1: dosis"],"tips":[{"texto":"tip especifico con nombre"}]},"pilar2":{"titulo":"Actividad Fisica","objetivo":"objetivo","frase_motivacional":"frase","frase_posicion":"medio","plan_semanal":"plan dia a dia","adaptaciones":"adaptaciones","tips":[{"texto":"tip"}]},"pilar3":{"titulo":"Bienestar Mental","objetivo":"objetivo","frase_motivacional":"frase","frase_posicion":"final","tecnicas":["t1","t2","t3","t4","t5"],"tips":[{"texto":"tip"}]}}
-REGLAS: Respetar intolerancias. Tips con nombre, profesion, horario real.
+REGLAS: Respetar intolerancias. Considera los medicamentos y condiciones de la paciente (interacciones con alimentos, suplementos y tipo de ejercicio; marcapasos, anticoagulantes, etc.) aunque no esten en ninguna lista. Tips con nombre, profesion, horario real.
 El menu semanal es OBLIGATORIO: los 7 dias (Lunes a Domingo) deben tener desayuno, almuerzo y cena completos y especificos, nunca vacios ni genericos ("ver arriba", "igual que ayer", etc.), y variados entre si dia a dia. El snack es opcional segun el perfil.'''
 
     catalogo_json = _cargar_catalogo()
@@ -3585,7 +3617,15 @@ REGLAS DE COSTOS:
 - El "inversion" de cada tratamiento sigue siendo el precio del paquete/sesion segun el catalogo.
 - El costo mensual estimado es la cifra principal de inversion que vera el paciente.
 
-REGLAS DE MEDICINA ESTETICA:
+SEGURIDAD CLINICA (PRIORIDAD MAXIMA, por encima de cualquier otra regla de este mensaje):
+- El catalogo NO es la lista completa de riesgos. Lee Medicamentos, Condiciones, Alergias, Cirugias y CONTRAINDICACIONES ACTIVAS de la paciente y aplica tu conocimiento medico general sobre como cada medicamento o condicion afecta cada tratamiento, aunque el catalogo no lo diga.
+- Anticoagulantes o antiagregantes (warfarina, aspirina, clopidogrel, etc.): no recomiendes procedimientos con aguja o que rompan la piel (toxina botulinica, rellenos, hilos, plasma, mesoterapia, microagujas) salvo que sea imprescindible; si los incluyes, indica "requiere valoracion medica previa".
+- Marcapasos, implantes o dispositivos: no recomiendes dispositivos de energia (radiofrecuencia, HIFU, electroporacion, corrientes, ondas de choque o acusticas, magneticas) sin valoracion medica.
+- Embarazo o lactancia, isotretinoina, inmunosupresores, enfermedades autoinmunes, tendencia a queloides, infeccion activa: aplica la precaucion que corresponda.
+- Si hay duda razonable sobre la seguridad de un tratamiento, no lo incluyas o escribe "requiere valoracion medica previa" en su beneficio.
+- NUNCA escribas que un tratamiento es "seguro" o "sin contraindicacion" para la paciente. Esa decision es del medico de la clinica.
+
+REGLAS DE MEDICINA ESTETICA (aplican solo si no chocan con SEGURIDAD CLINICA):
 - El catalogo incluye el campo "categoria" para cada tratamiento.
 - La categoria "Medicina Estetica" agrupa los tratamientos mas efectivos clinicamente: Toxina Botulinica, Rellenos Dermicos, Hilos PDO, Plasma / Plasma Gel, Peelings Medicos, Tratamientos Despigmentantes, Capilar Plus, Regenerador Facial.
 - Cuando el perfil del paciente justifique mayor eficacia clinica (arrugas, flacidez marcada, perdida de volumen, papada, pigmentacion profunda, caída capilar, secuelas de acne, etc.), los tratamientos de "Medicina Estetica" deben ser tu PRIMERA opcion.
