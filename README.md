@@ -6,7 +6,7 @@
 - Remote: `git@github.com:lsaijr/carvajal-metodo.git` (SSH, auth ya configurada — `ssh -T git@github.com` responde `Hi lsaijr!`).
 - Branch: `main`. Push directo a `main` funciona sin pasos extra.
 - **Despliegue: Railway** (enlazado a este repo GitHub, deploy automático en push a `main`). No hay `railway.json`/`railway.toml` en el repo — Railway detecta el stack solo (Nixpacks: Python/Flask + `requirements.txt`). `render.yaml` en el repo es config vieja de Render, ya no se usa para desplegar pero documenta las env vars requeridas.
-- Variables de entorno (configuradas en Railway, no en el repo): `CLAUDE_KEY`, `GEMINI_KEY`, `GROQ_KEY`, `RESEND_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `MAIL_TO`, `MAIL_FROM`, `MAIL_CC`, `BASE_URL`, `ADMIN_PASSWORD`.
+- Variables de entorno (configuradas en Railway, no en el repo): `CLAUDE_KEY`, `GEMINI_KEY`, `GROQ_KEY`, `RESEND_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `MAIL_TO`, `MAIL_FROM`, `MAIL_CC`, `MAIL_TEST_ONLY` (opcional: si existe, todo correo va solo a esa dirección), `BASE_URL`, `ADMIN_PASSWORD`.
 - Flujo normal: editar en `github-repo/`, commit, `git push origin main` → Railway redespliega solo.
 
 ## Catálogo de tratamientos

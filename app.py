@@ -21,6 +21,8 @@ MAIL_CC         = [m.strip() for m in os.environ.get('MAIL_CC','').split(',') if
 MAIL_TO     = os.environ.get('MAIL_TO', 'isai.josue@gmail.com').strip()
 MAIL_FROM   = os.environ.get('MAIL_FROM', 'envios@centrocarvajal.com')
 DEMO_MAIL   = os.environ.get('DEMO_MAIL', 'isai.josue@gmail.com')
+# Modo prueba: si está definido, TODO correo de enviar_resend va solo a esta dirección (sin CC ni destinatarios reales).
+MAIL_TEST_ONLY = os.environ.get('MAIL_TEST_ONLY', '').strip()
 PLANES_DIR  = os.path.join(os.path.dirname(__file__), 'planes_generados')
 os.makedirs(PLANES_DIR, exist_ok=True)
 
@@ -4084,7 +4086,7 @@ body{padding-top:44px}
   </div>
   <div style="background:var(--dark);padding:12px 28px;text-align:center;flex-shrink:0">
     <div style="color:var(--olive);font-size:9pt;font-weight:600;margin-bottom:3px">Centro Carvajal · Líderes en Medicina Estética en Panamá</div>
-    <div style="font-size:7pt;color:rgba(255,255,255,0.28);line-height:1.7">centrocarvajal.com · Tel: 263-8134 &amp; 209-4284 · @centrocarvajal · Panamá<br>Revisado y validado por el equipo médico de Centro Carvajal.</div>
+    <div style="font-size:7pt;color:rgba(255,255,255,0.28);line-height:1.7">centrocarvajal.com · Tel: 263-8134 &amp; 209-4284 · @centrocarvajal · Panamá<br>Propuesta preliminar elaborada con la información proporcionada; no constituye indicación médica ni recomendación abierta. Su validez y la realización de cualquier tratamiento requieren evaluación médica previa en Centro Carvajal. Centro Carvajal no se hace responsable por su uso fuera de la clínica ni por su aplicación por terceros.</div>
   </div>
 </div>
 
@@ -4438,6 +4440,9 @@ def enviar_resend(asunto, cuerpo, to, adjunto_path=None, adjunto_name=None, adju
     if not RESEND_KEY:
         print('RESEND_KEY no configurado')
         return
+    if MAIL_TEST_ONLY:
+        asunto = f'[MODO PRUEBA] {asunto}'
+        to, cc = MAIL_TEST_ONLY, None
     payload = {
         'from': f'Centro Carvajal <{MAIL_FROM}>',
         'to': [to],
