@@ -1,5 +1,138 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-10-07 al 2026-10-09: Seguridad clínica del plan (marcapasos, anticoagulantes), aviso al paciente y modo prueba de correo
+
+### Contexto
+
+El 7-oct se auditó campo por campo qué respuestas del formulario llegaban a la IA: de 107
+respuestas alcanzables solo 74 llegaban; tras el commit `0af9367` llegan 97. Las 10 que siguen
+fuera no hacen falta para el plan (celular, correo, cómo nos conoció, fecha/zona de "otro
+tratamiento", "¿toma medicamentos?" como sí/no, "¿entiende que pueden necesitarse múltiples
+sesiones?", "¿realiza rutina diaria?"; lo que incluye la rutina sí llega).
+Con ese código, la paciente ficticia "PRUEBA Rosa Villalobos (ficticia)" (marcapasos, warfarina,
+alergia a lidocaína, alergia a mariscos y maní, hinchazón y gases) generó un plan que excluía
+HIFU/RF/electroporación (marcapasos), rellenos/hilos/plasma/Regenerador Facial (warfarina),
+proponía rutina sin lidocaína y menú sin mariscos ni maní. **Pero seguía recomendando Toxina
+Botulínica y Cellulite Shock (X-Wave), y afirmaba que la toxina era "segura para su perfil
+clínico (sin contraindicación por marcapasos ni coagulación)".**
+
+### Causa raíz
+
+- El catálogo (`catalogo_tratamientos.json`) solo lista para la Toxina: embarazo, lactancia,
+  infección activa y enfermedad neuromuscular. Rellenos, hilos, plasma, Capilar Plus,
+  Regenerador Facial y RF con microagujas sí traen "Alteración coagulación". La IA excluyó
+  lo que el catálogo decía y trató el catálogo como única fuente de verdad.
+- El prompt de tratamientos (`SYS3`) empujaba a "Medicina Estética primera opción / al menos
+  la mitad del plan" y la seguridad era una sola frase ("Verificar contraindicaciones").
+- La warfarina llegaba como texto libre en "Medicamentos"; Python solo convertía en
+  contraindicación activa el marcapasos y la alergia a tópicos.
+- Nutrición y suplementos sí manejaron bien la warfarina (evitar exceso de vitamina K,
+  omega 3, vitamina E): ahí la IA usó criterio médico general.
+
+### Decisiones del usuario
+
+- Las contraindicaciones son información para el **médico**; el plan del paciente solo debe
+  llevar un aviso discreto (mismo tamaño de letra) que aclare que es una propuesta preliminar,
+  no una recomendación abierta, y que requiere evaluación médica previa en la clínica.
+- Idea aprobada a futuro: dos análisis de contraindicaciones, uno "según catálogo" y otro
+  "según criterio médico general (IA)", solo para el correo interno del médico.
+- Para medicamentos: instrucción a la IA de considerar medicamentos más allá del catálogo
+  **y** una lista corta en Python como red de seguridad.
+
+### Cambios (todo en `main`)
+
+- `8b18905` — `app.py`, `plantilla_plan.html`, `plantilla_borrador.html`, `README.md`:
+  - Pie del plan: se quitó "Revisado y validado por el equipo médico de Centro Carvajal"
+    (decía lo contrario de la realidad) y se puso: *Propuesta preliminar elaborada con la
+    información proporcionada; no constituye indicación médica ni recomendación abierta. Su
+    validez y la realización de cualquier tratamiento requieren evaluación médica previa en
+    Centro Carvajal. Centro Carvajal no se hace responsable por su uso fuera de la clínica ni
+    por su aplicación por terceros.* (El texto de responsabilidad debe revisarlo quien lleve lo
+    legal de la clínica.)
+  - **`MAIL_TEST_ONLY`**: si esta variable de entorno existe, `enviar_resend()` manda todo solo
+    a esa dirección, sin CC, con asunto `[MODO PRUEBA] ...`.
+- `89c98a8` — `app.py`:
+  - `_MEDICAMENTOS_RIESGO` + `_banderas_medicamentos()`: detectan en `medicamentos`/`condiciones`
+    anticoagulantes/antiagregantes (warfarina, Xarelto, Eliquis, clopidogrel, aspirina...),
+    isotretinoína, inmunosupresores/corticoides, oncológicos y fotosensibilizantes. Se suman a
+    "CONTRAINDICACIONES ACTIVAS" en `_datos_paciente()`. Comprobado: warfarina, aspirina,
+    Xarelto y Roaccutane se detectan; levotiroxina y "Ninguna" no. (Aspirina sola también
+    marca: es conservador a propósito.)
+  - `SYS3`: bloque **SEGURIDAD CLINICA** con prioridad máxima: aplicar conocimiento médico
+    general más allá del catálogo; con anticoagulantes no recomendar procedimientos con aguja
+    o que rompan la piel salvo valoración; con marcapasos/implantes no recomendar dispositivos de
+    energía; ante duda, "requiere valoracion medica previa"; nunca escribir que un tratamiento
+    es "seguro". La regla de Medicina Estética quedó subordinada a esa seguridad.
+  - `SYS2`: considerar medicamentos y condiciones (alimentos, suplementos, ejercicio).
+
+### Cómo se probó (de punta a punta, sin molestar a la clínica)
+
+1. `railway variables --set MAIL_TEST_ONLY=isai.josue@gmail.com` y esperar el deploy.
+2. Playwright (`node_modules` de `centrocarvajalweb`) abre `https://metodo.centrocarvajal.com/formulario`,
+   inyecta una copia de `autofill-cuestionario.js` con la paciente ficticia (nombre
+   "PRUEBA Rosa Villalobos (ficticia)", warfarina, alergia a lidocaína con descripción, marcapasos = Sí),
+   avanza con `#btn-next` hasta "ENVIAR" y llama `submitForm()`. La validación exige describir
+   cada alergia marcada "Sí".
+3. Los dos correos (formulario recibido, plan IA generado) llegan solo a `isai.josue@gmail.com`;
+   el plan HTML final queda en Cloudinary (enlace "Ver plan final" del correo).
+4. **Al terminar:** `railway variable delete MAIL_TEST_ONLY` **y además** `railway redeploy --yes`
+   (borrar la variable sola no redespliega y el contenedor sigue con ella). Esperar SUCCESS.
+   Mientras el modo prueba está activo la clínica NO recibe correos reales.
+
+### Resultado de la prueba final (Rosa, job `1b3ed4faf8324413`)
+
+- Mejoró: ya no recomienda Toxina Botulínica ni Cellulite Shock; propone peelings tópicos,
+  hidrofacial, microdermoabrasión, péptidos, masajes, exfoliación; Foto Facial queda con
+  "requiere valoración médica previa por el marcapasos".
+- Aviso nuevo visible en el pie del plan.
+- Modo prueba retirado y redeploy `e54b8d79` en SUCCESS.
+
+### Incidentes de la sesión
+
+- En una sesión anterior se coló un envío online de Rosa con código viejo (job `c0b9536c671f4d97`).
+  Esa ronda mandó 3 envíos reales a la clínica (ese, uno fallido por tokens y el bueno) y hubo
+  en total 5 correos de prueba "PRUEBA ... (ficticia)" que la clínica puede borrar por ese nombre.
+  En la cuenta de Gmail conectada aparecen 6 hilos de esos correos (copias CC); no se borraron.
+- Los 2 correos de las pruebas de esta sesión (8-oct y 9-oct) llevan `[MODO PRUEBA]` y solo
+  llegaron a isai.josue@gmail.com.
+
+### Pendientes
+
+1. **Alta, el plan aún expone cosas al paciente (sección 1, `SYS1`, `nota_medica`):**
+   - "Notas Críticas" lista las exclusiones por warfarina/marcapasos y sugiere "evaluar si en
+     algún momento es seguro suspender/ajustar anticoagulación". Nunca debe insinuar tocar
+     medicación. Propuesta: la nota dice solo que el historial incluye condiciones que el
+     médico debe evaluar antes de iniciar cualquier tratamiento.
+   - Sigue usando "seguro/segura" en varios beneficios ("opción segura por no requerir
+     punciones", "segura para su perfil de coagulación"). Reforzar la prohibición en el prompt y
+     añadir un filtro en código que busque esas palabras y sugerencias de ajustar medicación.
+2. **Filtro determinista en código** que cruce el plan generado con contraindicaciones del
+   catálogo + banderas de medicamentos y quite/marque el tratamiento (no depender de que la IA
+   obedezca).
+3. **Revisor de IA separado, solo para el correo interno del médico**, con dos fuentes:
+   "contraindicado según catálogo" y "precaución según criterio médico general (confirmar con
+   el médico)". Cuesta una llamada extra por plan; vigilar tokens y tiempo (la sección 3 ya se
+   cortó por tokens).
+4. **Preguntas para la clínica (decisión médica):**
+   - ¿Toxina Botulínica con anticoagulantes: excluir o "consultar al médico"? Hoy el catálogo no
+     la contraindica; agregar "Anticoagulantes" a la Toxina y a otros inyectables.
+   - ¿Cellulite Shock (X-Wave, ondas acústicas) es compatible con marcapasos?
+   - ¿"Péptidos Rejuvenecedores" lleva aguja? El plan los presenta como tópicos pero el catálogo
+     no lo indica (categoría Rejuvenecimiento Facial, contraindicaciones: alergias, infección).
+   - Foto Facial (luz pulsada) con marcapasos: el plan dice que no usa corriente ni ultrasonido;
+     confirmar.
+   - Revisar el texto legal del pie (responsabilidad fuera de la clínica) con quien corresponda.
+5. **Decisión de redacción:** el plan habla de la paciente en tercera persona ("Rosa", "su
+   anticoagulante"); definir si debe ser segunda persona ("tú").
+6. Convertir el script de prueba (Playwright + autofill) en una **suite de perfiles ficticios**
+   antes de cada despliegue: warfarina, marcapasos, embarazo, isotretinoína, queloides.
+7. Completar el catálogo: revisar las 34 fichas con contraindicaciones contra anticoagulantes y
+   otras condiciones comunes.
+8. Pendiente menor: `git pull` del clon local (se hizo) y revisar que `autofill-cuestionario.js`
+   siga alineado con los campos del formulario tras el rediseño del 5-oct.
+
+---
+
 ## 2026-09-27: Menú semanal (desayuno/almuerzo/cena) no siempre venía completo
 
 ### Cambio
