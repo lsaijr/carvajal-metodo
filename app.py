@@ -5101,6 +5101,9 @@ tr:last-child td{border-bottom:none}
     <tr><td>Acthyderm Rostro</td><td class="sessions">10 sesiones + kit</td><td class="price">$557.00</td></tr>
     <tr><td>Beauty Light</td><td class="sessions">1 sesión</td><td class="price">$150.00</td></tr>
     <tr><td>Beauty Light</td><td class="sessions">6 sesiones + kit</td><td class="price">$650.00</td></tr>
+    <tr><td>Beauty Essence</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
+    <tr><td>Beauty Essence</td><td class="sessions">6 sesiones + kit</td><td class="price">$570.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: limpiador Latte Bio, tónico Creazioni, suero de ácido hialurónico Uresim, crema vitamina C Garnier y suero Academie.</td></tr>
     <tr><td>Bright Eyes</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
     <tr><td>Bright Eyes</td><td class="sessions">6 sesiones + kit</td><td class="price">$241.00</td></tr>
     <tr><td>Críoradiofrecuencia</td><td class="sessions">Rostro, 1 sesión</td><td class="price">$70.00</td></tr>
@@ -5127,27 +5130,24 @@ tr:last-child td{border-bottom:none}
     <tr><td>Hidrorenovador</td><td class="sessions">3 sesiones + kit</td><td class="price">$305.00</td></tr>
     <tr><td>HIFU Párpados</td><td class="sessions">Párpados (1 sesión)</td><td class="price">$233.00</td></tr>
     <tr class="note-row"><td colspan="3">Incluye kit: Cicastim y Bio Oil.</td></tr>
-    <tr><td>HIFU Rostro y Cuello</td><td class="sessions">Rostro</td><td class="price">$463.00</td></tr>
-    <tr><td>HIFU Rostro y Cuello</td><td class="sessions">Cuello</td><td class="price">$313.00</td></tr>
-    <tr><td>HIFU Rostro y Cuello</td><td class="sessions">Rostro y cuello</td><td class="price">$633.00</td></tr>
-    <tr class="note-row"><td colspan="3">Precio por sesión. Cada área incluye su kit: banda tensora, Teatrical y Cicastim ACM; rostro y rostro y cuello incluyen además suero Academie.</td></tr>
-    <tr><td>Línea Sup/Inf de Párpados</td><td class="sessions">Línea superior o inferior (por área)</td><td class="price">$100.00</td></tr>
-    <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
+    <tr><td>HIFU Rostro</td><td class="sessions">Rostro</td><td class="price">$463.00</td></tr>
+    <tr><td>HIFU Rostro</td><td class="sessions">Cuello</td><td class="price">$313.00</td></tr>
+    <tr><td>HIFU Rostro</td><td class="sessions">Rostro y cuello</td><td class="price">$633.00</td></tr>
+    <tr class="note-row"><td colspan="3">Precio por sesión. Cada área incluye su kit: banda tensora, Crema Hidratante Vitamina C Garnier y Cicastim ACM; rostro y rostro y cuello incluyen además suero Academie.</td></tr>
+    <tr><td>Lumina Pure C</td><td class="sessions">1 sesión sin kit</td><td class="price">$300.00</td></tr>
+    <tr><td>Lumina Pure C</td><td class="sessions">1 sesión con kit</td><td class="price">$440.00</td></tr>
+    <tr class="note-row"><td colspan="3">El kit incluye: crema despigmentante Uresim, suero iluminador Uresim, protector solar ACM Depiwhite M., 2 frascos de fórmula Kligman y 5 ampollas Daily Radiant.</td></tr>
     <tr><td>Luz Anti-Acné</td><td class="sessions">1 sesión</td><td class="price">$140.00</td></tr>
     <tr><td>Luz Anti-Acné</td><td class="sessions">3 sesiones + kit</td><td class="price">$290.00</td></tr>
     <tr><td>Maquillaje Semi-Permanente</td><td class="sessions">Sombreado de cejas</td><td class="price">$150.00</td></tr>
     <tr><td>Maquillaje Semi-Permanente</td><td class="sessions">Microblading</td><td class="price">$200.00</td></tr>
     <tr><td>Maquillaje Semi-Permanente</td><td class="sessions">Línea de párpado superior o inferior (por área)</td><td class="price">$100.00</td></tr>
     <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
-    <tr><td>Microblading de Cejas</td><td class="sessions">Microblading</td><td class="price">$200.00</td></tr>
-    <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
     <tr><td>Microdermoabrasión</td><td class="sessions">1 sesión</td><td class="price">$45.00</td></tr>
     <tr><td>Péptidos de Párpados</td><td class="sessions">1 sesión</td><td class="price">$70.00</td></tr>
     <tr><td>Péptidos de Párpados</td><td class="sessions">3 sesiones + kit</td><td class="price">$187.00</td></tr>
     <tr><td>Péptidos Rejuvenecedores</td><td class="sessions">1 sesión</td><td class="price">$200.00</td></tr>
     <tr><td>Péptidos Rejuvenecedores</td><td class="sessions">3 sesiones + kit</td><td class="price">$544.00</td></tr>
-    <tr><td>Sombreado de Cejas</td><td class="sessions">Sombreado de cejas</td><td class="price">$150.00</td></tr>
-    <tr class="note-row"><td colspan="3">Incluye 2 sesiones: la aplicación y el retoque.</td></tr>
     <tr><td>Tratamiento de Novia</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
     <tr><td>Tratamiento de Novia</td><td class="sessions">3 sesiones + kit</td><td class="price">$354.00</td></tr>
     <tr><td>Velo de Colágeno</td><td class="sessions">1 sesión</td><td class="price">$40.00</td></tr>
@@ -5162,12 +5162,19 @@ tr:last-child td{border-bottom:none}
     <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
     <tr><td>Evaluación médica</td><td class="sessions">Primera de cortesía</td><td class="price">$45.00</td></tr>
     <tr class="note-row"><td colspan="3">La primera evaluación es de cortesía; $45.00 es su valor regular.</td></tr>
+    <tr><td>Antiaging Peptide</td><td class="sessions">Exámenes de laboratorio</td><td class="price">$100.00</td></tr>
+    <tr><td>Antiaging Peptide</td><td class="sessions">4 sesiones</td><td class="price">$250.00</td></tr>
+    <tr class="note-row"><td colspan="3">Las 4 sesiones incluyen la cita médica inicial y el seguimiento con control de peso cada semana.</td></tr>
     <tr><td>Capilar Plus</td><td class="sessions">Paquete</td><td class="price">$499.00</td></tr>
     <tr class="note-row"><td colspan="3">Incluye: plasma capilar (2 sesiones) + kit de uso en casa. Valor de los tratamientos por separado: $555.</td></tr>
     <tr><td>De age Treatment</td><td class="sessions">Paquete</td><td class="price">$975.00</td></tr>
     <tr class="note-row"><td colspan="3">Incluye: 20 hilos Screw + 20 hilos Mono + toxina botulínica (30 unidades). Valor de los tratamientos por separado: $1,950.</td></tr>
     <tr><td>Fine Lift</td><td class="sessions">Paquete</td><td class="price">$999.00</td></tr>
     <tr class="note-row"><td colspan="3">Incluye: toxina botulínica (15 unidades) + relleno Deep (1 cc) + 10 hilos Screw + 10 hilos Mono. Valor de los tratamientos por separado: $1,375.</td></tr>
+    <tr><td>Firming and Glow</td><td class="sessions">Paquete</td><td class="price">$500.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: 4 hilos espiculados + toxina botulínica (20 unidades).</td></tr>
+    <tr><td>Firming Touch</td><td class="sessions">Paquete</td><td class="price">$550.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: Hidroxyfill (1 cc) + plasma rico en plaquetas (1 sesión).</td></tr>
     <tr><td>Hilo Monofilamento</td><td class="sessions">1 hilo</td><td class="price">$25.00</td></tr>
     <tr><td>Hilo Monofilamento</td><td class="sessions">Paquete de 20 hilos (promoción especial)</td><td class="price">$250.00</td></tr>
     <tr><td>Hilos Screw</td><td class="sessions">1 hilo</td><td class="price">$50.00</td></tr>
@@ -5179,6 +5186,9 @@ tr:last-child td{border-bottom:none}
     <tr><td>Melas Peel J2 Espalda</td><td class="sessions">3 sesiones sin kit</td><td class="price">$301.00</td></tr>
     <tr><td>Peeling Periocular Mesoestetic</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
     <tr><td>Peeling Periocular Mesoestetic</td><td class="sessions">3 sesiones + kit</td><td class="price">$176.70</td></tr>
+    <tr><td>Péptidos Capilares</td><td class="sessions">1 sesión</td><td class="price">$75.00</td></tr>
+    <tr><td>Péptidos Capilares</td><td class="sessions">7 sesiones + kit</td><td class="price">$350.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: shampoo anticaída y ampollas capilares.</td></tr>
     <tr><td>Plasma</td><td class="sessions">1 sesión</td><td class="price">$200.00</td></tr>
     <tr class="note-row"><td colspan="3">Zona adicional: $50 más por sesión.</td></tr>
     <tr><td>Plasma Gel</td><td class="sessions">1 sesión</td><td class="price">$250.00</td></tr>
@@ -5195,6 +5205,8 @@ tr:last-child td{border-bottom:none}
     <tr class="note-row"><td colspan="3">Incluye, a la semana, una sesión de péptidos (PDRN, Hylagen o Hyladerm) y un kit de uso en casa: limpiador y crema Garnier vitamina C e iluminador Uresim.</td></tr>
     <tr><td>Total Lift</td><td class="sessions">Paquete</td><td class="price">$1,300.00</td></tr>
     <tr class="note-row"><td colspan="3">Incluye: 10 hilos Screw + 10 hilos Mono + toxina botulínica (30 unidades) + plasma gel (1 sesión) + plasma rico en plaquetas. Valor de los tratamientos por separado: $1,450.</td></tr>
+    <tr><td>Total Make Over</td><td class="sessions">Paquete</td><td class="price">$1,225.00</td></tr>
+    <tr class="note-row"><td colspan="3">Incluye: relleno Face Shape (1 cc) + 20 hilos Screw + 20 hilos Mono + toxina botulínica (32 unidades).</td></tr>
     <tr><td>Toxina Botulínica</td><td class="sessions">1 unidad</td><td class="price">$12.50</td></tr>
     <tr class="note-row"><td colspan="3">La cantidad de unidades depende de las zonas a tratar y se define en la evaluación médica.</td></tr>
     <tr><td>Urban Treatment</td><td class="sessions">Paquete</td><td class="price">$613.00</td></tr>
@@ -5207,18 +5219,24 @@ tr:last-child td{border-bottom:none}
   <table>
     <tr><th>Tratamiento</th><th>Sesiones</th><th>Precio</th></tr>
     <tr><td>Acthyderm Brazos</td><td class="sessions">1 sesión</td><td class="price">$60.00</td></tr>
-    <tr><td>Acthyderm Brazos</td><td class="sessions">12 sesiones</td><td class="price">$533.00</td></tr>
+    <tr><td>Acthyderm Brazos</td><td class="sessions">12 sesiones + kit</td><td class="price">$533.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Bio Oil y gel lipolítico.</td></tr>
     <tr><td>Acthyderm Cuerpo</td><td class="sessions">1 sesión</td><td class="price">$100.00</td></tr>
-    <tr><td>Acthyderm Cuerpo</td><td class="sessions">12 sesiones</td><td class="price">$783.00</td></tr>
+    <tr><td>Acthyderm Cuerpo</td><td class="sessions">12 sesiones + kit</td><td class="price">$783.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Bio Oil y gel lipolítico.</td></tr>
     <tr><td>Blanqueamiento por área</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
     <tr><td>Blanqueamiento por área</td><td class="sessions">5 sesiones + kit</td><td class="price">$293.60</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Whitening Serum Bioage, Post Treatment Bioage y protector solar Uresim.</td></tr>
     <tr><td>Cellulite Shock</td><td class="sessions">1 sesión</td><td class="price">$79.00</td></tr>
     <tr><td>Cellulite Shock</td><td class="sessions">10 sesiones + kit</td><td class="price">$790.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: vitamina C, Bio Oil, silimarina y esponja anticelulítica.</td></tr>
     <tr><td>Electro Fit</td><td class="sessions">1 sesión</td><td class="price">$40.00</td></tr>
-    <tr><td>Electro Fit</td><td class="sessions">12 sesiones</td><td class="price">$408.00</td></tr>
+    <tr><td>Electro Fit</td><td class="sessions">12 sesiones + kit</td><td class="price">$408.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Bio Oil y gel lipolítico.</td></tr>
     <tr><td>Exilis Cuerpo por Área</td><td class="sessions">1 sesión</td><td class="price">$200.00</td></tr>
-    <tr><td>Exilis Cuerpo por Área</td><td class="sessions">8 sesiones</td><td class="price">$1,000.00</td></tr>
+    <tr><td>Exilis Cuerpo por Área</td><td class="sessions">8 sesiones + kit</td><td class="price">$1,000.00</td></tr>
     <tr class="note-row"><td colspan="3">Áreas disponibles: abdomen alto, abdomen bajo, costados, espalda (línea del brassier), brazos, muslos internos, muslos externos, rodilla y pecho masculino.</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Bio Oil y gel lipolítico.</td></tr>
     <tr><td>FisioTape</td><td class="sessions">1 sesión</td><td class="price">$25.00</td></tr>
     <tr><td>FisioTape</td><td class="sessions">10 sesiones</td><td class="price">$258.00</td></tr>
     <tr><td>HIFU Cuerpo</td><td class="sessions">Escote</td><td class="price">$500.00</td></tr>
@@ -5230,13 +5248,17 @@ tr:last-child td{border-bottom:none}
     <tr><td>HIFU Cuerpo</td><td class="sessions">Muslos internos o externos</td><td class="price">$500.00</td></tr>
     <tr class="note-row"><td colspan="3">Precio por sesión. Cada área incluye su kit de cuidado (gel lipolítico, Bio Oil, bandas o faja según la zona).</td></tr>
     <tr><td>Lipolaser Contourning</td><td class="sessions">1 sesión</td><td class="price">$75.00</td></tr>
-    <tr><td>Lipolaser Contourning</td><td class="sessions">10 sesiones</td><td class="price">$558.00</td></tr>
+    <tr><td>Lipolaser Contourning</td><td class="sessions">10 sesiones + kit</td><td class="price">$558.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Bio Oil y gel lipolítico.</td></tr>
     <tr><td>Post Parto</td><td class="sessions">1 sesión</td><td class="price">$25.00</td></tr>
-    <tr><td>Post Parto</td><td class="sessions">10 sesiones</td><td class="price">$218.00</td></tr>
+    <tr><td>Post Parto</td><td class="sessions">10 sesiones + kit</td><td class="price">$218.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Bio Oil.</td></tr>
     <tr><td>Sculpted Body</td><td class="sessions">1 sesión</td><td class="price">$50.00</td></tr>
-    <tr><td>Sculpted Body</td><td class="sessions">12 sesiones</td><td class="price">$458.00</td></tr>
+    <tr><td>Sculpted Body</td><td class="sessions">12 sesiones + kit</td><td class="price">$458.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: Bio Oil y gel lipolítico.</td></tr>
     <tr><td>Tensor de Cuerpo</td><td class="sessions">1 sesión</td><td class="price">$150.00</td></tr>
-    <tr><td>Tensor de Cuerpo</td><td class="sessions">8 sesiones</td><td class="price">$808.00</td></tr>
+    <tr><td>Tensor de Cuerpo</td><td class="sessions">8 sesiones + kit</td><td class="price">$808.00</td></tr>
+    <tr class="note-row"><td colspan="3">El paquete incluye kit: vitamina C y Bio Oil.</td></tr>
   </table>
 </div>
 
