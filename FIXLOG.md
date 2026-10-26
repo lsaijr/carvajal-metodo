@@ -1,5 +1,32 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-10-26: Menopausia mal registrada y campos que no llegaban al Word
+
+### Contexto
+
+La clínica reportó que temas como menopausia se llenan en el formulario pero no aparecen en el
+Word del cuestionario.
+
+### Causa raíz
+
+1. `getYNValue()` buscaba la etiqueta por coincidencia parcial y se quedaba con la última fila
+   que coincidía. "menopausia" también coincide con "Perimenopausia", así que el campo
+   Menopausia (y `contraindications.Menopausia`, que usa la IA) guardaba la respuesta de
+   Perimenopausia. Era el único choque de etiquetas del formulario.
+2. `generar_docx_cuestionario()` no escribía varios campos que el formulario sí envía.
+
+### Corrección
+
+- `getYNValue()` busca primero la etiqueta exacta y solo después la parcial (en
+  `formulario-produccion.html`, `formulario-demo.html` y `formulario.html`).
+- El Word ahora incluye: dolor de cabeza, inflamación de articulaciones, dificultad para bajar de
+  peso, lista de alergias con sus síntomas, alergia a tópicos, comidas al día, si va al baño a
+  diario, qué incluye la rutina, láser actual; tratamientos previos y complicaciones toman
+  también la respuesta Sí/No. Perimenopausia y andropausia salen como SÍ/NO (antes podía salir
+  "No respondido").
+- Probado: Word generado con datos de prueba y `getYNValue` en Chromium (Menopausia Sí /
+  Perimenopausia No → Sí / No).
+
 ## 2026-10-07 al 2026-10-09: Seguridad clínica del plan (marcapasos, anticoagulantes), aviso al paciente y modo prueba de correo
 
 ### Contexto

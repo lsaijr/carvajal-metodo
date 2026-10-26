@@ -1278,16 +1278,16 @@ function removePhoto(e,idx){
 // ── YN map helper ──
 function getYNValue(container, labelText){
   if(!container)return'No respondido';
-  let found='No respondido';
-  container.querySelectorAll('.yn-row').forEach(row=>{
-    const lbl=row.querySelector('.yn-label').textContent.replace(/\*/g,'').trim();
-    if(lbl.toLowerCase().includes(labelText.toLowerCase())){
-      const ay=row.querySelector('.active-yes');
-      const an=row.querySelector('.active-no');
-      found=ay?'Sí':(an?'No':'No respondido');
-    }
-  });
-  return found;
+  const buscado=labelText.toLowerCase();
+  const filas=[...container.querySelectorAll('.yn-row')].map(row=>({
+    row, lbl:row.querySelector('.yn-label').textContent.replace(/\*/g,'').trim().toLowerCase()
+  }));
+  // Primero la etiqueta exacta: "menopausia" no debe tomar la fila "Perimenopausia".
+  const fila=(filas.find(f=>f.lbl===buscado)||filas.find(f=>f.lbl.includes(buscado))||{}).row;
+  if(!fila)return'No respondido';
+  const ay=fila.querySelector('.active-yes');
+  const an=fila.querySelector('.active-no');
+  return ay?'Sí':(an?'No':'No respondido');
 }
 
 function getCheckedValues(containerId){

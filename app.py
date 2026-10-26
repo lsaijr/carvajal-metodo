@@ -2470,6 +2470,13 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     cond  = _g('condicionSistemica')
     fuma_v = _g('fuma')
 
+    # Normaliza Sí/No/No respondido → SÍ/NO
+    def _yn_norm(key):
+        val = _g(key).strip()
+        if not val or val.lower() in ['no', 'no respondido', '']:
+            return 'NO'
+        return 'SÍ' if val.lower() in ['sí', 'si', 'yes'] else val
+
     # ── 1. DATOS PERSONALES ─────────────────────────────────────
     _sec('1. DATOS PERSONALES')
     _fila('nombre_completo',          _g('nombre'))
@@ -2508,8 +2515,8 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('sop',               _yn_c('SOP'))
     _fila('anticonceptivos',   _yn_c('Anticonceptivos'))
     _fila('menopausia',        _yn_c('Menopausia'))
-    _fila('perimenopausia',    _g('perimenopausia') or 'NO')
-    _fila('andropausia',       _g('andropausia') or 'NO')
+    _fila('perimenopausia',    _yn_norm('perimenopausia'))
+    _fila('andropausia',       _yn_norm('andropausia'))
     _fila('fuma',              'SÍ' if fuma_v.lower() not in ['no',''] else 'NO')
     _fila('fuma_frecuencia',   fuma_v.replace('Si - ','').replace('Sí - ','') if ' - ' in fuma_v else '')
     _fila('alcohol',           _g('alcohol'))
@@ -2521,6 +2528,9 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('hora_levanta',      _g('horaDespierta'))
     _fila('cansancio_dia',     _g('cansancioDia'))
     _fila('nivel_estres',      _g('nivelEstres'))
+    _fila('dolor_cabeza_migranas',     _yn_norm('dolorCabeza'))
+    _fila('inflamacion_articulaciones', _yn_norm('inflamacionArticulaciones'))
+    _fila('dificultad_bajar_peso',     _yn_norm('dificultadBajarPeso'))
 
     # ── 5. SÍNTOMAS DIGESTIVOS ───────────────────────────────────
     _sec('5. SÍNTOMAS DIGESTIVOS E INTOLERANCIAS')
@@ -2531,6 +2541,13 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     # ── 6. ALERGIAS ──────────────────────────────────────────────
     _sec('6. ALERGIAS')
     _fila('alergia_medicamentos', 'SÍ' if 'medicamento' in _g('alergias').lower() else 'NO')
+    _fila('alergias',             _g('alergias') or 'Ninguna')
+    alergias_det = data.get('alergiasDetalle', {}) or {}
+    if isinstance(alergias_det, dict):
+        for alergeno, sintomas in alergias_det.items():
+            if sintomas:
+                _fila(f'alergia_{alergeno}', sintomas)
+    _fila('alergia_topicos',      _yn_norm('alergiaTopicos'))
 
     # ── 7. CIRUGÍAS Y ANTECEDENTES ───────────────────────────────
     _sec('7. CIRUGÍAS Y ANTECEDENTES')
@@ -2539,17 +2556,12 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('antecedentes_familiares','SÍ' if _g('antecedentesFam') not in ['Ninguno','No',''] else 'NO')
     _fila('antecedentes_detalle',  _g('antecedentesFamDet'))
 
-    # Función local: normaliza Sí/No/No respondido → SÍ/NO
-    def _yn_norm(key):
-        val = _g(key).strip()
-        if not val or val.lower() in ['no', 'no respondido', '']:
-            return 'NO'
-        return 'SÍ' if val.lower() in ['sí', 'si', 'yes'] else val
-
     _fila('dispositivos_medicos',          _yn_norm('dispositivosMedicos'))
 
     # ── 8. ALIMENTACIÓN ──────────────────────────────────────────
     _sec('8. ALIMENTACIÓN Y NUTRICIÓN')
+    _fila('comidas_al_dia',             _g('comidas'))
+    _fila('va_al_bano_diario',          _yn_norm('banoDiario'))
     _fila('observaciones_alimentarias', _g('notasAlimentacion'))
 
     # ── 9. PIEL Y RUTINA ─────────────────────────────────────────
@@ -2564,6 +2576,7 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
     _fila('rutina_manana',            _g('rutinaManana'))
     _fila('rutina_tarde',             _g('rutinaTarde'))
     _fila('rutina_noche',             _g('rutinaNoche'))
+    _fila('rutina_incluye',           _g('rutinaIncluye'))
     _fila('rutina_limpieza',          'Limpieza'   if any(x in (_g('rutinaManana')+_g('rutinaNoche')).lower() for x in ['limpiad','jabon','jabón','espuma']) else '')
     _fila('rutina_hidratacion',       'Hidratación' if any(x in (_g('rutinaManana')+_g('rutinaNoche')).lower() for x in ['hidrat','crema']) else '')
     _fila('rutina_retinol',           'Retinol'    if 'retinol' in (_g('rutinaManana')+_g('rutinaNoche')).lower() else '')
@@ -2571,9 +2584,10 @@ def generar_docx_cuestionario(data, plan_json=None, analisis_medico=None):
 
     # ── 10. HISTORIAL ESTÉTICO ───────────────────────────────────
     _sec('10. HISTORIAL ESTÉTICO Y TRATAMIENTOS PREVIOS')
-    _fila('tratamientos_previos',     'SÍ' if hist_lst else 'NO')
+    _fila('tratamientos_previos',     'SÍ' if hist_lst or _yn_norm('tratamientosPrevios') == 'SÍ' else 'NO')
+    _fila('laser_actual',             _g('laserActualDet'))
     _fila('tratamiento_otro',         _yn_h('otro'))
-    _fila('complicaciones_esteticas', 'SÍ' if _g('complicacionesDet') else 'NO')
+    _fila('complicaciones_esteticas', 'SÍ' if _g('complicacionesDet') or _yn_norm('complicacionesPrevias') == 'SÍ' else 'NO')
     _fila('complicaciones_esteticas_desc', _g('complicacionesDet'))
 
     # ── 11. OBJETIVOS ────────────────────────────────────────────
