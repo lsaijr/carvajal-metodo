@@ -3230,6 +3230,7 @@ PIEL: {d['pielTipo']} | Problemas: {', '.join(d['pielProblemas'])}
 Rutina manana: {d['rutinaManana']} | Noche: {d['rutinaNoche']}
 
 HABITOS: Act.fisica: {d['actFisica']} | Sueno: {d['sueno']} | Comidas al dia: {d.get('comidas') or 'No especificado'}
+Hora en que se levanta: {d.get('horaDespierta') or 'No indicado'} | Hora en que se acuesta: {d.get('horaDuerme') or 'No indicado'}
 Fuma: {d['fuma']} | Alcohol: {d['alcohol']}
 
 SALUD: {contra_txt}
@@ -3550,6 +3551,49 @@ def _sincronizar_catalogo_inicial():
 
 
 
+def _hora_a_min(texto):
+    """'07:30', '7:30 pm' o '19h' → minutos desde medianoche; None si no se entiende."""
+    m = re.search(r'(\d{1,2})(?:[:.h](\d{2}))?\s*([ap])?\.?\s*m?', str(texto or '').lower())
+    if not m:
+        return None
+    h, mi = int(m.group(1)), int(m.group(2) or 0)
+    if m.group(3) == 'p' and h < 12: h += 12
+    if m.group(3) == 'a' and h == 12: h = 0
+    return h * 60 + mi if h < 24 and mi < 60 else None
+
+
+def _completar_rutina(items, d):
+    """Ordena la rutina por hora y agrega desayuno, almuerzo o cena si la IA los omitió."""
+    items = [i for i in (items or []) if isinstance(i, dict)]
+    levanta = _hora_a_min(d.get('horaDespierta'))
+    acuesta = _hora_a_min(d.get('horaDuerme'))
+    levanta = 6 * 60 + 30 if levanta is None else levanta
+    acuesta = 22 * 60 + 30 if acuesta is None else acuesta
+    if acuesta <= levanta:  # se acuesta pasada la medianoche
+        acuesta += 24 * 60
+
+    def tiene(*claves):
+        return any(any(c in str(i.get('actividad', '')).lower() for c in claves) for i in items)
+
+    faltantes = []
+    if not tiene('desayun'):
+        faltantes.append((levanta + 45, 'Desayuno según el menú del día (Pilar 1)'))
+    if not tiene('almuerz'):
+        faltantes.append((max(levanta + 5 * 60, 12 * 60 + 30), 'Almuerzo según el menú del día (Pilar 1)'))
+    if not tiene('cena', 'cenar'):
+        faltantes.append((max(acuesta - 150, levanta + 10 * 60), 'Cena ligera según el menú del día (Pilar 1), al menos 2 horas antes de dormir'))
+    for minutos, texto in faltantes:
+        minutos %= 24 * 60
+        items.append({'hora': f'{minutos // 60:02d}:{minutos % 60:02d}', 'actividad': texto, 'pilar': 'Nutricion'})
+
+    def orden(i):
+        m = _hora_a_min(i.get('hora'))
+        if m is None:
+            return 10 ** 6
+        return m + 24 * 60 if m < levanta - 60 else m  # lo de madrugada va al final del día
+    return sorted(items, key=orden)
+
+
 def generar_plan_ia(d, job_id=None, modelo='claude', session_id=None):
     datos = _datos_paciente(d)
     t_total = time.time()
@@ -3574,7 +3618,13 @@ def generar_plan_ia(d, job_id=None, modelo='claude', session_id=None):
 Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
 Genera SOLO estas 3 claves: portada, diagnostico, rutina.
 {"portada":{"titulo_pilares":"Los 5 Pilares - [condicion]","intro":"3-4 lineas calido motivador","pilares_resumen":[{"num":1,"emoji":"\ud83e\udd57","titulo":"Titulo adaptado","descripcion":"2-3 lineas"},{"num":2,"emoji":"\ud83c\udfc3","titulo":"Titulo","descripcion":"2-3 lineas"},{"num":3,"emoji":"\ud83e\udde0","titulo":"Titulo","descripcion":"2-3 lineas"},{"num":4,"emoji":"\ud83d\ude34","titulo":"Titulo","descripcion":"2-3 lineas"},{"num":5,"emoji":"\u2728","titulo":"Titulo","descripcion":"2-3 lineas"}]},"diagnostico":{"nota_medica":"Nota alertas criticas","filas":[{"area":"Antropometria","estado":"datos","hallazgos":"analisis","alerta":"normal"},{"area":"Salud Digestiva","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Sueno y Energia","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Evaluacion Cutanea","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Salud Capilar","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Prioridad Principal","estado":"palabras textuales","hallazgos":"...","alerta":"normal"},{"area":"Condiciones Medicas","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Rutina Facial Actual","estado":"...","hallazgos":"...","alerta":"normal"},{"area":"Estilo de Vida","estado":"...","hallazgos":"...","alerta":"normal"}]},"rutina":{"nota":"nota rutina","items":[{"hora":"07:00","actividad":"descripcion","pilar":"Nutricion"}]}}
-REGLA: Maximo 8 items en rutina. Tips hiperspecificos con nombre y profesion.'''
+REGLAS DE LA RUTINA (un dia tipico de la paciente, de 10 a 14 items, ordenados por hora, formato HH:MM de 24 horas):
+- El primer item es a la hora en que se levanta y el ultimo a la hora en que se acuesta, tal como las indico. Si no las indico, usa 06:30 y 22:30.
+- Incluye SIEMPRE desayuno, almuerzo y cena, cada uno como item propio que diga "Desayuno", "Almuerzo" o "Cena". La cena va al menos 2 horas antes de acostarse.
+- Agrega snacks (media manana y/o media tarde) segun sus comidas al dia y su objetivo; si come 4 o mas veces al dia, incluye al menos un snack.
+- Acomoda las comidas, la actividad fisica y el cuidado de la piel (manana y noche) a su horario laboral y a sus horas de sueno.
+- "pilar" es exactamente uno de: Nutricion, Actividad, Mental, Sueno, Estetico (piel y cuidado personal = Estetico).
+Tips hiperspecificos con nombre y profesion.'''
 
     SYS2 = '''Eres el generador de contenido para planes del METODO CARVAJAL.
 Devuelve UNICAMENTE JSON valido sin explicaciones ni markdown.
@@ -3602,6 +3652,8 @@ El menu semanal es OBLIGATORIO: los 7 dias (Lunes a Domingo) deben tener desayun
     actualizar(f'Sección 1/3 — Portada, diagnóstico y rutina diaria... ({nombre_modelo})', 15)
     r1, err = _llamar(1, 3, SYS1, datos, max_tok=tok1)
     if err: return {'error': err}
+    if isinstance(r1.get('rutina'), dict):
+        r1['rutina']['items'] = _completar_rutina(r1['rutina'].get('items'), d)
     guardar_progreso(r1)  # ← sesión guardada tras paso 1
 
     if modelo == 'claude':

@@ -1,5 +1,31 @@
 # Registro de Correcciones — Centro Carvajal
 
+## 2026-10-27: La rutina diaria omitía la cena y no usaba el horario de la paciente
+
+### Contexto
+
+La clínica reportó que la rutina diaria del plan no incluye la cena.
+
+### Causa raíz
+
+1. `_datos_paciente()` no enviaba a la IA la hora en que la paciente se levanta ni la hora en que
+   se acuesta (solo estaban en el Word), así que la IA inventaba el horario.
+2. SYS1 limitaba la rutina a "Maximo 8 items" y no exigía las comidas; con despertar, piel,
+   ejercicio, trabajo y dormir, la cena era lo primero que quedaba fuera.
+
+### Corrección
+
+- `_datos_paciente()` incluye "Hora en que se levanta / se acuesta".
+- SYS1: rutina de 10 a 14 items en HH:MM, de la hora en que se levanta a la hora en que se acuesta
+  (06:30 / 22:30 si no las indicó); desayuno, almuerzo y cena siempre como items propios, cena al
+  menos 2 h antes de dormir; snacks según comidas al día (4+ → al menos uno); ajustada al horario
+  laboral; `pilar` limitado a Nutricion/Actividad/Mental/Sueno/Estetico (los colores del plan).
+- Red de seguridad en Python (`_completar_rutina`): ordena por hora (lo de madrugada al final) y
+  agrega desayuno/almuerzo/cena si la IA los omitió.
+- Probado con Claude real, solo la sección 1, sin correos: "PRUEBA Ana Rutina" (05:30–23:30,
+  oficina, 4+ comidas) y "PRUEBA Luis Turno" (09:00–01:00, turno 14:00–23:00, 2 comidas). Ambas
+  rutinas empiezan y terminan a sus horas, con las tres comidas, snacks y orden correcto.
+
 ## 2026-10-26: Menopausia mal registrada y campos que no llegaban al Word
 
 ### Contexto
